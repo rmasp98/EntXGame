@@ -6,11 +6,13 @@
 namespace ex = entityx;
 
 #include "main/renderer.hpp"
+#include "main/objectGen.hpp"
 
 
 class Level : public ex::EntityX {
    public:
       explicit Level() {
+         systems.add<objGenSystem>(entities);
          systems.add<RenderSystem>(entities);
          systems.configure();
       }

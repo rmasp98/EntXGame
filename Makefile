@@ -1,5 +1,6 @@
 CC        := g++
 LD        := g++
+FLAGS	  := -std=c++11 -Wall
 
 MODULES   := common main
 SRC_DIR   := $(addprefix src/,$(MODULES))
@@ -16,7 +17,7 @@ vpath %.cpp $(SRC_DIR)
 
 define make-goal
 $1/%.o: %.cpp
-	$(CC) $(INCLUDES) -c $$< -o $$@
+	$(CC) $(FLAGS) $(INCLUDES) -c $$< -o $$@
 endef
 
 .PHONY: all checkdirs clean
@@ -24,7 +25,7 @@ endef
 all: checkdirs $(EXE)
 
 $(EXE): $(OBJ)
-	$(LD) $^ -o $@ $(LIBS)
+	$(LD) $(FLAGS) $^ -o $@ $(LIBS)
 
 
 checkdirs: $(BUILD_DIR)

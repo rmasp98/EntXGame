@@ -17,7 +17,7 @@ class RenderSystem : public ex::System<RenderSystem> {
    protected:
       void genBuffers(ex::Entity&, Renderable&);
       void drawScene(Renderable&);
-      Camera cam;
+      Camera* cam;
 
 };
 

@@ -5,7 +5,7 @@
 RenderSystem::RenderSystem(ex::EntityManager &entM) {
 
    entM.each<Camera>([this](ex::Entity entity, Camera &camera) {
-      cam = camera;
+      *cam = camera;
    });
 
    entM.each<Renderable>([this](ex::Entity entity, Renderable &mesh) {
@@ -33,7 +33,13 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs) {
    std::vector<glm::vec2> uvsInds;
    std::vector<glm::vec3> vertInds, normInds;
 
-
+   std::vector<int> uvsalfk;
+   std::cout << "byedkbnksfjn" << std::endl;
+   for (int i=0; i<10; i++) {
+      uvsalfk.push_back(i);
+      std::cout << uvsalfk.size() << std::endl;
+   }
+   std::cout << "bye1slkvnsfk" << std::endl;
    indexVBO(eVecs.verts, eVecs.uvs, eVecs.norms, inds, vertInds, uvsInds, normInds);
 
    //This will probably need to be added to the component
@@ -89,7 +95,7 @@ void RenderSystem::drawScene(Renderable& mesh) {
    glBindVertexArray(mesh.VAO);
 
    //Generate and send camara matrix
-   glm::mat4 camView = cam.projection * cam.camSpec * mesh.modelMat;
+   glm::mat4 camView = cam->projection * cam->view * mesh.modelMat;
    glUniformMatrix4fv(glGetUniformLocation(mesh.progID, "camView"), 1, GL_FALSE, &camView[0][0]);
 
    //Send model matrix

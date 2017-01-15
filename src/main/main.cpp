@@ -10,7 +10,7 @@
 
 
 
-int initGraphics(GLFWwindow* window) {
+int initGraphics(GLFWwindow*& window) {
 
 
    if (!glfwInit()) {
@@ -24,7 +24,7 @@ int initGraphics(GLFWwindow* window) {
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Should find out about other profiles
 
-   window = glfwCreateWindow(1024, 768, "First Program", glfwGetPrimaryMonitor(), NULL);
+   window = glfwCreateWindow(1366, 768, "First Program", glfwGetPrimaryMonitor(), NULL);
    if (window == NULL) {
        std::cerr << "Failed to open GLFW window\n";
        return -1;
@@ -68,12 +68,18 @@ int main () {
    //firstRoom->createObject("shaders/statue.obj", "shaders/statueUV.DDS", glm::translate(glm::mat4(1.0f), vec3(0.0f, 2.0f, 0.0f)));
    //firstRoom->cam = new camara(window);
 
+   Level* firstLevel = new Level();
+   GLfloat currT = glfwGetTime();
+
     do {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Clear screen
         glfwPollEvents();
 
         //Computes new camaraspace position and draw object
         //firstRoom->drawScene(window);
+
+        firstLevel->update(glfwGetTime() - currT);
+        currT = glfwGetTime();
 
         //Swap buffers
         glfwSwapBuffers(window);

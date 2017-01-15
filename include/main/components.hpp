@@ -1,5 +1,5 @@
 #ifndef COMPONENTS_HPP
-#define COMPENENTS_HPP
+#define COMPONENTS_HPP
 
 #include <glm/glm.hpp>
 #include <GL/gl.h>
@@ -23,7 +23,8 @@ struct Light {
 
 
 struct Renderable {
-   Renderable() {}
+   Renderable(std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn)
+   : verts(vertIn), norms(normIn), uvs(uvIn) {}
 
    std::vector<glm::vec3> verts, norms;
    std::vector<glm::vec2> uvs;
@@ -48,9 +49,9 @@ struct Collidable {
 
 
 struct Camera {
-   Camera() {}
+   Camera(glm::mat4 projIn, glm::mat4 viewIn) : projection(projIn), view(viewIn) {}
 
-   glm::mat4 projection, camSpec;
+   glm::mat4 projection, view;
 };
 
 
