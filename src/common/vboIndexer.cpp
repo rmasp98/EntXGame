@@ -123,9 +123,7 @@ void indexVBO(
 		if ( found ){ // A similar vertex is already in the VBO, use it instead !
 			out_indices.push_back( index );
 		}else{ // If not, it needs to be added in the output data.
-         std::cout << "hello" << std::endl;
 			out_vertices.push_back( in_vertices[i]);
-			std::cout << "hello1" << std::endl;
 			out_uvs     .push_back( in_uvs[i]);
 			out_normals .push_back( in_normals[i]);
 			unsigned short newindex = (unsigned short)out_vertices.size() - 1;

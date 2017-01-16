@@ -14,6 +14,27 @@ struct Position {
 
 
 
+struct Acceleration {
+   Acceleration(GLfloat maxVIn, GLfloat accIn, glm::vec3 dirIn)
+                : maxSpeed(maxVIn), accel(accIn), speed(glm::vec3(0.0f)), dir(dirIn), right(glm::vec3(dirIn.z, 0.0f, -dirIn.x)) {}
+
+   GLfloat maxSpeed, accel;
+   glm::vec3 speed, dir, right;
+};
+
+
+
+struct Jump {
+   Jump(GLfloat jumpVIn, GLfloat gIn) : jumpSpeed(jumpVIn), gravity(gIn) {}
+
+   glm::vec2 jumpMove;
+   bool isJump, isPreJump;
+   GLfloat jumpSpeed, gravity, vz;
+};
+
+
+
+
 struct Light {
    Light(glm::vec3 ambIn, glm::vec3 difIn, glm::vec3 specIn)
    : ambient(ambIn), diffuse(difIn), specular(specIn) {}
@@ -28,10 +49,17 @@ struct Renderable {
 
    std::vector<glm::vec3> verts, norms;
    std::vector<glm::vec2> uvs;
-   GLuint progID, VAO, vertID, uvID, normID, indID, indSize, texID;
+   GLuint VAO, vertID, uvID, normID, indID, indSize, texID;
    glm::mat4 modelMat;
 };
 
+
+
+struct Shader {
+   Shader(GLuint shaderIn) : progID(shaderIn) {}
+
+   GLuint progID;
+};
 
 
 struct Texture {
@@ -50,6 +78,7 @@ struct Collidable {
 
 struct Camera {
    Camera(glm::mat4 projIn, glm::mat4 viewIn) : projection(projIn), view(viewIn) {}
+   Camera() {}
 
    glm::mat4 projection, view;
 };

@@ -68,7 +68,7 @@ int main () {
    //firstRoom->createObject("shaders/statue.obj", "shaders/statueUV.DDS", glm::translate(glm::mat4(1.0f), vec3(0.0f, 2.0f, 0.0f)));
    //firstRoom->cam = new camara(window);
 
-   Level* firstLevel = new Level();
+   Level* firstLevel = new Level(window);
    GLfloat currT = glfwGetTime();
 
     do {
