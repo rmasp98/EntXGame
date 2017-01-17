@@ -29,7 +29,7 @@ struct Jump {
 
    glm::vec2 jumpMove;
    bool isJump, isPreJump;
-   GLfloat jumpSpeed, gravity, vz;
+   GLfloat jumpSpeed, gravity;
 };
 
 
