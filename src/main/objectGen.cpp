@@ -47,8 +47,9 @@ objGenSystem::objGenSystem(ex::EntityManager& entM) {
 
    entity.assign<Camera>(projection, view);
    entity.assign<Position>(glm::vec3(0.0f));
-   entity.assign<Acceleration>(1.0f, 5.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+   entity.assign<Acceleration>(0.5f, 2.5f);
    entity.assign<Jump>(3.0f, -9.8f);
+   entity.assign<Direction>(0.1f, glm::vec2(0, 0), glm::vec3(0.0f, 0.0f, 1.0f));
 
    //Create light
    entity = entM.create();

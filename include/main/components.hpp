@@ -15,12 +15,25 @@ struct Position {
 
 
 struct Acceleration {
-   Acceleration(GLfloat maxVIn, GLfloat accIn, glm::vec3 dirIn)
-                : maxSpeed(maxVIn), accel(accIn), speed(glm::vec3(0.0f)), dir(dirIn), right(glm::vec3(dirIn.z, 0.0f, -dirIn.x)) {}
+   Acceleration(GLfloat maxVIn, GLfloat accIn)
+                : maxSpeed(maxVIn), accel(accIn), speed(glm::vec3(0.0f)) {}
 
    GLfloat maxSpeed, accel;
-   glm::vec3 speed, dir, right;
+   glm::vec3 speed;
 };
+
+
+
+struct Direction {
+   Direction(GLfloat speedIn, glm::vec2 angIn, glm::vec3 faceIn)
+          : mouseSpeed(speedIn), angle(angIn), facing(faceIn),
+            dir(glm::vec3(faceIn.x, 0.0f, faceIn.z)), right(glm::vec3(faceIn.z, 0.0f, -faceIn.x)) {}
+
+   GLfloat mouseSpeed;
+   glm::vec2 angle;
+   glm::vec3 facing, dir, right;
+};
+
 
 
 

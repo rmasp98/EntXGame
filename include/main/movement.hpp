@@ -17,9 +17,10 @@ class MoveSystem : public ex::System<MoveSystem> {
 
    protected:
       GLFWwindow* win;
+      GLint winXcen, winYcen;
 
-      void moveObject(Position&, Acceleration&, float);
-      void changeDirection();
+      void moveObject(ex::Entity&, Position&, Acceleration&, Direction&, float);
+      void changeDirection(Camera&, Direction&, GLfloat);
 
 };
 
