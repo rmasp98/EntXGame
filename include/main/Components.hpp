@@ -16,10 +16,10 @@ struct Position {
 
 struct Acceleration {
    Acceleration(GLfloat maxVIn, GLfloat accIn)
-                : maxSpeed(maxVIn), accel(accIn), speed(glm::vec3(0.0f)) {}
+                : maxSpeed(maxVIn), accel(accIn), vel(glm::vec3(0.0f)) {}
 
    GLfloat maxSpeed, accel;
-   glm::vec3 speed;
+   glm::vec3 vel;
 };
 
 
@@ -57,13 +57,22 @@ struct Light {
 
 
 struct Renderable {
-   Renderable(std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn)
-   : verts(vertIn), norms(normIn), uvs(uvIn) {}
+   Renderable(std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn, GLint texIn)
+   : verts(vertIn), norms(normIn), uvs(uvIn), texID(texIn) {}
 
    std::vector<glm::vec3> verts, norms;
    std::vector<glm::vec2> uvs;
    GLuint VAO, vertID, uvID, normID, indID, indSize, texID;
    glm::mat4 modelMat;
+};
+
+
+
+
+struct Room {
+   Room(std::vector< glm::tvec2<GLint> > blkIn) : blocks(blkIn) {}
+
+   std::vector< glm::tvec2<GLint> > blocks;
 };
 
 
@@ -74,12 +83,6 @@ struct Shader {
    GLuint progID;
 };
 
-
-struct Texture {
-   Texture(GLuint idIn) : textID(idIn) {}
-
-   GLuint textID;
-};
 
 
 

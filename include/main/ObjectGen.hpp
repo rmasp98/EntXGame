@@ -10,13 +10,21 @@ namespace ex = entityx;
 #include "common/objLoader.hpp"
 #include "common/shader.hpp"
 #include "common/texture.hpp"
-#include "main/components.hpp"
+
+#include "main/Components.hpp"
 
 
-class objGenSystem : public ex::System<objGenSystem> {
+class ObjectSystem : public ex::System<ObjectSystem> {
    public:
-      explicit objGenSystem(ex::EntityManager&);
+      explicit ObjectSystem(ex::EntityManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
+
+   protected:
+      ex::EntityManager* entMan;
+
+      void genLevel();
+      void genObject(std::string, std::string, GLint);
+
 
 
 };

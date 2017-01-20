@@ -7,7 +7,7 @@
 #include <entityx/entityx.h>
 namespace ex = entityx;
 
-#include "main/components.hpp"
+#include "main/Components.hpp"
 
 
 class MoveSystem : public ex::System<MoveSystem> {

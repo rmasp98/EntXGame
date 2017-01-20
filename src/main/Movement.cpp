@@ -1,5 +1,5 @@
 #include <cmath>
-#include "main/movement.hpp"
+#include "main/Movement.hpp"
 
 
 
@@ -44,8 +44,6 @@ void MoveSystem::changeDirection(Camera& cam, Direction& dir, GLfloat dT) {
    double xPos, yPos;
    glfwGetCursorPos(win, &xPos, &yPos);
 
-   std::cout << xPos << "\t" << winXcen << std::endl;
-
    dir.angle.x += dir.mouseSpeed * dT * GLfloat(winXcen - xPos);
    double dTheta = dir.mouseSpeed * dT * GLfloat(winYcen - yPos);
    if (dir.angle.y + dTheta <= -0.9 * glm::pi<GLfloat>() / 2.0f)
@@ -76,7 +74,7 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
    ex::ComponentHandle<Jump> jump = ent.component<Jump>();
    if (jump) {
       if ((glfwGetKey(win, GLFW_KEY_SPACE) == GLFW_PRESS) && (!jump->isJump)) {
-         jump->isJump = true; accel.speed.y = jump->jumpSpeed;
+         jump->isJump = true; accel.vel.y = jump->jumpSpeed;
       }
 
       isJump = jump->isJump;
@@ -86,35 +84,36 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
    glm::vec3 tempPos(pos.pos);
    if (isJump) {
 
-      tempPos.y += accel.speed.y * dT;
-      accel.speed.y += jump->gravity * dT;
+      tempPos.y += accel.vel.y * dT;
+      accel.vel.y += jump->gravity * dT;
 
    } else {
       //can make the min/max as a function of yspeed so that diagonal is normalised
       if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
-         accel.speed.x = std::min(accel.speed.x + accel.accel*dT,
-                                  (float)sqrt(accel.maxSpeed*accel.maxSpeed - accel.speed.z*accel.speed.z));
+         accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);
       else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
-         accel.speed.x = std::max(accel.speed.x - accel.accel*dT,
-                                 (float)-sqrt(accel.maxSpeed*accel.maxSpeed - accel.speed.z*accel.speed.z));
+         accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -accel.maxSpeed);
       else
-         accel.speed.x = accel.speed.x < 0 ? std::min(accel.speed.x + accel.accel*dT, 0.0f)
-                                           : std::max(accel.speed.x - accel.accel*dT, 0.0f);
+         accel.vel.x = accel.vel.x < 0 ? std::min(accel.vel.x + accel.accel*dT, 0.0f)
+                                           : std::max(accel.vel.x - accel.accel*dT, 0.0f);
 
 
       if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
-         accel.speed.z = std::min(accel.speed.z + accel.accel*dT,
-                                  (float)sqrt(accel.maxSpeed*accel.maxSpeed - accel.speed.x*accel.speed.x));
+         accel.vel.z = std::min(accel.vel.z + accel.accel*dT, accel.maxSpeed);
       else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
-         accel.speed.z = std::max(accel.speed.z - accel.accel*dT,
-                                 (float)-sqrt(accel.maxSpeed*accel.maxSpeed - accel.speed.x*accel.speed.x));
+         accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -accel.maxSpeed);
       else
-         accel.speed.z = accel.speed.z < 0 ? std::min(accel.speed.z + accel.accel*dT, 0.0f)
-                                           : std::max(accel.speed.z - accel.accel*dT, 0.0f);
+         accel.vel.z = accel.vel.z < 0 ? std::min(accel.vel.z + accel.accel*dT, 0.0f)
+                                           : std::max(accel.vel.z - accel.accel*dT, 0.0f);
 
+      GLfloat speed = sqrt(accel.vel.x*accel.vel.x + accel.vel.z*accel.vel.z);
+      if (speed > accel.maxSpeed) {
+         accel.vel.x *= accel.maxSpeed / speed;
+         accel.vel.z *= accel.maxSpeed / speed;
+      }
    }
 
-   tempPos += accel.speed.z * facing.dir + accel.speed.x * facing.right;
+   tempPos += accel.vel.z * facing.dir + accel.vel.x * facing.right;
 
    //collision detection
 
