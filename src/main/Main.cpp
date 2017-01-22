@@ -24,7 +24,16 @@ int initGraphics(GLFWwindow*& window) {
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Should find out about other profiles
 
-   window = glfwCreateWindow(1366, 768, "First Program", glfwGetPrimaryMonitor(), NULL);
+
+   const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+   glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+   glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+   glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+   glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+   window = glfwCreateWindow(mode->width, mode->height, "My Title", glfwGetPrimaryMonitor(), NULL);
+
+   //window = glfwCreateWindow(1366, 768, "First Program", glfwGetPrimaryMonitor(), NULL);
    if (window == NULL) {
        std::cerr << "Failed to open GLFW window\n";
        return -1;

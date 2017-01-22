@@ -45,7 +45,7 @@ void ObjectSystem::genLevel() {
    glm::mat4 view = glm::lookAt(glm::vec3(0.0, 1.0f, 10.0f), glm::vec3(0.0, 1.0f, 0.0f), glm::vec3(0,1,0));
 
    entity.assign<Camera>(projection, view);
-   entity.assign<Position>(glm::vec3(0.0f));
+   entity.assign<Position>(glm::vec3(0.0f, 2.0f, 0.0f));
    entity.assign<Acceleration>(0.5f, 2.5f);
    entity.assign<Jump>(3.0f, -9.8f);
    entity.assign<Direction>(0.1f, glm::vec2(0, 0), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -54,7 +54,7 @@ void ObjectSystem::genLevel() {
 
    //Create light
    entity = entMan->create();
-   glm::vec3 amb(1.0f), diff(1.0f), spec(1.0f), pos(0.0f, 2.0f, 0.0f);
+   glm::vec3 amb(1.0f), diff(1.0f), spec(1.0f), pos(0.0f, 9.5f, 0.0f);
 
    entity.assign<Light>(amb, diff, spec);
    entity.assign<Position>(pos);
