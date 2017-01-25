@@ -29,6 +29,10 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
       moveObject(entity, pos, accel, face, dT);
    });
 
+   entM.each<Position, Renderable>([this](ex::Entity entity, Position& pos, Renderable& mat) {
+      mat.modelMat = glm::translate(glm::mat4(1.0f), pos.pos);
+   });
+
    entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
       cam.view = lookAt(pos.pos, pos.pos + face.facing, glm::vec3(0,1,0));
    });

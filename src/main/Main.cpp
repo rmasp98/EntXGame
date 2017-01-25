@@ -31,7 +31,7 @@ int initGraphics(GLFWwindow*& window) {
    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-   window = glfwCreateWindow(mode->width, mode->height, "My Title", glfwGetPrimaryMonitor(), NULL);
+   window = glfwCreateWindow(mode->width, mode->height, "My Title", NULL, NULL);
 
    //window = glfwCreateWindow(1366, 768, "First Program", glfwGetPrimaryMonitor(), NULL);
    if (window == NULL) {

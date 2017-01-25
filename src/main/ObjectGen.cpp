@@ -46,7 +46,7 @@ void ObjectSystem::genLevel() {
 
    entity.assign<Camera>(projection, view);
    entity.assign<Position>(glm::vec3(0.0f, 2.0f, 0.0f));
-   entity.assign<Acceleration>(0.5f, 2.5f);
+   entity.assign<Acceleration>(0.2f, 1.0f);
    entity.assign<Jump>(3.0f, -9.8f);
    entity.assign<Direction>(0.1f, glm::vec2(0, 0), glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -91,6 +91,7 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
 
    entity.assign<Renderable>(verts, norms, uvs, texID);
    entity.assign<Shader>(pID);
+   entity.assign<Position>(glm::vec3(0.0f, 1.0f, 0.0f));
 
 }
 

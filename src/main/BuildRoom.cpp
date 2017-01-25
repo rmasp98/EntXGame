@@ -53,9 +53,9 @@ std::vector< glm::tvec2<GLint> > RoomSystem::createBlocks(GLint numBlocks) {
 
          GLint dir = rand() % 4, pmDir = 2*(dir%2) - 1;
          if (dir < 2)
-            bPos[iBlock] += glm::tvec2<GLint>(pmDir, 0);
+            bPos[iBlock] = bPos[block] + glm::tvec2<GLint>(pmDir, 0);
          else
-            bPos[iBlock] += glm::tvec2<GLint>(0, pmDir);
+            bPos[iBlock] = bPos[block] + glm::tvec2<GLint>(0, pmDir);
 
 
          flag = false;
