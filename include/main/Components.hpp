@@ -1,19 +1,35 @@
+////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                    //
+//                              Title of the Game                                     //
+//                               Components.hpp                                       //
+//                                Ross Maspero                                        //
+//                                                                                    //
+////////////////////////////////////////////////////////////////////////////////////////
+
 #ifndef COMPONENTS_HPP
 #define COMPONENTS_HPP
 
-#include <glm/glm.hpp>
-#include <GL/gl.h>
+//Generic libraries
 #include <vector>
 
+//Graphics libraries
+#include <glm/glm.hpp>
+#include <GL/gl.h>
 
+//////////////////////////////////////////////////////////////////////////////////////////
+//List of all the game components
+
+
+//An object with position. There is also a buffer for collision detection
 struct Position {
-   Position(glm::vec3 posIn) : pos(posIn) {}
+   Position(glm::vec3 posIn, GLfloat buffIn) : pos(posIn), buffer(buffIn) {}
 
    glm::vec3 pos;
+   GLfloat buffer;
 };
 
 
-
+//An object that moves. This includes the maximum speed, the accerlation and current velocity
 struct Acceleration {
    Acceleration(GLfloat maxVIn, GLfloat accIn)
                 : maxSpeed(maxVIn), accel(accIn), vel(glm::vec3(0.0f)) {}
@@ -23,7 +39,7 @@ struct Acceleration {
 };
 
 
-
+//This is mostly for Cameras. This includes the pan speed, current angle, facing direction, travelling and right direction
 struct Direction {
    Direction(GLfloat speedIn, glm::vec2 angIn, glm::vec3 faceIn)
           : mouseSpeed(speedIn), angle(angIn), facing(faceIn),
@@ -36,18 +52,19 @@ struct Direction {
 
 
 
-
+//This is for jumping objects. This includes xy movement while jumping, whether it is jumping currently
+//speed that in starts in jump and accerlation due to gravity
 struct Jump {
    Jump(GLfloat jumpVIn, GLfloat gIn) : jumpSpeed(jumpVIn), gravity(gIn) {}
 
    glm::vec2 jumpMove;
-   bool isJump, isPreJump;
+   bool isJump;
    GLfloat jumpSpeed, gravity;
 };
 
 
 
-
+//This is for light entities. Contains the ambient, diffuse and specular components of the light
 struct Light {
    Light(glm::vec3 ambIn, glm::vec3 difIn, glm::vec3 specIn)
    : ambient(ambIn), diffuse(difIn), specular(specIn) {}
@@ -56,6 +73,9 @@ struct Light {
 };
 
 
+
+//An object that can be rendered. Includes vertices, normals, uv coordinates, model matrix and various IDs:
+//Vertex Array object, graphics ids for verts, uv coords, norms, VBO indices; number of verts and texture ID
 struct Renderable {
    Renderable(std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn, GLint texIn)
    : verts(vertIn), norms(normIn), uvs(uvIn), texID(texIn) {}
@@ -69,6 +89,8 @@ struct Renderable {
 
 
 
+//This is mostly for the room. Includes the blocks, boundary and normals for the walls, floor and roof
+//This is used for collision detection
 struct Room {
    Room() {}
 
@@ -79,6 +101,8 @@ struct Room {
 
 
 
+
+//This is a holder for the program ID
 struct Shader {
    Shader(GLuint shaderIn) : progID(shaderIn) {}
 
@@ -88,12 +112,15 @@ struct Shader {
 
 
 
+//This is a holder for anything that can move and hence collide
 struct Collidable {
    Collidable() {}
 
 };
 
 
+
+//Just holds some values for the camera
 struct Camera {
    Camera(glm::mat4 projIn, glm::mat4 viewIn) : projection(projIn), view(viewIn) {}
    Camera() {}

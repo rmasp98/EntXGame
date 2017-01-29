@@ -1,50 +1,59 @@
+////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                    //
+//                              Title of the Game                                     //
+//                                Renderer.cpp                                        //
+//                                Ross Maspero                                        //
+//                                                                                    //
+////////////////////////////////////////////////////////////////////////////////////////
+
+
 #include "main/Renderer.hpp"
 
-#include "common/vboIndexer.hpp"
+
 
 
 RenderSystem::RenderSystem(ex::EntityManager &entM) {
 
+   //Add camera as local variable as it is used in many functions
    entM.each<Camera>([this](ex::Entity entity, Camera &camera) {
       cam = &camera;
    });
 
-
-   addLight(entM);
-
-
+   //Generates a VAO for each renderable entity (should also be added to an event create new object)
    entM.each<Renderable, Shader>([this](ex::Entity entity, Renderable &mesh, Shader& pID) {
       genBuffers(entity, mesh, pID);
    });
-
 }
 
 
 void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::TimeDelta dT) {
 
+   //Pass the lights to graphics card
    addLight(entM);
 
+   //Passes camera and model matrix, and then renders each object
    entM.each<Renderable, Shader>([this](ex::Entity entity, Renderable &mesh, Shader& pID) {
       drawScene(mesh, pID);
    });
 
+   //Reset the VAO
    glBindVertexArray(0);
 }
 
 
 
-
+//This creates the VAOs, which are later used to quick switch between objects to render
 void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) {
 
    std::vector<unsigned short> inds;
    std::vector<glm::vec2> uvsInds;
    std::vector<glm::vec3> vertInds, normInds;
 
+   //This performs VBO indexing
    indexVBO(eVecs.verts, eVecs.uvs, eVecs.norms, inds, vertInds, uvsInds, normInds);
-
-   //This will probably need to be added to the component
    eVecs.indSize = inds.size();
 
+   //Generate and bind VAO
    glGenVertexArrays(1, &eVecs.VAO);
    glBindVertexArray(eVecs.VAO);
 
@@ -81,6 +90,7 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
    glUniform1i(glGetUniformLocation(prog.progID, "material.specular"), 0);
    glUniform1f(glGetUniformLocation(prog.progID, "material.shininess"), 32.0f);
 
+   //Unbind VAO
    glBindVertexArray(0);
 
 }
@@ -92,22 +102,25 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
 
 void RenderSystem::drawScene(Renderable& mesh, Shader& prog) {
 
+   //Rebind the objects VAO
    glBindVertexArray(mesh.VAO);
 
-   //Generate and send camara matrix
+   //Send camera information to the buffer
    glm::mat4 camView = cam->projection * cam->view * mesh.modelMat;
    glUniformMatrix4fv(glGetUniformLocation(prog.progID, "camView"), 1, GL_FALSE, &camView[0][0]);
 
-   //Send model matrix
+   //Send object's model matrix
    glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
 
-   //Resets the texture
+   //Resets the texture and binds correct texture
    glActiveTexture(GL_TEXTURE0);
    glBindTexture(GL_TEXTURE_2D, mesh.texID);
 
+   //Render the object
    glDrawElements(GL_TRIANGLES, mesh.indSize, GL_UNSIGNED_SHORT, (void*)0);
-   glBindVertexArray(0);
 
+   //Unbind the VAO for the next object
+   glBindVertexArray(0);
 }
 
 
@@ -116,12 +129,14 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog) {
 
 void RenderSystem::addLight(ex::EntityManager& entM) {
 
-
+   //Runs over all light entities to send the information to the buffer
    GLuint iNum = 0, pID = 0;
    entM.each<Light, Position, Shader>([this, &iNum, &pID]
                                      (ex::Entity entity, Light& l, Position& p, Shader& s) {
 
       pID = s.progID;
+
+      //Creates a custom name to pass the lights into an array
       std::stringstream bName;
       bName << "light[" << iNum++ << "].";
 
@@ -141,5 +156,6 @@ void RenderSystem::addLight(ex::EntityManager& entM) {
       glUniform1f(glGetUniformLocation(s.progID, &(bName.str() + "quad")[0]), 0.017);
    });
 
+   //Passes the number of lights to the buffer
    glUniform1i(glGetUniformLocation(pID, "lightNum"), iNum);
 }

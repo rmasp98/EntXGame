@@ -1,12 +1,53 @@
-#include <iostream>
-#include <vector>
-#include <GL/glew.h>
-#include <GL/glut.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                    //
+//                              Title of the Game                                     //
+//                                  Main.cpp                                          //
+//                                Ross Maspero                                        //
+//                                                                                    //
+////////////////////////////////////////////////////////////////////////////////////////
+
 
 #include "main/Main.hpp"
+
+
+int main () {
+
+   GLFWwindow* window;
+
+   //Initialises the graphics and window libraries
+   if (initGraphics(window)) {
+      std::cerr << "Initialisation failed. Aborting\n";
+      return -1;
+   }
+
+   //Create the entity system
+   Level* firstLevel = new Level(window);
+   GLfloat currT = glfwGetTime();
+
+   //Game loop
+   do {
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Clear screen
+      glfwPollEvents(); //Check for key and mouse events
+
+      //Update every system
+      firstLevel->update(glfwGetTime() - currT);
+      currT = glfwGetTime();
+
+      //Swap second buffer
+      glfwSwapBuffers(window);
+
+   } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
+          glfwWindowShouldClose(window) == 0);
+
+   //Assume destroys window and all associated parts
+   glfwTerminate();
+
+   return 0;
+}
+
+
+
+
 
 
 
@@ -24,21 +65,25 @@ int initGraphics(GLFWwindow*& window) {
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Should find out about other profiles
 
-
+   //Gets information about the primary monitor
    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-   window = glfwCreateWindow(mode->width, mode->height, "My Title", NULL, NULL);
+   //Creates the window
+   window = glfwCreateWindow(mode->width, mode->height, "First Program", NULL, NULL);
 
-   //window = glfwCreateWindow(1366, 768, "First Program", glfwGetPrimaryMonitor(), NULL);
+   //This one sets up full screen but there is currently a bug that produces a blue strip
+   //window = glfwCreateWindow(mode->width, mode->height, "First Program", mode, NULL);
+
+   //Checks to ensure a window was created properly
    if (window == NULL) {
        std::cerr << "Failed to open GLFW window\n";
        return -1;
    }
-   glfwMakeContextCurrent(window);
+   glfwMakeContextCurrent(window); //Makes this window the current window
 
    glewExperimental = true; //Find out what this means
    if (glewInit() != GLEW_OK) {
@@ -48,7 +93,6 @@ int initGraphics(GLFWwindow*& window) {
 
    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); //Allows key presses to be detected in frame
    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); //Hide cursor
-   glfwSetCursorPos(window, 1024/2, 768/2);
 
    glClearColor(0.0, 0.0, 0.4, 0.0);   //Set default backgrond to dark blue
    glEnable(GL_DEPTH_TEST);            //Enable depth testing of objects
@@ -56,48 +100,4 @@ int initGraphics(GLFWwindow*& window) {
    glEnable(GL_CULL_FACE);             //Don't draw backfacing triangles
 
    return 0;
-}
-
-
-
-
-
-int main () {
-
-   GLFWwindow* window;
-
-   if (initGraphics(window)) {
-      std::cerr << "Initialisation failed. Aborting\n";
-      return -1;
-   }
-
-   // Load, create and initialise object, camara and light
-   // objectList* firstRoom = new objectList("shaders/main.vs", "shaders/main.fs");
-   //firstRoom->createObject("shaders/roomUV.DDS", glm::mat4(1.0f));
-   //firstRoom->createObject("shaders/statue.obj", "shaders/statueUV.DDS", glm::translate(glm::mat4(1.0f), vec3(0.0f, 2.0f, 0.0f)));
-   //firstRoom->cam = new camara(window);
-
-   Level* firstLevel = new Level(window);
-   GLfloat currT = glfwGetTime();
-
-    do {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Clear screen
-        glfwPollEvents();
-
-        //Computes new camaraspace position and draw object
-        //firstRoom->drawScene(window);
-
-        firstLevel->update(glfwGetTime() - currT);
-        currT = glfwGetTime();
-
-        //Swap buffers
-        glfwSwapBuffers(window);
-
-    } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-             glfwWindowShouldClose(window) == 0);
-
-    //delete firstRoom;
-    glfwTerminate();
-
-    return 0;
 }
