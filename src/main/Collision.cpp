@@ -18,15 +18,22 @@ CollisionSystem::CollisionSystem() {}
 
 void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
+   //Passes the room in to check if entity has collided against wall
+   entM.each<Room>([this, &entM](ex::Entity roomEnt, Room& room) {
    //Checks every for collision for any collidable entities
-   entM.each<Collidable, Position>([this, &entM](ex::Entity entity, Collidable& coll, Position& pos) {
-      //Passes the room in to check if entity has collided against wall
-      entM.each<Room>([this, &pos](ex::Entity roomEnt, Room& room) {
-         wallCollision(pos, room);
+      entM.each<Collidable, Position>([this, &room, &entM](ex::Entity entity1, Collidable& coll, Position& pos1) {
+         wallCollision(pos1, room);
+
+         bool isSame=false;
+         entM.each<Collidable, Position>([this, &entity1, &pos1, &isSame](ex::Entity entity2, Collidable& coll, Position& pos2) {
+            if (entity1 == entity2)
+               isSame = true;
+            else if (isSame)
+               objectCollision(pos1, pos2);
+
+         });
       });
    });
-
-
 }
 
 
@@ -73,4 +80,19 @@ void CollisionSystem::wallCollision(Position& pos, Room& room) {
             pos.pos.z = room.bound[bestInd][1] + pos.buffer;
       }
    }
+}
+
+
+
+
+
+void CollisionSystem::objectCollision(Position& ent1, Position& ent2) {
+
+   GLfloat dist = glm::length(glm::vec2(ent1.pos.x - ent2.pos.x, ent1.pos.z - ent2.pos.z));
+   if (dist < ent1.buffer + ent2.buffer) {
+      ent1.pos.x = ent2.pos.x + (ent1.buffer + ent2.buffer)*(ent1.pos.x - ent2.pos.x)/dist;
+      ent1.pos.z = ent2.pos.z + (ent1.buffer + ent2.buffer)*(ent1.pos.z - ent2.pos.z)/dist;
+   }
+
+
 }
