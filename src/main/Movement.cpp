@@ -123,9 +123,9 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
 
    pos.pos = tempPos;
 
-   if ((jump) && (pos.pos.y < 0)) {
+   if ((jump) && (pos.pos.y < 2.0f)) {
       jump->isJump = false;
-      pos.pos.y = 0;
+      pos.pos.y = 2.0f;
    }
 
 

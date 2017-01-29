@@ -14,12 +14,6 @@ namespace ex = entityx;
 #include "common/texture.hpp"
 
 
-struct roomComps {
-   std::vector< glm::tvec2<GLint> > blocks;
-   std::vector< std::vector<GLfloat> > bound;
-   std::vector<glm::vec3> norms;
-};
-
 
 class RoomSystem : public ex::System<RoomSystem> {
    public:
@@ -29,8 +23,8 @@ class RoomSystem : public ex::System<RoomSystem> {
    protected:
 
       std::vector< glm::tvec2<GLint> > createBlocks(GLint);
-      void createBound(roomComps&);
-      void buildRoom(ex::Entity&, roomComps&);
+      void createBound(ex::ComponentHandle<Room>&);
+      void buildRoom(ex::EntityManager&, ex::Entity&, ex::ComponentHandle<Room>&, GLuint);
 
 };
 

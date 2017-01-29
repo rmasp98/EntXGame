@@ -49,16 +49,17 @@ void ObjectSystem::genLevel() {
    entity.assign<Acceleration>(0.2f, 1.0f);
    entity.assign<Jump>(3.0f, -9.8f);
    entity.assign<Direction>(0.1f, glm::vec2(0, 0), glm::vec3(0.0f, 0.0f, 1.0f));
+   entity.assign<Collidable>();
 
    genObject("shaders/statue.obj", "shaders/statueUV.DDS", pID);
 
    //Create light
-   entity = entMan->create();
-   glm::vec3 amb(1.0f), diff(1.0f), spec(1.0f), pos(0.0f, 9.5f, 0.0f);
+   //entity = entMan->create();
+   //glm::vec3 amb(1.0f), diff(1.0f), spec(1.0f), pos(0.0f, 9.5f, 0.0f);
 
-   entity.assign<Light>(amb, diff, spec);
-   entity.assign<Position>(pos);
-   entity.assign<Shader>(pID);
+   //entity.assign<Light>(amb, diff, spec);
+   //entity.assign<Position>(pos);
+   //entity.assign<Shader>(pID);
 
 }
 

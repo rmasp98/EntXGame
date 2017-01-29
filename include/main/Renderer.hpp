@@ -20,6 +20,7 @@ class RenderSystem : public ex::System<RenderSystem> {
       void genBuffers(ex::Entity&, Renderable&, Shader&);
       void drawScene(Renderable&, Shader&);
       void addLight(ex::EntityManager&);
+
       Camera* cam;
 
 };

@@ -70,9 +70,11 @@ struct Renderable {
 
 
 struct Room {
-   Room(std::vector< glm::tvec2<GLint> > blkIn) : blocks(blkIn) {}
+   Room() {}
 
    std::vector< glm::tvec2<GLint> > blocks;
+   std::vector< std::vector<GLfloat> > bound;
+   std::vector<glm::vec3> norms;
 };
 
 

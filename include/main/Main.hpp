@@ -9,6 +9,7 @@ namespace ex = entityx;
 #include "main/ObjectGen.hpp"
 #include "main/Movement.hpp"
 #include "main/BuildRoom.hpp"
+#include "main/Collision.hpp"
 
 
 class Level : public ex::EntityX {
@@ -17,6 +18,7 @@ class Level : public ex::EntityX {
          systems.add<ObjectSystem>(entities);
          systems.add<RoomSystem>(entities);
          systems.add<MoveSystem>(window);
+         systems.add<CollisionSystem>(entities);
          systems.add<RenderSystem>(entities);
          systems.configure();
       }
