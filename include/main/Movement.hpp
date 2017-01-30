@@ -23,16 +23,19 @@ namespace ex = entityx;
 #include "main/Components.hpp"
 
 
-class MoveSystem : public ex::System<MoveSystem> {
+class MoveSystem : public ex::System<MoveSystem>, public ex::Receiver<MoveSystem> {
    public:
       explicit MoveSystem(GLFWwindow*);
+      void configure(ex::EventManager& evnM) override;
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
+      void receive(const PushEvent&);
 
    protected:
       GLFWwindow* win;
       GLint winXcen, winYcen;
 
-      void moveObject(ex::Entity&, Position&, Acceleration&, Direction&, float);
+      void moveObject(ex::Entity&, Position&, Acceleration&, Direction*, GLfloat);
+      void moveObject(Position&, Acceleration&, GLfloat);
       void changeDirection(Camera&, Direction&, GLfloat);
 };
 

@@ -19,17 +19,17 @@ CollisionSystem::CollisionSystem() {}
 void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
    //Passes the room in to check if entity has collided against wall
-   entM.each<Room>([this, &entM](ex::Entity roomEnt, Room& room) {
+   entM.each<Room>([this, &entM, &evnM](ex::Entity roomEnt, Room& room) {
    //Checks every for collision for any collidable entities
-      entM.each<Collidable, Position>([this, &room, &entM](ex::Entity entity1, Collidable& coll, Position& pos1) {
+      entM.each<Collidable, Position>([this, &room, &entM, &evnM](ex::Entity entity1, Collidable& coll, Position& pos1) {
          wallCollision(pos1, room);
 
          bool isSame=false;
-         entM.each<Collidable, Position>([this, &entity1, &pos1, &isSame](ex::Entity entity2, Collidable& coll, Position& pos2) {
+         entM.each<Collidable, Position>([this, &entity1, &isSame, &evnM](ex::Entity entity2, Collidable& coll, Position& pos2) {
             if (entity1 == entity2)
                isSame = true;
             else if (isSame)
-               objectCollision(pos1, pos2);
+               objectCollision(entity1, entity2, evnM);
 
          });
       });
@@ -86,13 +86,24 @@ void CollisionSystem::wallCollision(Position& pos, Room& room) {
 
 
 
-void CollisionSystem::objectCollision(Position& ent1, Position& ent2) {
+void CollisionSystem::objectCollision(ex::Entity& ent1, ex::Entity& ent2, ex::EventManager& evM) {
 
-   GLfloat dist = glm::length(glm::vec2(ent1.pos.x - ent2.pos.x, ent1.pos.z - ent2.pos.z));
-   if (dist < ent1.buffer + ent2.buffer) {
-      ent1.pos.x = ent2.pos.x + (ent1.buffer + ent2.buffer)*(ent1.pos.x - ent2.pos.x)/dist;
-      ent1.pos.z = ent2.pos.z + (ent1.buffer + ent2.buffer)*(ent1.pos.z - ent2.pos.z)/dist;
+   ex::ComponentHandle<Position> pos1 = ent1.component<Position>();
+   ex::ComponentHandle<Position> pos2 = ent2.component<Position>();
+   if (pos1 && pos2) {
+      glm::vec3 distVec = glm::vec3(pos1->pos.x - pos2->pos.x, 0.0f, pos1->pos.z - pos2->pos.z);
+      GLfloat dist = glm::length(distVec);
+      if (dist < pos1->buffer + pos2->buffer) {
+         //pos1.pos.x = pos2.pos.x + (pos1.buffer + pos2.buffer)*(pos1.pos.x - pos2.pos.x)/dist;
+         //pos1.pos.z = pos2.pos.z + (pos1.buffer + pos2.buffer)*(pos1.pos.z - pos2.pos.z)/dist;
+         pos1->pos = pos2->pos + (pos1->buffer + pos2->buffer)*distVec/dist;
+
+         ex::ComponentHandle<Camera> cam = ent1.component<Camera>();
+         if (cam)
+            evM.emit<PushEvent>(ent2, distVec);
+      }
+   } else {
+      std::cerr << "Something went very wrong! Collision failed\n";
    }
-
 
 }

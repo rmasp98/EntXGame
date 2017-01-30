@@ -28,6 +28,12 @@ MoveSystem::MoveSystem(GLFWwindow* window) {
 
 
 
+void MoveSystem::configure(ex::EventManager &evnM) { evnM.subscribe<PushEvent>(*this); }
+
+
+
+
+
 void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
    //Look at mouse movement to determine if facing direction changed
@@ -35,10 +41,16 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
       changeDirection(cam, face, dT);
    });
 
-   //Checks for each entity that moves and moves them (currently only moves camera)
-   entM.each<Position, Acceleration, Direction>([this, dT](ex::Entity entity, Position& pos,
-                                                           Acceleration& accel, Direction& face) {
-      moveObject(entity, pos, accel, face, dT);
+   //Checks for each controllable entity that moves and moves them (currently only moves camera)
+   entM.each<Position, Acceleration>([this, dT](ex::Entity entity, Position& pos, Acceleration& accel) {
+
+      ex::ComponentHandle<Direction> face = entity.component<Direction>();
+
+      if (face)
+         moveObject(entity, pos, accel, face.get(), dT);
+      else
+         moveObject(pos, accel, dT);
+
    });
 
    //Creates the model matrix based on the objects current position
@@ -93,7 +105,7 @@ void MoveSystem::changeDirection(Camera& cam, Direction& dir, GLfloat dT) {
 
 
 
-void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel, Direction& facing, GLfloat dT) {
+void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel, Direction* facing, GLfloat dT) {
 
    //Some entities don't have jump so need to account for that
    bool isJump = false;
@@ -112,7 +124,7 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
       //Updates the y position and velocity and the updates xz position
       pos.pos.y += accel.vel.y * dT;
       accel.vel.y += jump->gravity * dT;
-      pos.pos += accel.vel.z * facing.dir + accel.vel.x * facing.right;
+      pos.pos += accel.vel.z * facing->dir + accel.vel.x * facing->right;
    } else {
       //If A/D is pressed, increase x speed up to max speed otherwise decelerate down to 0
       if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
@@ -142,9 +154,9 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
 
       //This then updates position and adds a sprint if shift is pressed
       if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-         pos.pos += (accel.vel.z * facing.dir + accel.vel.x * facing.right) * 2.0f;
+         pos.pos += (accel.vel.z * facing->dir + accel.vel.x * facing->right) * 2.0f;
       else
-         pos.pos += accel.vel.z * facing.dir + accel.vel.x * facing.right;
+         pos.pos += accel.vel.z * facing->dir + accel.vel.x * facing->right;
 
    }
 
@@ -152,5 +164,41 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
    if ((jump) && (pos.pos.y < 2.0f)) {
       jump->isJump = false;
       pos.pos.y = 2.0f;
+   }
+}
+
+
+
+
+
+void MoveSystem::moveObject(Position& pos, Acceleration& accel, GLfloat dT) {
+
+
+
+}
+
+
+
+
+void MoveSystem::receive(const PushEvent& push) {
+
+   GLfloat dT = 0.5f;
+
+   ex::Entity ent = push.object;
+
+   ex::ComponentHandle<Acceleration> objMove = ent.component<Acceleration>();
+   ex::ComponentHandle<Position> objPos = ent.component<Position>();
+   if (objMove && objPos) {
+      if (std::abs(push.distVec.x) > std::abs(push.distVec.z)) {
+         if (push.distVec.x < 0)
+            objMove->vel.x = std::min(objMove->vel.x + objMove->accel*dT, objMove->maxSpeed);
+         else
+            objMove->vel.x = std::max(objMove->vel.x - objMove->accel*dT, -objMove->maxSpeed);
+      } else {
+         if (push.distVec.z < 0)
+            objMove->vel.z = std::min(objMove->vel.z + objMove->accel*dT, objMove->maxSpeed);
+         else
+            objMove->vel.z = std::max(objMove->vel.z - objMove->accel*dT, -objMove->maxSpeed);
+      }
    }
 }

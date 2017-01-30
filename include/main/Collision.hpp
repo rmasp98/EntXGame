@@ -24,7 +24,7 @@ class CollisionSystem : public ex::System<CollisionSystem> {
 
    protected:
       void wallCollision(Position&, Room&);
-      void objectCollision(Position&, Position&);
+      void objectCollision(ex::Entity&, ex::Entity&, ex::EventManager&);
 };
 
 

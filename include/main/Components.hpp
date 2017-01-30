@@ -120,6 +120,15 @@ struct Collidable {
 
 
 
+struct PushEvent {
+   PushEvent(ex::Entity& entIn, glm::vec3& vecIn) : object(entIn), distVec(vecIn) {}
+
+   ex::Entity object;
+   glm::vec3 distVec;
+};
+
+
+
 //Just holds some values for the camera
 struct Camera {
    Camera(glm::mat4 projIn, glm::mat4 viewIn) : projection(projIn), view(viewIn) {}

@@ -110,5 +110,6 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
    entity.assign<Shader>(pID);
    entity.assign<Position>(glm::vec3(1.0f, 1.0f, 0.0f), 0.5f);
    entity.assign<Collidable>();
+   entity.assign<Acceleration>(0.1, 0.25);
 
 }
