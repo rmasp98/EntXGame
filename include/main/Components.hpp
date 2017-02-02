@@ -120,12 +120,14 @@ struct Collidable {
 
 
 
-struct PushEvent {
-   PushEvent(ex::Entity& entIn, glm::vec3& vecIn) : object(entIn), distVec(vecIn) {}
+//Holds the direction and whether the object is being pushed
+struct Push {
+   Push() : pushDir(glm::vec3(0.0f)), isPush(false) {}
 
-   ex::Entity object;
-   glm::vec3 distVec;
+   glm::vec3 pushDir;
+   bool isPush;
 };
+
 
 
 

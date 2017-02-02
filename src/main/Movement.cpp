@@ -23,12 +23,8 @@ MoveSystem::MoveSystem(GLFWwindow* window) {
    //Move cursor to the center
    glfwSetCursorPos(win, winXcen, winYcen);
 
+   isBEV = false; delay = 0;
 }
-
-
-
-
-void MoveSystem::configure(ex::EventManager &evnM) { evnM.subscribe<PushEvent>(*this); }
 
 
 
@@ -36,34 +32,55 @@ void MoveSystem::configure(ex::EventManager &evnM) { evnM.subscribe<PushEvent>(*
 
 void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
-   //Look at mouse movement to determine if facing direction changed
-   entM.each<Camera, Direction>([this, dT](ex::Entity entity, Camera& cam, Direction& face) {
-      changeDirection(cam, face, dT);
-   });
+   //If Birds-Eye-View (BEV) mode is active
+   if (isBEV) {
+      entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
+         cam.view = lookAt(bevPos, bevPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1,0,0));
+      });
 
-   //Checks for each controllable entity that moves and moves them (currently only moves camera)
-   entM.each<Position, Acceleration>([this, dT](ex::Entity entity, Position& pos, Acceleration& accel) {
+      //Currently moves in x and z but need to add zoom in and out function too.
+      moveBEV();
 
-      ex::ComponentHandle<Direction> face = entity.component<Direction>();
+      //Need to add a delay so it doesn't flick straight back
+      if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS)
+         isBEV = false;
 
-      if (face)
-         moveObject(entity, pos, accel, face.get(), dT);
-      else
-         moveObject(pos, accel, dT);
+   } else {
+      //Look at mouse movement to determine if facing direction changed
+      entM.each<Camera, Direction>([this, dT](ex::Entity entity, Camera& cam, Direction& face) {
+         changeDirection(cam, face, dT);
+      });
 
-   });
+      //Checks for each controllable entity that moves and moves them (currently only moves camera)
+      entM.each<Position, Acceleration>([this, dT](ex::Entity entity, Position& pos, Acceleration& accel) {
 
-   //Creates the model matrix based on the objects current position
-   entM.each<Position, Renderable>([this](ex::Entity entity, Position& pos, Renderable& mat) {
-      mat.modelMat = glm::translate(glm::mat4(1.0f), pos.pos);
-   });
+         ex::ComponentHandle<Direction> face = entity.component<Direction>();
 
-   //Assigns the calculated values to the camera
-   entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
-      cam.view = lookAt(pos.pos, pos.pos + face.facing, glm::vec3(0,1,0));
-   });
+         if (face)
+            moveObject(entity, pos, accel, face.get(), dT);
+         else
+            moveObject(entity, pos, accel, dT);
 
+      });
 
+      //Creates the model matrix based on the objects current position
+      entM.each<Position, Renderable>([this](ex::Entity entity, Position& pos, Renderable& mat) {
+         mat.modelMat = glm::translate(glm::mat4(1.0f), pos.pos);
+      });
+
+      //Assigns the calculated values to the camera
+      entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
+         cam.view = lookAt(pos.pos, pos.pos + face.facing, glm::vec3(0,1,0));
+      });
+
+      if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) {
+         isBEV = true;
+         entM.each<Camera, Position>([this](ex::Entity entity, Camera& cam, Position& pos) {
+            bevPos = glm::vec3(pos.pos.x, 40.0f, pos.pos.z);
+         });
+      }
+
+   }
 }
 
 
@@ -154,9 +171,9 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
 
       //This then updates position and adds a sprint if shift is pressed
       if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-         pos.pos += (accel.vel.z * facing->dir + accel.vel.x * facing->right) * 2.0f;
+         pos.pos += (accel.vel.z * facing->dir * dT + accel.vel.x * facing->right * dT) * 2.0f;
       else
-         pos.pos += accel.vel.z * facing->dir + accel.vel.x * facing->right;
+         pos.pos += accel.vel.z * facing->dir * dT + accel.vel.x * facing->right * dT;
 
    }
 
@@ -171,34 +188,53 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
 
 
 
-void MoveSystem::moveObject(Position& pos, Acceleration& accel, GLfloat dT) {
+void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel, GLfloat dT) {
 
+   ex::ComponentHandle<Push> push = ent.component<Push>();
+   if (push) {
+      if (push->isPush) {
+         if (std::abs(push->pushDir.x) > std::abs(push->pushDir.z)) {
+            if (push->pushDir.x < 0)
+               accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);
+            else
+               accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -accel.maxSpeed);
+         } else {
+            if (push->pushDir.z < 0)
+               accel.vel.z = std::min(accel.vel.z + accel.accel*dT, accel.maxSpeed);
+            else
+               accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -accel.maxSpeed);
+         }
 
+         push->isPush = false;
+      } else {
+         accel.vel.x = accel.vel.x < 0 ? std::min(accel.vel.x + accel.accel*dT, 0.0f)
+                                       : std::max(accel.vel.x - accel.accel*dT, 0.0f);
 
+         accel.vel.z = accel.vel.z < 0 ? std::min(accel.vel.z + accel.accel*dT, 0.0f)
+                                       : std::max(accel.vel.z - accel.accel*dT, 0.0f);
+      }
+   }
+
+   pos.pos += accel.vel * dT;
 }
 
 
 
 
-void MoveSystem::receive(const PushEvent& push) {
 
-   GLfloat dT = 0.5f;
 
-   ex::Entity ent = push.object;
+void MoveSystem::moveBEV() {
 
-   ex::ComponentHandle<Acceleration> objMove = ent.component<Acceleration>();
-   ex::ComponentHandle<Position> objPos = ent.component<Position>();
-   if (objMove && objPos) {
-      if (std::abs(push.distVec.x) > std::abs(push.distVec.z)) {
-         if (push.distVec.x < 0)
-            objMove->vel.x = std::min(objMove->vel.x + objMove->accel*dT, objMove->maxSpeed);
-         else
-            objMove->vel.x = std::max(objMove->vel.x - objMove->accel*dT, -objMove->maxSpeed);
-      } else {
-         if (push.distVec.z < 0)
-            objMove->vel.z = std::min(objMove->vel.z + objMove->accel*dT, objMove->maxSpeed);
-         else
-            objMove->vel.z = std::max(objMove->vel.z - objMove->accel*dT, -objMove->maxSpeed);
-      }
-   }
+   if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
+      bevPos += glm::vec3(0.0f, 0.0f, -1.0f);
+   else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
+      bevPos += glm::vec3(0.0f, 0.0f, 1.0f);
+
+
+   if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
+      bevPos += glm::vec3(1.0f, 0.0f, 0.0f);
+   else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
+      bevPos += glm::vec3(-1.0f, 0.0f, 0.0f);
+
+
 }

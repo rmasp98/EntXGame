@@ -94,13 +94,14 @@ void CollisionSystem::objectCollision(ex::Entity& ent1, ex::Entity& ent2, ex::Ev
       glm::vec3 distVec = glm::vec3(pos1->pos.x - pos2->pos.x, 0.0f, pos1->pos.z - pos2->pos.z);
       GLfloat dist = glm::length(distVec);
       if (dist < pos1->buffer + pos2->buffer) {
-         //pos1.pos.x = pos2.pos.x + (pos1.buffer + pos2.buffer)*(pos1.pos.x - pos2.pos.x)/dist;
-         //pos1.pos.z = pos2.pos.z + (pos1.buffer + pos2.buffer)*(pos1.pos.z - pos2.pos.z)/dist;
          pos1->pos = pos2->pos + (pos1->buffer + pos2->buffer)*distVec/dist;
 
          ex::ComponentHandle<Camera> cam = ent1.component<Camera>();
-         if (cam)
-            evM.emit<PushEvent>(ent2, distVec);
+         ex::ComponentHandle<Push> push = ent2.component<Push>();
+         if (cam && push) {
+            push->isPush = true;
+            push->pushDir = pos1->pos - pos2->pos;
+         }
       }
    } else {
       std::cerr << "Something went very wrong! Collision failed\n";

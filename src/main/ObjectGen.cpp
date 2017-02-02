@@ -63,7 +63,7 @@ void ObjectSystem::genLevel() {
    //Set initial position and collision buffer of camera
    entity.assign<Position>(glm::vec3(0.0f, 2.0f, 0.0f), 0.5);
    //Movement: max speed, acceleration
-   entity.assign<Acceleration>(0.1f, 0.5f);
+   entity.assign<Acceleration>(5.0f, 30.0f);
    //Jump speed, initial jump speed and acceleration due to gravity
    entity.assign<Jump>(3.0f, -9.8f);
    //Facing direction: mouse speed, initial viewing angle, initial facing vector
@@ -110,6 +110,7 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
    entity.assign<Shader>(pID);
    entity.assign<Position>(glm::vec3(1.0f, 1.0f, 0.0f), 0.5f);
    entity.assign<Collidable>();
-   entity.assign<Acceleration>(0.1, 0.25);
+   entity.assign<Acceleration>(5.0f, 2.0f);
+   entity.assign<Push>();
 
 }

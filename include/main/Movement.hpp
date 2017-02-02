@@ -26,17 +26,18 @@ namespace ex = entityx;
 class MoveSystem : public ex::System<MoveSystem>, public ex::Receiver<MoveSystem> {
    public:
       explicit MoveSystem(GLFWwindow*);
-      void configure(ex::EventManager& evnM) override;
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
-      void receive(const PushEvent&);
 
    protected:
       GLFWwindow* win;
-      GLint winXcen, winYcen;
+      GLint winXcen, winYcen, delay;
+      bool isBEV;
+      glm::vec3 bevPos;
 
       void moveObject(ex::Entity&, Position&, Acceleration&, Direction*, GLfloat);
-      void moveObject(Position&, Acceleration&, GLfloat);
+      void moveObject(ex::Entity&, Position&, Acceleration&, GLfloat);
       void changeDirection(Camera&, Direction&, GLfloat);
+      void moveBEV();
 };
 
 
