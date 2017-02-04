@@ -25,6 +25,7 @@ int main () {
    GLfloat currT = glfwGetTime();
 
    //Game loop
+   //GLint cnt=0; GLfloat cTime = glfwGetTime();
    do {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Clear screen
       glfwPollEvents(); //Check for key and mouse events
@@ -32,6 +33,12 @@ int main () {
       //Update every system
       firstLevel->update(glfwGetTime() - currT);
       currT = glfwGetTime();
+
+      //Checks the frame rate
+      /*if (cnt++ % 100 == 0) {
+         std::cout << 100/(currT - cTime) << std::endl;
+         cTime = glfwGetTime();
+      }*/
 
       //Swap second buffer
       glfwSwapBuffers(window);

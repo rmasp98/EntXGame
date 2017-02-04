@@ -98,9 +98,12 @@ void CollisionSystem::objectCollision(ex::Entity& ent1, ex::Entity& ent2, ex::Ev
 
          ex::ComponentHandle<Camera> cam = ent1.component<Camera>();
          ex::ComponentHandle<Push> push = ent2.component<Push>();
-         if (cam && push) {
+         ex::ComponentHandle<Acceleration> vel1 = ent1.component<Acceleration>();
+         ex::ComponentHandle<Acceleration> vel2 = ent2.component<Acceleration>();
+         if (cam && push && vel1 && vel2) {
             push->isPush = true;
             push->pushDir = pos1->pos - pos2->pos;
+            //vel1->vel = glm::length(vel2->vel) < vel1->maxSpeed ? vel2->vel : vel1->vel;
          }
       }
    } else {

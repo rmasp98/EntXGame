@@ -23,7 +23,13 @@ MoveSystem::MoveSystem(GLFWwindow* window) {
    //Move cursor to the center
    glfwSetCursorPos(win, winXcen, winYcen);
 
-   isBEV = false; delay = 0;
+   //Starts game from BEV coming down
+   //isBEV = true; isUp = false; isDown = true; delay = 0;
+   //viewOrient = glm::vec3(1,0,0);
+   //bevPos = glm::vec3(0,40,0);
+
+   isBEV = false; isUp = false; isDown = false; delay = 0;
+   viewOrient = glm::vec3(0,1,0);
 }
 
 
@@ -34,16 +40,18 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
 
    //If Birds-Eye-View (BEV) mode is active
    if (isBEV) {
-      entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
-         cam.view = lookAt(bevPos, bevPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1,0,0));
-      });
-
-      //Currently moves in x and z but need to add zoom in and out function too.
-      moveBEV();
-
       //Need to add a delay so it doesn't flick straight back
-      if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS)
-         isBEV = false;
+      delay++;
+      if ((glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) && (!isUp)) {
+         isDown = true; delay = 0; oldBevPos = bevPos; oldViewPos = viewPos;
+      }
+
+      entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
+         //Currently moves in x and z but need to add zoom in and out function too.
+         moveBEV(pos);
+
+         cam.view = lookAt(bevPos, viewPos, viewOrient);
+      });
 
    } else {
       //Look at mouse movement to determine if facing direction changed
@@ -70,18 +78,16 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
 
       //Assigns the calculated values to the camera
       entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
-         cam.view = lookAt(pos.pos, pos.pos + face.facing, glm::vec3(0,1,0));
+         cam.view = lookAt(pos.pos, pos.pos + face.facing, viewOrient);
+         currView = pos.pos + face.facing;
       });
 
       if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) {
-         isBEV = true;
-         entM.each<Camera, Position>([this](ex::Entity entity, Camera& cam, Position& pos) {
-            bevPos = glm::vec3(pos.pos.x, 40.0f, pos.pos.z);
-         });
+         isBEV = true; isUp = true; delay = 0; viewPos = currView;
       }
-
    }
 }
+
 
 
 
@@ -124,6 +130,12 @@ void MoveSystem::changeDirection(Camera& cam, Direction& dir, GLfloat dT) {
 
 void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel, Direction* facing, GLfloat dT) {
 
+   bool isSprint = false;
+   GLfloat velMod = 1.0;
+   //This then updates position and adds a sprint if shift is pressed
+   if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || isSprint)
+      velMod = 2.0;
+
    //Some entities don't have jump so need to account for that
    bool isJump = false;
    ex::ComponentHandle<Jump> jump = ent.component<Jump>();
@@ -141,7 +153,7 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
       //Updates the y position and velocity and the updates xz position
       pos.pos.y += accel.vel.y * dT;
       accel.vel.y += jump->gravity * dT;
-      pos.pos += accel.vel.z * facing->dir + accel.vel.x * facing->right;
+      pos.pos += (accel.vel.z * facing->dir + accel.vel.x * facing->right) * dT * velMod;
    } else {
       //If A/D is pressed, increase x speed up to max speed otherwise decelerate down to 0
       if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
@@ -169,11 +181,7 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
          accel.vel.z *= accel.maxSpeed / speed;
       }
 
-      //This then updates position and adds a sprint if shift is pressed
-      if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-         pos.pos += (accel.vel.z * facing->dir * dT + accel.vel.x * facing->right * dT) * 2.0f;
-      else
-         pos.pos += accel.vel.z * facing->dir * dT + accel.vel.x * facing->right * dT;
+      pos.pos += (accel.vel.z * facing->dir + accel.vel.x * facing->right) * dT * velMod;
 
    }
 
@@ -223,18 +231,46 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
 
 
 
-void MoveSystem::moveBEV() {
+void MoveSystem::moveBEV(Position& camPos) {
 
-   if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
-      bevPos += glm::vec3(0.0f, 0.0f, -1.0f);
-   else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
-      bevPos += glm::vec3(0.0f, 0.0f, 1.0f);
+   GLfloat t = 100.0f;
 
+   if (isUp) {
+      GLfloat yT = (1 - cos(glm::pi<GLfloat>()*delay/t))/2.0f;
+      bevPos = glm::vec3(camPos.pos.x,
+                         camPos.pos.y + (40.0f - camPos.pos.y)*yT,
+                         camPos.pos.z);
 
-   if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
-      bevPos += glm::vec3(1.0f, 0.0f, 0.0f);
-   else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
-      bevPos += glm::vec3(-1.0f, 0.0f, 0.0f);
+      viewOrient = yT * glm::vec3(1,0,0) + (1 - yT) * glm::vec3(0,1,0);
 
+      if (delay == t)
+         isUp = false;
 
+   } else if (isDown) {
+      GLfloat yT = (1 - cos(glm::pi<GLfloat>()*delay/t))/2.0f;
+
+      bevPos = yT * camPos.pos + (1 - yT) * oldBevPos;
+      viewOrient = (1 - yT) * glm::vec3(1,0,0) + yT * glm::vec3(0,1,0);
+      viewPos = yT * currView + (1 - yT) * oldViewPos;
+
+      if (delay == t) {
+         isDown = false; isBEV = false;
+      }
+   } else {
+      if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
+         bevPos += glm::vec3(0.0f, 0.0f, -1.0f);
+         viewPos += glm::vec3(0.0f, 0.0f, -1.0f);
+      } else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) {
+         bevPos += glm::vec3(0.0f, 0.0f, 1.0f);
+         viewPos += glm::vec3(0.0f, 0.0f, 1.0f);
+      }
+
+      if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) {
+         bevPos += glm::vec3(1.0f, 0.0f, 0.0f);
+         viewPos += glm::vec3(1.0f, 0.0f, 0.0f);
+      } else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) {
+         bevPos += glm::vec3(-1.0f, 0.0f, 0.0f);
+         viewPos += glm::vec3(-1.0f, 0.0f, 0.0f);
+      }
+   }
 }

@@ -31,13 +31,13 @@ class MoveSystem : public ex::System<MoveSystem>, public ex::Receiver<MoveSystem
    protected:
       GLFWwindow* win;
       GLint winXcen, winYcen, delay;
-      bool isBEV;
-      glm::vec3 bevPos;
+      bool isBEV, isUp, isDown;
+      glm::vec3 bevPos, currView, viewOrient, oldBevPos, viewPos, oldViewPos;
 
       void moveObject(ex::Entity&, Position&, Acceleration&, Direction*, GLfloat);
       void moveObject(ex::Entity&, Position&, Acceleration&, GLfloat);
       void changeDirection(Camera&, Direction&, GLfloat);
-      void moveBEV();
+      void moveBEV(Position&);
 };
 
 

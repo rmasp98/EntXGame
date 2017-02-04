@@ -21,6 +21,7 @@ namespace ex = entityx;
 #include "main/Movement.hpp"
 #include "main/BuildRoom.hpp"
 #include "main/Collision.hpp"
+#include "main/Menu.hpp"
 
 
 //Initialise graphics libaries
@@ -33,6 +34,7 @@ class Level : public ex::EntityX {
       explicit Level(GLFWwindow* window) {
          systems.add<ObjectSystem>(entities);
          systems.add<RoomSystem>(entities);
+         systems.add<MenuSystem>();
          systems.add<MoveSystem>(window);
          systems.add<CollisionSystem>();
          systems.add<RenderSystem>(entities);
