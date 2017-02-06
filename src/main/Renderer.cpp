@@ -13,12 +13,6 @@
 
 
 RenderSystem::RenderSystem(ex::EntityManager &entM) {
-
-   //Add camera as local variable as it is used in many functions
-   entM.each<Camera>([this](ex::Entity entity, Camera &camera) {
-      cam = &camera;
-   });
-
    //Generates a VAO for each renderable entity (should also be added to an event create new object)
    entM.each<Renderable, Shader>([this](ex::Entity entity, Renderable &mesh, Shader& pID) {
       genBuffers(entity, mesh, pID);
@@ -31,9 +25,15 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
    //Pass the lights to graphics card
    addLight(entM);
 
+   //Find camera as it is required by drawScene this is where you will differentiate between level and menu
+   Camera* cam;
+   entM.each<Camera>([this, &cam](ex::Entity entity, Camera &camera) {
+      cam = &camera;
+   });
+
    //Passes camera and model matrix, and then renders each object
-   entM.each<Renderable, Shader>([this](ex::Entity entity, Renderable &mesh, Shader& pID) {
-      drawScene(mesh, pID);
+   entM.each<Renderable, Shader>([this, &cam](ex::Entity entity, Renderable &mesh, Shader& pID) {
+      drawScene(mesh, pID, cam);
    });
 
    //Reset the VAO
@@ -86,8 +86,8 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, inds.size() * sizeof(unsigned short), &inds[0] , GL_STATIC_DRAW);
 
    // Bind our texture in Texture Unit 0
-   glUniform1i(glGetUniformLocation(prog.progID, "material.diffuse"), 0);
-   glUniform1i(glGetUniformLocation(prog.progID, "material.specular"), 0);
+   //glUniform1i(glGetUniformLocation(prog.progID, "material.diffuse"), 0);
+   //glUniform1i(glGetUniformLocation(prog.progID, "material.specular"), 0);
    glUniform1f(glGetUniformLocation(prog.progID, "material.shininess"), 32.0f);
 
    //Unbind VAO
@@ -100,7 +100,7 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
 
 
 
-void RenderSystem::drawScene(Renderable& mesh, Shader& prog) {
+void RenderSystem::drawScene(Renderable& mesh, Shader& prog, Camera* cam) {
 
    //Rebind the objects VAO
    glBindVertexArray(mesh.VAO);

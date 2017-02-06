@@ -31,19 +31,21 @@ int initGraphics(GLFWwindow*&);
 class Level : public ex::EntityX {
    public:
       //add a new system here. I think the order matters
-      explicit Level(GLFWwindow* window) {
-         systems.add<ObjectSystem>(entities);
-         systems.add<RoomSystem>(entities);
-         systems.add<MenuSystem>();
-         systems.add<MoveSystem>(window);
-         systems.add<CollisionSystem>();
-         systems.add<RenderSystem>(entities);
-         systems.configure();
-      }
+      explicit Level(GLFWwindow* window);
+      void update(ex::TimeDelta dT);
 
-      void update(ex::TimeDelta dT) {
-         systems.update_all(dT);
-      }
+   protected:
+      bool isMenu;
+
+};
+
+
+
+
+class Menu : public ex::EntityX {
+   public:
+      explicit Menu();
+      void update(ex::TimeDelta dT);
 
 };
 

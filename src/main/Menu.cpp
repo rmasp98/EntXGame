@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                    //
 //                              Title of the Game                                     //
-//                                Renderer.cpp                                        //
+//                                  Menu.cpp                                          //
 //                                Ross Maspero                                        //
 //                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -10,8 +10,9 @@
 #include "main/Menu.hpp"
 
 
-MenuSystem::MenuSystem() {
+MenuSystem::MenuSystem(ex::EntityManager& entM) {
 
+   //Make the menu entities
 
 
 }

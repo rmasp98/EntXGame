@@ -17,7 +17,26 @@
 #include <GL/gl.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////
-//List of all the game components
+//List of global components. These components are used in all aspects of the game
+
+
+//Just holds some values for the camera
+struct Camera {
+   Camera(glm::mat4 projIn, glm::mat4 viewIn) : projection(projIn), view(viewIn) {}
+   Camera() {}
+
+   glm::mat4 projection, view;
+};
+
+
+
+//This is a holder for the program ID
+struct Shader {
+   Shader(GLuint shaderIn) : progID(shaderIn) {}
+
+   GLuint progID;
+};
+
 
 
 //An object with position. There is also a buffer for collision detection
@@ -27,6 +46,28 @@ struct Position {
    glm::vec3 pos;
    GLfloat buffer;
 };
+
+
+
+//An object that can be rendered. Includes vertices, normals, uv coordinates, model matrix and various IDs:
+//Vertex Array object, graphics ids for verts, uv coords, norms, VBO indices; number of verts and texture ID
+struct Renderable {
+   Renderable(std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn, GLint texIn)
+   : verts(vertIn), norms(normIn), uvs(uvIn), texID(texIn) {}
+
+   std::vector<glm::vec3> verts, norms;
+   std::vector<glm::vec2> uvs;
+   GLuint VAO, vertID, uvID, normID, indID, indSize, texID;
+   glm::mat4 modelMat;
+};
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//This is a list of components required for the level
+
 
 
 //An object that moves. This includes the maximum speed, the accerlation and current velocity
@@ -74,20 +115,6 @@ struct Light {
 
 
 
-//An object that can be rendered. Includes vertices, normals, uv coordinates, model matrix and various IDs:
-//Vertex Array object, graphics ids for verts, uv coords, norms, VBO indices; number of verts and texture ID
-struct Renderable {
-   Renderable(std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn, GLint texIn)
-   : verts(vertIn), norms(normIn), uvs(uvIn), texID(texIn) {}
-
-   std::vector<glm::vec3> verts, norms;
-   std::vector<glm::vec2> uvs;
-   GLuint VAO, vertID, uvID, normID, indID, indSize, texID;
-   glm::mat4 modelMat;
-};
-
-
-
 
 //This is mostly for the room. Includes the blocks, boundary and normals for the walls, floor and roof
 //This is used for collision detection
@@ -98,17 +125,6 @@ struct Room {
    std::vector< std::vector<GLfloat> > bound;
    std::vector<glm::vec3> norms;
 };
-
-
-
-
-//This is a holder for the program ID
-struct Shader {
-   Shader(GLuint shaderIn) : progID(shaderIn) {}
-
-   GLuint progID;
-};
-
 
 
 
@@ -131,13 +147,13 @@ struct Push {
 
 
 
-//Just holds some values for the camera
-struct Camera {
-   Camera(glm::mat4 projIn, glm::mat4 viewIn) : projection(projIn), view(viewIn) {}
-   Camera() {}
 
-   glm::mat4 projection, view;
-};
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Components required for the Menus
+
+
+
+
 
 
 
