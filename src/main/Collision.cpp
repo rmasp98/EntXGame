@@ -103,8 +103,10 @@ void CollisionSystem::objectCollision(ex::Entity& ent1, ex::Entity& ent2, ex::Ev
          if (cam && push && vel1 && vel2) {
             push->isPush = true;
             push->pushDir = pos1->pos - pos2->pos;
+            //Vel2 has not been updated yet so will set vel1 to 0
             //vel1->vel = glm::length(vel2->vel) < vel1->maxSpeed ? vel2->vel : vel1->vel;
          }
+
       }
    } else {
       std::cerr << "Something went very wrong! Collision failed\n";

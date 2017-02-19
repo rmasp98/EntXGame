@@ -25,15 +25,9 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
    //Pass the lights to graphics card
    addLight(entM);
 
-   //Find camera as it is required by drawScene this is where you will differentiate between level and menu
-   Camera* cam;
-   entM.each<Camera>([this, &cam](ex::Entity entity, Camera &camera) {
-      cam = &camera;
-   });
-
    //Passes camera and model matrix, and then renders each object
-   entM.each<Renderable, Shader>([this, &cam](ex::Entity entity, Renderable &mesh, Shader& pID) {
-      drawScene(mesh, pID, cam);
+   entM.each<Renderable, Shader>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID) {
+      drawScene(mesh, pID, entM);
    });
 
    //Reset the VAO
@@ -100,17 +94,19 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
 
 
 
-void RenderSystem::drawScene(Renderable& mesh, Shader& prog, Camera* cam) {
+void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& entM) {
 
    //Rebind the objects VAO
    glBindVertexArray(mesh.VAO);
 
-   //Send camera information to the buffer
-   glm::mat4 camView = cam->projection * cam->view * mesh.modelMat;
-   glUniformMatrix4fv(glGetUniformLocation(prog.progID, "camView"), 1, GL_FALSE, &camView[0][0]);
+   entM.each<Camera>([this, &mesh, &prog](ex::Entity ent, Camera& cam) {
+      //Send camera information to the buffer
+      glm::mat4 camView = cam.projection * cam.view * mesh.modelMat;
+      glUniformMatrix4fv(glGetUniformLocation(prog.progID, "camView"), 1, GL_FALSE, &camView[0][0]);
 
-   //Send object's model matrix
-   glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
+      //Send object's model matrix
+      glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
+   });
 
    //Resets the texture and binds correct texture
    glActiveTexture(GL_TEXTURE0);

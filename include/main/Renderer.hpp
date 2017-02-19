@@ -30,7 +30,7 @@ class RenderSystem : public ex::System<RenderSystem> {
 
    protected:
       void genBuffers(ex::Entity&, Renderable&, Shader&);
-      void drawScene(Renderable&, Shader&, Camera*);
+      void drawScene(Renderable&, Shader&, ex::EntityManager& entM);
       void addLight(ex::EntityManager&);
 };
 
