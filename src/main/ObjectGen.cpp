@@ -105,6 +105,12 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
       exit(EXIT_FAILURE);
    }
 
+   //GLuint texID = SOIL_load_OGL_texture(texFile.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_DDS_LOAD_DIRECT);
+   //if( 0 == texID ) {
+      //printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
+   //}
+
+
    //Assign all values to the entity
    entity.assign<Renderable>(verts, norms, uvs, texID);
    entity.assign<Shader>(pID);

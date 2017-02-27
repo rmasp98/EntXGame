@@ -27,7 +27,7 @@ int main () {
 
    //Game loop
    //GLint cnt=0; GLfloat cTime = glfwGetTime();
-   bool isMenu = true;
+   bool isMenu = false;
    do {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Clear screen
       glfwPollEvents(); //Check for key and mouse events

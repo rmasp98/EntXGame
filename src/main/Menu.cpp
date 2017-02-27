@@ -39,14 +39,14 @@ void MenuSystem::update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) {
 void MenuSystem::genMenu(ex::EntityManager& entM) {
 
    //Load the shaders (need to add shader names to config file)
-   std::string vsName = "shaders/menu.vs", fsName = "shaders/menu.fs";
+   /*std::string vsName = "shaders/menu.vs", fsName = "shaders/menu.fs";
    GLuint pID;
    if (vsName != "" && fsName != "")
       pID = LoadShaders(vsName.c_str(), fsName.c_str());
    else {
       std::cerr << "Failed to load shaders!\n";
       exit(EXIT_FAILURE);
-   }
+   }*/
 
 
    ex::Entity entity = entM.create();
@@ -67,7 +67,7 @@ void MenuSystem::genMenu(ex::EntityManager& entM) {
    uvs.push_back(glm::vec2(0));
    uvs.push_back(glm::vec2(0));
 
-   GLuint texID = 99;
+   //GLuint texID = 99;
 
    //Loads the verticies, uv coords and normals from an object file
    /*std::string objFile = "shaders/statue.obj";
@@ -87,8 +87,8 @@ void MenuSystem::genMenu(ex::EntityManager& entM) {
    }*/
 
    //Assign all values to the entity
-   entity.assign<Renderable>(verts, norms, uvs, texID);
+   /*entity.assign<Renderable>(verts, norms, uvs, texID);
    entity.assign<Shader>(pID);
-   entity.assign<Position>(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f);
+   entity.assign<Position>(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f);*/
 
 }

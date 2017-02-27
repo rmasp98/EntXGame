@@ -13,6 +13,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GL/glew.h>
+#include <SOIL/SOIL.h>
 #include <entityx/entityx.h>
 namespace ex = entityx;
 
