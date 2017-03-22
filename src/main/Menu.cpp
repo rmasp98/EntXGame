@@ -12,10 +12,20 @@
 
 MenuSystem::MenuSystem(ex::EntityManager& entM) {
 
-   genFont();
+   //Load the shaders (need to add shader names to config file)
+   std::string vsName = "shaders/menu.vs", fsName = "shaders/menu.fs";
+   GLuint pID;
+   if (vsName != "" && fsName != "")
+      pID = LoadShaders(vsName.c_str(), fsName.c_str());
+   else {
+      std::cerr << "Failed to load shaders!\n";
+      exit(EXIT_FAILURE);
+   }
+
+   genFont(entM, pID);
 
    //Make the menu entities
-   genMenu(entM);
+   genMenu(entM, pID);
 
 }
 
@@ -35,7 +45,7 @@ void MenuSystem::update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) {
 
 
 
-void MenuSystem::genFont() {
+void MenuSystem::genFont(ex::EntityManager& entM, GLuint progID) {
 
    //Initialise the font library
    FT_Library ft;
@@ -45,11 +55,75 @@ void MenuSystem::genFont() {
 
    //Initialise font
    FT_Face face;
-   if(FT_New_Face(ft, "FreeSans.ttf", 0, &face)) {
+   if(FT_New_Face(ft, "/usr/share/fonts/TTF/LiberationSans-Regular.ttf", 0, &face)) {
       fprintf(stderr, "Could not open font\n");
    }
 
    atlas* a42 = new atlas(face, 42);
+
+   glm::vec3 tPos = glm::vec3(0.0f);
+   makeTextBox("Hello World", entM, tPos, a42, progID);
+
+
+}
+
+
+
+
+
+void MenuSystem::makeTextBox(const char* text, ex::EntityManager& eM, glm::vec3 pos, atlas* font, GLuint prog) {
+
+   ex::Entity entity = eM.create();
+
+   const GLubyte *p;
+   GLfloat sx=1.0f, sy=1.0f, x=0.0f, y=0.0f;
+   std::vector<glm::vec3> verts, norms;
+   std::vector<glm::vec2> uvs;
+   for (p = (const GLubyte *)text; *p; p++) {
+      std::cout << *p << std::endl;
+		//Calculate the vertex and texture coordinates
+		float x2 = x + font->c[*p].bl * sx;
+		float y2 = -y - font->c[*p].bt * sy;
+		float w = font->c[*p].bw * sx;
+		float h = font->c[*p].bh * sy;
+
+      //Advance the cursor to the start of the next character
+		x += font->c[*p].ax * sx;
+		y += font->c[*p].ay * sy;
+
+      // Skip glyphs that have no pixels
+		if (!w || !h)
+			continue;
+
+      verts.push_back(glm::vec3(x2, -y2, 0));
+      uvs.push_back(glm::vec2(font->c[*p].tx, font->c[*p].ty));
+      norms.push_back(glm::vec3(0.0f));
+
+      verts.push_back(glm::vec3(x2 + w, -y2, 0));
+      uvs.push_back(glm::vec2(font->c[*p].tx + font->c[*p].bw / font->w, font->c[*p].ty));
+      norms.push_back(glm::vec3(0.0f));
+
+      verts.push_back(glm::vec3(x2, -y2 - h, 0));
+      uvs.push_back(glm::vec2(font->c[*p].tx, font->c[*p].ty + font->c[*p].bh / font->h));
+      norms.push_back(glm::vec3(0.0f));
+
+      verts.push_back(glm::vec3(x2 + w, -y2, 0));
+      uvs.push_back(glm::vec2(font->c[*p].tx + font->c[*p].bw / font->w, font->c[*p].ty));
+      norms.push_back(glm::vec3(0.0f));
+
+      verts.push_back(glm::vec3(x2, -y2 - h, 0));
+      uvs.push_back(glm::vec2(font->c[*p].tx, font->c[*p].ty + font->c[*p].bh / font->h));
+      norms.push_back(glm::vec3(0.0f));
+
+      verts.push_back(glm::vec3(x2 + w, -y2 - h, 0));
+      uvs.push_back(glm::vec2(font->c[*p].tx + font->c[*p].bw / font->w, font->c[*p].ty + font->c[*p].bh / font->h));
+      norms.push_back(glm::vec3(0.0f));
+	}
+
+   //Assign verts, norms and uvs
+   entity.assign<Renderable>(verts, norms, uvs, font->tex);
+   entity.assign<Shader>(prog);
+   entity.assign<Position>(pos, 0.0f);
 
 
 }
@@ -59,39 +133,12 @@ void MenuSystem::genFont() {
 
 
 
-
-
-
-void MenuSystem::genMenu(ex::EntityManager& entM) {
-
-   //Load the shaders (need to add shader names to config file)
-   std::string vsName = "shaders/menu.vs", fsName = "shaders/menu.fs";
-   GLuint pID;
-   if (vsName != "" && fsName != "")
-      pID = LoadShaders(vsName.c_str(), fsName.c_str());
-   else {
-      std::cerr << "Failed to load shaders!\n";
-      exit(EXIT_FAILURE);
-   }
-
+void MenuSystem::genMenu(ex::EntityManager& entM, GLuint progID) {
 
    ex::Entity entity = entM.create();
 
    std::vector<glm::vec3> verts, norms;
    std::vector<glm::vec2> uvs;
-
-
-   //verts.push_back(glm::vec3(-0.5f, -0.5f, 0.0f));
-   //verts.push_back(glm::vec3(0.5f, -0.5f, 0.0f));
-   //verts.push_back(glm::vec3(0.0f,  0.5f, 0.0f));
-
-   //norms.push_back(glm::vec3(0,0,-1));
-   //norms.push_back(glm::vec3(0,0,-1));
-   //norms.push_back(glm::vec3(0,0,-1));
-
-   //uvs.push_back(glm::vec2(0));
-   //uvs.push_back(glm::vec2(0));
-   //uvs.push_back(glm::vec2(0));
 
    verts.push_back(glm::vec3(-1.0f, -1.0f, 0.0f));
    verts.push_back(glm::vec3(1.0f, -1.0f, 0.0f));
@@ -119,30 +166,10 @@ void MenuSystem::genMenu(ex::EntityManager& entM) {
    uvs.push_back(glm::vec2(0));
    uvs.push_back(glm::vec2(0));
 
-
-   //GLuint texID = 99;
-
-   //Loads the verticies, uv coords and normals from an object file
-   /*std::string objFile = "shaders/statue.obj";
-   if (!loadOBJ(objFile.c_str(), verts, uvs, norms)) {
-      std::cerr << "Failed to load asset!\n";
-      exit(EXIT_FAILURE);
-   }*/
-
-   //Load texture for object
-   /*GLint texID;
-   std::string texFile = "shaders/statueUV.DDS";
-   if (texFile != "") {
-      texID = (loadDDS(texFile.c_str()));
-   } else {
-      std::cerr << "Failed to load UV map!\n";
-      exit(EXIT_FAILURE);
-   }*/
-
    //Assign all values to the entity
    GLuint texID;
    entity.assign<Renderable>(verts, norms, uvs, texID);
-   entity.assign<Shader>(pID);
+   entity.assign<Shader>(progID);
    entity.assign<Position>(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f);
 
 }

@@ -31,27 +31,28 @@ namespace ex = entityx;
 
 
 class MenuSystem : public ex::System<MenuSystem> {
+   struct atlas {
+      GLuint tex;		         // texture object
+      unsigned int w;			// width of texture in pixels
+      unsigned int h;			// height of texture in pixels
+
+      struct {
+         // advance.x, advance.y, bitmap.width, bitmap.height, bitmap_left, bitmap_top, x and y offset of glyph in texture coordinates
+         float ax, ay, bw, bh, bl, bt, tx, ty;
+      } c[128];
+
+      atlas(FT_Face, GLuint);
+      ~atlas() { glDeleteTextures(1, &tex); };
+   };
+
    public:
       explicit MenuSystem(ex::EntityManager& entM);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    private:
-      void genMenu(ex::EntityManager&);
-      void genFont();
-
-      struct atlas {
-      	GLuint tex;		         // texture object
-      	unsigned int w;			// width of texture in pixels
-      	unsigned int h;			// height of texture in pixels
-
-         struct {
-            // advance.x, advance.y, bitmap.width, bitmap.height, bitmap_left, bitmap_top, x and y offset of glyph in texture coordinates
-            float ax, ay, bw, bh, bl, bt, tx, ty;
-      	} c[128];
-
-         atlas(FT_Face, GLuint);
-      	~atlas() { glDeleteTextures(1, &tex); };
-      };
+      void genMenu(ex::EntityManager&, GLuint);
+      void genFont(ex::EntityManager&, GLuint);
+      void makeTextBox(const char*, ex::EntityManager&, glm::vec3, atlas*, GLuint);
 };
 
 
