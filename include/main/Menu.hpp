@@ -17,11 +17,17 @@
 #include <entityx/entityx.h>
 namespace ex = entityx;
 
+//Text libraries
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 //Game headers
 #include "common/objLoader.hpp"
 #include "common/shader.hpp"
 #include "common/texture.hpp"
 #include "main/Components.hpp"
+
+#define MAXWIDTH 1024
 
 
 class MenuSystem : public ex::System<MenuSystem> {
@@ -31,6 +37,21 @@ class MenuSystem : public ex::System<MenuSystem> {
 
    private:
       void genMenu(ex::EntityManager&);
+      void genFont();
+
+      struct atlas {
+      	GLuint tex;		         // texture object
+      	unsigned int w;			// width of texture in pixels
+      	unsigned int h;			// height of texture in pixels
+
+         struct {
+            // advance.x, advance.y, bitmap.width, bitmap.height, bitmap_left, bitmap_top, x and y offset of glyph in texture coordinates
+            float ax, ay, bw, bh, bl, bt, tx, ty;
+      	} c[128];
+
+         atlas(FT_Face, GLuint);
+      	~atlas() { glDeleteTextures(1, &tex); };
+      };
 };
 
 
