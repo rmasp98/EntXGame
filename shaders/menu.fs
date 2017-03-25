@@ -11,8 +11,9 @@ struct Material {
 out vec4 color;
 in vec2 FragUV;
 uniform Material material;
+uniform vec4 colour;
 
 void main()
 {
-    color = vec4(texture(material.diffuse, FragUV), 0.0f)
+    color = vec4(vec3(texture(material.diffuse, FragUV)), 0.0f) * vec4(0,0,0,1);
 }

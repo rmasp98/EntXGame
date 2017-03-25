@@ -10,6 +10,16 @@
 #include "main/Menu.hpp"
 
 
+struct point {
+	GLfloat x;
+	GLfloat y;
+	GLfloat s;
+	GLfloat t;
+};
+
+
+
+
 MenuSystem::MenuSystem(ex::EntityManager& entM) {
 
    //Load the shaders (need to add shader names to config file)
@@ -35,10 +45,69 @@ MenuSystem::MenuSystem(ex::EntityManager& entM) {
 
 void MenuSystem::update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) {
 
-
+   /*float sx = 2.0 / glutGet(GLUT_WINDOW_WIDTH);
+	float sy = 2.0 / glutGet(GLUT_WINDOW_HEIGHT);
+	glUseProgram(program);
+	//White background
+	glClearColor(1, 1, 1, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
+	//Enable blending, necessary for our alpha texture
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GLfloat black[4] = { 0, 0, 0, 1 };
+	GLfloat red[4] = { 1, 0, 0, 1 };
+	GLfloat transparent_green[4] = { 0, 1, 0, 0.5 };
+	//Set color to black
+	glUniform4fv(uniform_color, 1, black);
+	// Effects of alignment
+	render_text("The Quick Brown Fox Jumps Over The Lazy Dog", a48, -1 + 8 * sx, 1 - 50 * sy, sx, sy);
+   */
 
 }
 
+
+void MenuSystem::render_text(const char *text, atlas * a, float x, float y, float sx, float sy) {
+	const uint8_t *p;
+	// Use the texture containing the atlas
+	glBindTexture(GL_TEXTURE_2D, a->tex);
+	//glUniform1i(uniform_tex, 0);
+	// Set up the VBO for our vertex data
+	//glEnableVertexAttribArray(attribute_coord);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(attribute_coord, 4, GL_FLOAT, GL_FALSE, 0, 0);
+	point coords[6 * strlen(text)];
+	int c = 0;
+	// Loop through all characters
+	for (p = (const uint8_t *)text; *p; p++) {
+		// Calculate the vertex and texture coordinates
+		float x2 = x + a->c[*p].bl * sx;
+		float y2 = -y - a->c[*p].bt * sy;
+		float w = a->c[*p].bw * sx;
+		float h = a->c[*p].bh * sy;
+		// Advance the cursor to the start of the next character
+		x += a->c[*p].ax * sx;
+		y += a->c[*p].ay * sy;
+		// Skip glyphs that have no pixels
+		if (!w || !h)
+			continue;
+		coords[c++] = (point) {
+		x2, -y2, a->c[*p].tx, a->c[*p].ty};
+		coords[c++] = (point) {
+		x2 + w, -y2, a->c[*p].tx + a->c[*p].bw / a->w, a->c[*p].ty};
+		coords[c++] = (point) {
+		x2, -y2 - h, a->c[*p].tx, a->c[*p].ty + a->c[*p].bh / a->h};
+		coords[c++] = (point) {
+		x2 + w, -y2, a->c[*p].tx + a->c[*p].bw / a->w, a->c[*p].ty};
+		coords[c++] = (point) {
+		x2, -y2 - h, a->c[*p].tx, a->c[*p].ty + a->c[*p].bh / a->h};
+		coords[c++] = (point) {
+		x2 + w, -y2 - h, a->c[*p].tx + a->c[*p].bw / a->w, a->c[*p].ty + a->c[*p].bh / a->h};
+	}
+	// Draw all the character on the screen in one go
+	glBufferData(GL_ARRAY_BUFFER, sizeof coords, coords, GL_DYNAMIC_DRAW);
+	glDrawArrays(GL_TRIANGLES, 0, c);
+	glDisableVertexAttribArray(attribute_coord);
+}
 
 
 
@@ -55,7 +124,8 @@ void MenuSystem::genFont(ex::EntityManager& entM, GLuint progID) {
 
    //Initialise font
    FT_Face face;
-   if(FT_New_Face(ft, "/usr/share/fonts/TTF/LiberationSans-Regular.ttf", 0, &face)) {
+   //if(FT_New_Face(ft, "/usr/share/fonts/TTF/LiberationSans-Regular.ttf", 0, &face)) {
+   if(FT_New_Face(ft, "FreeSans.ttf", 0, &face)) {
       fprintf(stderr, "Could not open font\n");
    }
 
@@ -76,11 +146,13 @@ void MenuSystem::makeTextBox(const char* text, ex::EntityManager& eM, glm::vec3 
    ex::Entity entity = eM.create();
 
    const GLubyte *p;
-   GLfloat sx=1.0f, sy=1.0f, x=0.0f, y=0.0f;
+   float sx = 2.0 / 1000;
+	float sy = 2.0 / 800;
+
+   GLfloat x=0.0f, y=0.0f;
    std::vector<glm::vec3> verts, norms;
    std::vector<glm::vec2> uvs;
    for (p = (const GLubyte *)text; *p; p++) {
-      std::cout << *p << std::endl;
 		//Calculate the vertex and texture coordinates
 		float x2 = x + font->c[*p].bl * sx;
 		float y2 = -y - font->c[*p].bt * sy;
@@ -95,16 +167,16 @@ void MenuSystem::makeTextBox(const char* text, ex::EntityManager& eM, glm::vec3 
 		if (!w || !h)
 			continue;
 
+      verts.push_back(glm::vec3(x2 + w, -y2, 0));
+      uvs.push_back(glm::vec2(font->c[*p].tx + font->c[*p].bw, font->c[*p].ty));
+      norms.push_back(glm::vec3(0.0f));
+
       verts.push_back(glm::vec3(x2, -y2, 0));
       uvs.push_back(glm::vec2(font->c[*p].tx, font->c[*p].ty));
       norms.push_back(glm::vec3(0.0f));
 
-      verts.push_back(glm::vec3(x2 + w, -y2, 0));
-      uvs.push_back(glm::vec2(font->c[*p].tx + font->c[*p].bw / font->w, font->c[*p].ty));
-      norms.push_back(glm::vec3(0.0f));
-
       verts.push_back(glm::vec3(x2, -y2 - h, 0));
-      uvs.push_back(glm::vec2(font->c[*p].tx, font->c[*p].ty + font->c[*p].bh / font->h));
+      uvs.push_back(glm::vec2(font->c[*p].tx, font->c[*p].ty + font->c[*p].bh));
       norms.push_back(glm::vec3(0.0f));
 
       verts.push_back(glm::vec3(x2 + w, -y2, 0));
@@ -135,7 +207,7 @@ void MenuSystem::makeTextBox(const char* text, ex::EntityManager& eM, glm::vec3 
 
 void MenuSystem::genMenu(ex::EntityManager& entM, GLuint progID) {
 
-   ex::Entity entity = entM.create();
+   //ex::Entity entity = entM.create();
 
    std::vector<glm::vec3> verts, norms;
    std::vector<glm::vec2> uvs;
@@ -167,10 +239,10 @@ void MenuSystem::genMenu(ex::EntityManager& entM, GLuint progID) {
    uvs.push_back(glm::vec2(0));
 
    //Assign all values to the entity
-   GLuint texID;
-   entity.assign<Renderable>(verts, norms, uvs, texID);
-   entity.assign<Shader>(progID);
-   entity.assign<Position>(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f);
+   //GLuint texID;
+   //entity.assign<Renderable>(verts, norms, uvs, texID);
+   //entity.assign<Shader>(progID);
+   //entity.assign<Position>(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f);
 
 }
 

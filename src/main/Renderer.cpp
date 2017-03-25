@@ -51,7 +51,7 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
    glGenVertexArrays(1, &eVecs.VAO);
    glBindVertexArray(eVecs.VAO);
 
-   glUseProgram(prog.progID);
+   //glUseProgram(prog.progID);
 
    //Bind vertices to shader
    glGenBuffers(1, &eVecs.vertID);
@@ -80,8 +80,8 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, inds.size() * sizeof(unsigned short), &inds[0] , GL_STATIC_DRAW);
 
    // Bind our texture in Texture Unit 0
-   //glUniform1i(glGetUniformLocation(prog.progID, "material.diffuse"), 0);
-   //glUniform1i(glGetUniformLocation(prog.progID, "material.specular"), 0);
+   glUniform1i(glGetUniformLocation(prog.progID, "material.diffuse"), 0);
+   glUniform1i(glGetUniformLocation(prog.progID, "material.specular"), 0);
    glUniform1f(glGetUniformLocation(prog.progID, "material.shininess"), 32.0f);
 
    //Unbind VAO
@@ -98,6 +98,8 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
 
    //Rebind the objects VAO
    glBindVertexArray(mesh.VAO);
+
+   glUseProgram(prog.progID);
 
    entM.each<Camera>([this, &mesh, &prog](ex::Entity ent, Camera& cam) {
       //Send camera information to the buffer

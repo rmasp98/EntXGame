@@ -53,6 +53,8 @@ class MenuSystem : public ex::System<MenuSystem> {
       void genMenu(ex::EntityManager&, GLuint);
       void genFont(ex::EntityManager&, GLuint);
       void makeTextBox(const char*, ex::EntityManager&, glm::vec3, atlas*, GLuint);
+
+      void render_text(const char*, atlas*, float, float, float, float);
 };
 
 
