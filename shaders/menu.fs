@@ -1,19 +1,12 @@
 #version 330 core
-
-//Need to pass font texture to this
-//uniform sampler2D tex;
-
-struct Material {
-   sampler2D diffuse, specular;
-   float shininess;
-};
-
+in vec2 TexCoords;
 out vec4 color;
-in vec2 FragUV;
-uniform Material material;
-uniform vec4 colour;
+
+uniform sampler2D text;
+uniform vec3 textColor;
 
 void main()
 {
-    color = vec4(vec3(texture(material.diffuse, FragUV)), 0.0f) * vec4(0,0,0,1);
-}
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
+    color = vec4(textColor, 1.0) * sampled;
+}  

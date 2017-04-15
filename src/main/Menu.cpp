@@ -9,33 +9,57 @@
 
 #include "main/Menu.hpp"
 
-
-struct point {
-	GLfloat x;
-	GLfloat y;
-	GLfloat s;
-	GLfloat t;
-};
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
+const GLuint WIDTH = 800, HEIGHT = 600;
+GLuint VAO, VBO;
+GLuint w, h;
 
 
 MenuSystem::MenuSystem(ex::EntityManager& entM) {
 
-   //Load the shaders (need to add shader names to config file)
-   std::string vsName = "shaders/menu.vs", fsName = "shaders/menu.fs";
-   GLuint pID;
+	std::string vsName = "shaders/menu.vs", fsName = "shaders/menu.fs";
    if (vsName != "" && fsName != "")
       pID = LoadShaders(vsName.c_str(), fsName.c_str());
    else {
       std::cerr << "Failed to load shaders!\n";
       exit(EXIT_FAILURE);
    }
+	glUseProgram(pID);
 
-   genFont(entM, pID);
+	if(FT_Init_FreeType(&ft))
+		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
 
-   //Make the menu entities
-   genMenu(entM, pID);
+	a42 = new atlas("assets/FreeSans.ttf", 48, ft);
+
+	FT_Done_FreeType(ft);
+
+	renderText(entM, "Hello World", glm::vec2(0.0f));
+
+
+
+	 // Configure VAO/VBO for texture quads
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+}
+
+
+
+
+
+void MenuSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex::TimeDelta dt) {
+
+	RenderText("Hello World", glm::vec2(0.0f, 0.0f), 1.0f/1000, glm::vec3(0.0, 0.0f, 0.0f));
 
 }
 
@@ -43,284 +67,190 @@ MenuSystem::MenuSystem(ex::EntityManager& entM) {
 
 
 
-void MenuSystem::update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) {
+void MenuSystem::renderText(ex::EntityManager& entM, std::string text, glm::vec2 tPos) {
 
-   /*float sx = 2.0 / glutGet(GLUT_WINDOW_WIDTH);
-	float sy = 2.0 / glutGet(GLUT_WINDOW_HEIGHT);
-	glUseProgram(program);
-	//White background
-	glClearColor(1, 1, 1, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
-	//Enable blending, necessary for our alpha texture
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GLfloat black[4] = { 0, 0, 0, 1 };
-	GLfloat red[4] = { 1, 0, 0, 1 };
-	GLfloat transparent_green[4] = { 0, 1, 0, 0.5 };
-	//Set color to black
-	glUniform4fv(uniform_color, 1, black);
-	// Effects of alignment
-	render_text("The Quick Brown Fox Jumps Over The Lazy Dog", a48, -1 + 8 * sx, 1 - 50 * sy, sx, sy);
-   */
+	ex::Entity entity = entM.create();
+
+	GLfloat scale = 1.0f/1000.0f;
+
+	GLuint numVerts = 6 * text.length();
+	std::vector<glm::vec3> verts(numVerts, glm::vec3(0)), norms(numVerts, glm::vec3(0));
+	std::vector<glm::vec2> uvs(numVerts, glm::vec2(0));
+
+	// Iterate through all characters
+	const GLubyte *p; GLuint i=0;
+	for (p = (const GLubyte *)text.c_str(); *p; p++) {
+		 character ch = a42->c[*p];
+		 //Character ch = Characters[*c];
+
+		 GLfloat xpos = tPos.x + ch.bearing.x * scale;
+		 GLfloat ypos = tPos.y - (ch.size.y - ch.bearing.y) * scale;
+
+		 GLfloat w = ch.size.x * scale;
+		 GLfloat h = ch.size.y * scale;
+		 // Update VBO for each character
+		 GLfloat right = ch.offset.x + (ch.size.x / (GLfloat)a42->w);
+		 GLfloat top = ch.offset.y + (ch.size.y / (GLfloat)a42->h);
+
+		 verts[6*i]   = glm::vec3(xpos, ypos + h, 0);
+		 uvs  [6*i]   = glm::vec2(ch.offset.x, ch.offset.y);
+		 verts[6*i+1] = glm::vec3(xpos, ypos, 0);
+		 uvs  [6*i+1] = glm::vec2(ch.offset.x, top);
+		 verts[6*i+2] = glm::vec3(xpos + w, ypos, 0);
+		 uvs  [6*i+2] = glm::vec2(right, top);
+
+		 verts[6*i+3] = glm::vec3(xpos,     ypos + h, 0);
+		 uvs  [6*i+3] = glm::vec2(ch.offset.x, ch.offset.y);
+		 verts[6*i+4] = glm::vec3(xpos + w, ypos, 0);
+		 uvs  [6*i+4] = glm::vec2(right, top);
+		 verts[6*i+5] = glm::vec3(xpos + w, ypos + h, 0);
+		 uvs  [6*(i++)+5] = glm::vec2(right, ch.offset.y);
+
+		 tPos.x += (ch.advance.x >> 6) * scale;
+   }
+
+	entity.assign<Renderable>(verts, norms, uvs, a42->texID);
+
 
 }
 
 
-void MenuSystem::render_text(const char *text, atlas * a, float x, float y, float sx, float sy) {
-	const uint8_t *p;
-	// Use the texture containing the atlas
-	glBindTexture(GL_TEXTURE_2D, a->tex);
-	//glUniform1i(uniform_tex, 0);
-	// Set up the VBO for our vertex data
-	//glEnableVertexAttribArray(attribute_coord);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(attribute_coord, 4, GL_FLOAT, GL_FALSE, 0, 0);
-	point coords[6 * strlen(text)];
-	int c = 0;
-	// Loop through all characters
-	for (p = (const uint8_t *)text; *p; p++) {
-		// Calculate the vertex and texture coordinates
-		float x2 = x + a->c[*p].bl * sx;
-		float y2 = -y - a->c[*p].bt * sy;
-		float w = a->c[*p].bw * sx;
-		float h = a->c[*p].bh * sy;
-		// Advance the cursor to the start of the next character
-		x += a->c[*p].ax * sx;
-		y += a->c[*p].ay * sy;
-		// Skip glyphs that have no pixels
-		if (!w || !h)
-			continue;
-		coords[c++] = (point) {
-		x2, -y2, a->c[*p].tx, a->c[*p].ty};
-		coords[c++] = (point) {
-		x2 + w, -y2, a->c[*p].tx + a->c[*p].bw / a->w, a->c[*p].ty};
-		coords[c++] = (point) {
-		x2, -y2 - h, a->c[*p].tx, a->c[*p].ty + a->c[*p].bh / a->h};
-		coords[c++] = (point) {
-		x2 + w, -y2, a->c[*p].tx + a->c[*p].bw / a->w, a->c[*p].ty};
-		coords[c++] = (point) {
-		x2, -y2 - h, a->c[*p].tx, a->c[*p].ty + a->c[*p].bh / a->h};
-		coords[c++] = (point) {
-		x2 + w, -y2 - h, a->c[*p].tx + a->c[*p].bw / a->w, a->c[*p].ty + a->c[*p].bh / a->h};
+
+
+
+void MenuSystem::RenderText(std::string text, glm::vec2 pos, GLfloat scale, glm::vec3 color)
+{
+    // Activate corresponding render state
+    glUseProgram(pID);
+    glUniform3f(glGetUniformLocation(pID, "textColor"), color.x, color.y, color.z);
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(VAO);
+
+    // Iterate through all characters
+    const GLubyte *p; GLuint i=0;
+    for (p = (const GLubyte *)text.c_str(); *p; p++) {
+		  character ch = a42->c[*p];
+		  //Character ch = Characters[*c];
+
+        GLfloat xpos = pos.x + ch.bearing.x * scale;
+        GLfloat ypos = pos.y - (ch.size.y - ch.bearing.y) * scale;
+
+        GLfloat w = ch.size.x * scale;
+        GLfloat h = ch.size.y * scale;
+        // Update VBO for each character
+		  GLfloat right = ch.offset.x + (ch.size.x / (GLfloat)a42->w);
+		  GLfloat top = ch.offset.y + (ch.size.y / (GLfloat)a42->h);
+
+		  GLfloat vertices[6][4] = {
+            { xpos,     ypos + h,   ch.offset.x, ch.offset.y },
+            { xpos,     ypos,       ch.offset.x, top },
+            { xpos + w, ypos,       right, top },
+
+            { xpos,     ypos + h,   ch.offset.x, ch.offset.y },
+            { xpos + w, ypos,       right, top },
+            { xpos + w, ypos + h,   right, ch.offset.y }
+        };
+
+
+        // Render glyph texture over quad
+        glBindTexture(GL_TEXTURE_2D, a42->texID);
+
+	     // Update content of VBO memory
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // Be sure to use glBufferSubData and not glBufferData
+		  glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // Render quad
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+        pos.x += (ch.advance.x >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+	 }
+
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+
+
+
+
+
+
+MenuSystem::atlas::atlas(std::string fontFile, GLuint fontSize, FT_Library& ft) {
+	FT_Face face;
+	if (FT_New_Face(ft, fontFile.c_str(), 0, &face))
+		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+
+	 // Set size to load glyphs as
+	 FT_Set_Pixel_Sizes(face, 0, fontSize);
+	 FT_GlyphSlot g = face->glyph;
+
+	 GLuint rowW = 0, rowH = 0;
+	 w = 0; h = 0;
+	 GLint MAXSIZE;
+	 glGetIntegerv(GL_MAX_TEXTURE_SIZE, &MAXSIZE);
+
+	 for (GLubyte i=32; i<128; i++) {
+		 if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
+			 std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
+			 continue;
+		 }
+
+		 if (rowW + g->bitmap.width + 1 >= (GLuint)MAXSIZE) {
+			w = std::max(w, rowW);
+			h += rowH;
+			rowW = 0;
+			rowH = 0;
+		}
+		rowW += g->bitmap.width + 1;
+		rowH = std::max(rowH, g->bitmap.rows);
 	}
-	// Draw all the character on the screen in one go
-	glBufferData(GL_ARRAY_BUFFER, sizeof coords, coords, GL_DYNAMIC_DRAW);
-	glDrawArrays(GL_TRIANGLES, 0, c);
-	glDisableVertexAttribArray(attribute_coord);
-}
 
+	w = std::max(w, rowW);
+	h += rowH;
 
+	// Generate the texture buffer
+	glGenTextures(1, &texID);
+	glBindTexture(GL_TEXTURE_2D, texID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
 
+	//Bunch of texture config
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-
-
-void MenuSystem::genFont(ex::EntityManager& entM, GLuint progID) {
-
-   //Initialise the font library
-   FT_Library ft;
-   if(FT_Init_FreeType(&ft)) {
-      fprintf(stderr, "Could not init freetype library\n");
-   }
-
-   //Initialise font
-   FT_Face face;
-   //if(FT_New_Face(ft, "/usr/share/fonts/TTF/LiberationSans-Regular.ttf", 0, &face)) {
-   if(FT_New_Face(ft, "FreeSans.ttf", 0, &face)) {
-      fprintf(stderr, "Could not open font\n");
-   }
-
-   atlas* a42 = new atlas(face, 42);
-
-   glm::vec3 tPos = glm::vec3(0.0f);
-   makeTextBox("Hello World", entM, tPos, a42, progID);
-
-
-}
-
-
-
-
-
-void MenuSystem::makeTextBox(const char* text, ex::EntityManager& eM, glm::vec3 pos, atlas* font, GLuint prog) {
-
-   ex::Entity entity = eM.create();
-
-   const GLubyte *p;
-   float sx = 2.0 / 1000;
-	float sy = 2.0 / 800;
-
-   GLfloat x=0.0f, y=0.0f;
-   std::vector<glm::vec3> verts, norms;
-   std::vector<glm::vec2> uvs;
-   for (p = (const GLubyte *)text; *p; p++) {
-		//Calculate the vertex and texture coordinates
-		float x2 = x + font->c[*p].bl * sx;
-		float y2 = -y - font->c[*p].bt * sy;
-		float w = font->c[*p].bw * sx;
-		float h = font->c[*p].bh * sy;
-
-      //Advance the cursor to the start of the next character
-		x += font->c[*p].ax * sx;
-		y += font->c[*p].ay * sy;
-
-      // Skip glyphs that have no pixels
-		if (!w || !h)
+	GLint xOff=0, yOff=0; rowH=0;
+	for (GLubyte i=32; i<128; i++) {
+		if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
+			std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
 			continue;
+		}
 
-      verts.push_back(glm::vec3(x2 + w, -y2, 0));
-      uvs.push_back(glm::vec2(font->c[*p].tx + font->c[*p].bw, font->c[*p].ty));
-      norms.push_back(glm::vec3(0.0f));
+		if (xOff + g->bitmap.width + 1 >= (GLuint)MAXSIZE) {
+			yOff += rowH; rowH = 0; xOff = 0;
+		}
 
-      verts.push_back(glm::vec3(x2, -y2, 0));
-      uvs.push_back(glm::vec2(font->c[*p].tx, font->c[*p].ty));
-      norms.push_back(glm::vec3(0.0f));
+		glTexSubImage2D(GL_TEXTURE_2D, 0, xOff, yOff, g->bitmap.width,
+							 g->bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, g->bitmap.buffer);
 
-      verts.push_back(glm::vec3(x2, -y2 - h, 0));
-      uvs.push_back(glm::vec2(font->c[*p].tx, font->c[*p].ty + font->c[*p].bh));
-      norms.push_back(glm::vec3(0.0f));
+		c[i] = character{glm::vec2(g->bitmap.width, g->bitmap.rows),
+							  glm::vec2(g->bitmap_left, g->bitmap_top),
+						  	  glm::vec2(xOff / (GLfloat)w, yOff / (GLfloat)h),
+						  	  glm::ivec2(g->advance.x, g->advance.y)};
 
-      verts.push_back(glm::vec3(x2 + w, -y2, 0));
-      uvs.push_back(glm::vec2(font->c[*p].tx + font->c[*p].bw / font->w, font->c[*p].ty));
-      norms.push_back(glm::vec3(0.0f));
+		rowH = std::max(rowH, g->bitmap.rows);
+		xOff += g->bitmap.width + 1;
 
-      verts.push_back(glm::vec3(x2, -y2 - h, 0));
-      uvs.push_back(glm::vec2(font->c[*p].tx, font->c[*p].ty + font->c[*p].bh / font->h));
-      norms.push_back(glm::vec3(0.0f));
-
-      verts.push_back(glm::vec3(x2 + w, -y2 - h, 0));
-      uvs.push_back(glm::vec2(font->c[*p].tx + font->c[*p].bw / font->w, font->c[*p].ty + font->c[*p].bh / font->h));
-      norms.push_back(glm::vec3(0.0f));
 	}
 
-   //Assign verts, norms and uvs
-   entity.assign<Renderable>(verts, norms, uvs, font->tex);
-   entity.assign<Shader>(prog);
-   entity.assign<Position>(pos, 0.0f);
-
-
+	glBindTexture(GL_TEXTURE_2D, 0);
+	FT_Done_Face(face);
 }
 
 
 
-
-
-
-void MenuSystem::genMenu(ex::EntityManager& entM, GLuint progID) {
-
-   //ex::Entity entity = entM.create();
-
-   std::vector<glm::vec3> verts, norms;
-   std::vector<glm::vec2> uvs;
-
-   verts.push_back(glm::vec3(-1.0f, -1.0f, 0.0f));
-   verts.push_back(glm::vec3(1.0f, -1.0f, 0.0f));
-   verts.push_back(glm::vec3(1.0f, 1.0f, 0.0f));
-
-   norms.push_back(glm::vec3(0,0,-1));
-   norms.push_back(glm::vec3(0,0,-1));
-   norms.push_back(glm::vec3(0,0,-1));
-
-   uvs.push_back(glm::vec2(0));
-   uvs.push_back(glm::vec2(0));
-   uvs.push_back(glm::vec2(0));
-
-
-
-   verts.push_back(glm::vec3(1.0f, 1.0f, 0.0f));
-   verts.push_back(glm::vec3(-1.0f, 1.0f, 0.0f));
-   verts.push_back(glm::vec3(-1.0f, -1.0f, 0.0f));
-
-   norms.push_back(glm::vec3(0,0,-1));
-   norms.push_back(glm::vec3(0,0,-1));
-   norms.push_back(glm::vec3(0,0,-1));
-
-   uvs.push_back(glm::vec2(0));
-   uvs.push_back(glm::vec2(0));
-   uvs.push_back(glm::vec2(0));
-
-   //Assign all values to the entity
-   //GLuint texID;
-   //entity.assign<Renderable>(verts, norms, uvs, texID);
-   //entity.assign<Shader>(progID);
-   //entity.assign<Position>(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f);
-
-}
-
-
-
-
-
-
-
-
-
-
-
-MenuSystem::atlas::atlas(FT_Face face, GLuint height) {
-   FT_Set_Pixel_Sizes(face, 0, height);
-   FT_GlyphSlot g = face->glyph;
-   unsigned int roww = 0;
-   unsigned int rowh = 0;
-   w = 0;
-   h = 0;
-   memset(c, 0, sizeof c);
-
-   //Find minimum size for a texture holding all visible ASCII characters
-   for (int i = 32; i < 128; i++) {
-      if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
-         fprintf(stderr, "Loading character %c failed!\n", i);
-         continue;
-      }
-
-      if (roww + g->bitmap.width + 1 >= MAXWIDTH) {
-         w = std::max(w, roww); h += rowh;
-         roww = 0; rowh = 0;
-      }
-
-      roww += g->bitmap.width + 1;
-      rowh = std::max(rowh, g->bitmap.rows);
-   }
-
-   w = std::max(w, roww);
-   h += rowh;
-
-   //Create a texture that will be used to hold all ASCII glyphs
-   glActiveTexture(GL_TEXTURE0); glGenTextures(1, &tex);
-   glBindTexture(GL_TEXTURE_2D, tex); //glUniform1i(uniform_tex, 0);
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, w, h, 0, GL_ALPHA, GL_UNSIGNED_BYTE, 0);
-
-   //We require 1 byte alignment when uploading texture data
-   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-   //Clamping to edges is important to prevent artifacts when scaling
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-   //Linear filtering usually looks best for text
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-   //Paste all glyph bitmaps into the texture, remembering the offset
-   int ox = 0, oy = 0; rowh = 0;
-   for (int i = 32; i < 128; i++) {
-      if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
-         fprintf(stderr, "Loading character %c failed!\n", i);
-         continue;
-      }
-
-      if (ox + g->bitmap.width + 1 >= MAXWIDTH) {
-         oy += rowh;
-         rowh = 0;
-         ox = 0;
-      }
-
-      glTexSubImage2D(GL_TEXTURE_2D, 0, ox, oy, g->bitmap.width, g->bitmap.rows, GL_ALPHA, GL_UNSIGNED_BYTE, g->bitmap.buffer);
-      c[i].ax = g->advance.x >> 6;  c[i].ay = g->advance.y >> 6;
-      c[i].bw = g->bitmap.width;    c[i].bh = g->bitmap.rows;
-      c[i].bl = g->bitmap_left;     c[i].bt = g->bitmap_top;
-      c[i].tx = ox / (float)w;      c[i].ty = oy / (float)h;
-      rowh = std::max(rowh, g->bitmap.rows);
-      ox += g->bitmap.width + 1;
-   }
-   fprintf(stderr, "Generated a %d x %d (%d kb) texture atlas\n", w, h, w * h / 1024);
+MenuSystem::atlas::~atlas() {
+	glDeleteTextures(1, &texID);
+	//FT_Done_Face(face);
 }

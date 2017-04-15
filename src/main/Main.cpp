@@ -21,7 +21,7 @@ int main () {
    }
 
    //Create the entity systems
-   Level* firstLevel = new Level(window);
+   //Level* firstLevel = new Level(window);
    Menu* firstMenu = new Menu();
    GLfloat currT = glfwGetTime();
 
@@ -36,7 +36,8 @@ int main () {
       if (isMenu)
          firstMenu->update(glfwGetTime() - currT);
       else
-         firstLevel->update(glfwGetTime() - currT);
+         //firstLevel->update(glfwGetTime() - currT);
+         std::cout << "No" << std::endl;
 
       currT = glfwGetTime();
 
@@ -101,7 +102,7 @@ int initGraphics(GLFWwindow*& window) {
       return -1;
    }
 
-   glfwWindowHint(GLFW_SAMPLES, 4); //Antialiasing = 4 samples
+   //glfwWindowHint(GLFW_SAMPLES, 4); //Antialiasing = 4 samples
    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //Pointing to version of openGL
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

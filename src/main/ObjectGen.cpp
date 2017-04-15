@@ -72,7 +72,7 @@ void ObjectSystem::genLevel() {
    entity.assign<Collidable>();
 
    //Generate objects in the room (i.e. blocks)
-   genObject("shaders/statue.obj", "shaders/statueUV.DDS", pID);
+   genObject("assets/statue.obj", "assets/statueUV.DDS", pID);
 
 }
 

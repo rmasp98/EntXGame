@@ -1,13 +1,11 @@
 #version 330 core
+layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
+out vec2 TexCoords;
 
-layout(location = 0) in vec3 vertexPos;
-layout(location = 1) in vec2 vertexUV;
-//layout(location = 2) in vec3 vertexNorm;
-
-out vec2 FragUV;
+uniform mat4 projection;
 
 void main()
 {
-    gl_Position = vec4(vertexPos.x, vertexPos.y, vertexPos.z, 1.0);
-    FragUV = vertexUV;
+    gl_Position = vec4(vertex.xy, 0.0, 1.0);
+    TexCoords = vertex.zw;
 }
