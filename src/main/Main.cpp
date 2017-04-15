@@ -21,7 +21,7 @@ int main () {
    }
 
    //Create the entity systems
-   //Level* firstLevel = new Level(window);
+   Level* firstLevel = new Level(window);
    Menu* firstMenu = new Menu();
    GLfloat currT = glfwGetTime();
 
@@ -36,8 +36,7 @@ int main () {
       if (isMenu)
          firstMenu->update(glfwGetTime() - currT);
       else
-         //firstLevel->update(glfwGetTime() - currT);
-         std::cout << "No" << std::endl;
+         firstLevel->update(glfwGetTime() - currT);
 
       currT = glfwGetTime();
 

@@ -9,10 +9,6 @@
 #ifndef COLLISION_HPP
 #define COLLISION_HPP
 
-//Graphics library
-#include <entityx/entityx.h>
-namespace ex = entityx;
-
 //Game headers
 #include "main/Components.hpp"
 

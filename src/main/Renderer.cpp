@@ -25,10 +25,17 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
    //Pass the lights to graphics card
    addLight(entM);
 
+   //Creates the model matrix based on the objects current position
+   entM.each<Position, Renderable>([this](ex::Entity entity, Position& pos, Renderable& mat) {
+      mat.modelMat = glm::translate(glm::mat4(1.0f), pos.pos);
+   });
+
    //Passes camera and model matrix, and then renders each object
    entM.each<Renderable, Shader>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID) {
       drawScene(mesh, pID, entM);
    });
+
+
 
    //Reset the VAO
    glBindVertexArray(0);
@@ -105,10 +112,14 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
       //Send camera information to the buffer
       glm::mat4 camView = cam.projection * cam.view * mesh.modelMat;
       glUniformMatrix4fv(glGetUniformLocation(prog.progID, "camView"), 1, GL_FALSE, &camView[0][0]);
-
-      //Send object's model matrix
-      glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
    });
+
+   entM.each<Font>([this, &mesh, &prog](ex::Entity ent, Font& font) {
+      glUniform3fv(glGetUniformLocation(prog.progID, "textColour"), 1, &(font.colour[0]));
+   });
+
+   //Send object's model matrix
+   glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
 
    //Resets the texture and binds correct texture
    glActiveTexture(GL_TEXTURE0);

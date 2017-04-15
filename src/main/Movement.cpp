@@ -71,10 +71,6 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
 
       });
 
-      //Creates the model matrix based on the objects current position
-      entM.each<Position, Renderable>([this](ex::Entity entity, Position& pos, Renderable& mat) {
-         mat.modelMat = glm::translate(glm::mat4(1.0f), pos.pos);
-      });
 
       //Assigns the calculated values to the camera
       entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {

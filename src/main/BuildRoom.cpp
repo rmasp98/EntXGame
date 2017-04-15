@@ -252,7 +252,7 @@ void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::Compone
 
    //Loads the texture for the walls. The file name will need to be loaded from a config file
    GLint texID;
-   std::string texFile = "shaders/roomUV.DDS";
+   std::string texFile = "assets/roomUV.DDS";
    if (texFile != "") {
       texID = (loadDDS(texFile.c_str()));
    } else {

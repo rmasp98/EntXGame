@@ -9,18 +9,14 @@
 #ifndef MOVEMENT_HPP
 #define MOVEMENT_HPP
 
+//Game headers
+#include "main/Components.hpp"
+
 //Generic libraries
 #include <cmath>
 
 //Graphic libraries
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <entityx/entityx.h>
-namespace ex = entityx;
-
-//Game headers
-#include "main/Components.hpp"
 
 
 class MoveSystem : public ex::System<MoveSystem>, public ex::Receiver<MoveSystem> {

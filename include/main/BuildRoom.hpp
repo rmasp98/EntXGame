@@ -9,20 +9,14 @@
 #ifndef BUILD_ROOM_HPP
 #define BUILD_ROOM_HPP
 
-//Generic headers
-#include <vector>
-#include <time.h>
-
-//Graphics libraries
-#include <glm/glm.hpp>
-#include <GL/glew.h>
-#include <entityx/entityx.h>
-namespace ex = entityx;
-
 //Game headers
 #include "main/Components.hpp"
 #include "common/shader.hpp"
 #include "common/texture.hpp"
+
+//Generic headers
+#include <vector>
+#include <time.h>
 
 
 //System for building the puzzle room

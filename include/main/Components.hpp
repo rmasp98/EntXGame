@@ -13,8 +13,19 @@
 #include <vector>
 
 //Graphics libraries
+#include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <GL/gl.h>
+
+//Text libraries
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+// Entityx libraries
+#include <entityx/entityx.h>
+namespace ex = entityx;
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //List of global components. These components are used in all aspects of the game
@@ -53,7 +64,7 @@ struct Position {
 //Vertex Array object, graphics ids for verts, uv coords, norms, VBO indices; number of verts and texture ID
 struct Renderable {
    Renderable(std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn, GLint texIn)
-   : verts(vertIn), norms(normIn), uvs(uvIn), texID(texIn) {}
+   : verts(vertIn), norms(normIn), uvs(uvIn), texID(texIn), modelMat(glm::mat4(1.0f)) {}
 
    std::vector<glm::vec3> verts, norms;
    std::vector<glm::vec2> uvs;
@@ -151,6 +162,29 @@ struct Push {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Components required for the Menus
 
+// struct for a single character in a font
+struct character {
+   glm::vec2 size, bearing, offset;
+   glm::ivec2 advance;
+};
+
+// Struct of an atlas map of a font
+struct Atlas {
+   GLuint texID, w, h;  // texture object, width and height of texture in pixels
+   character c[128];
+
+   Atlas(std::string, GLuint, FT_Library& ft);
+   ~Atlas() { glDeleteTextures(1, &texID); };
+};
+
+//Holds the font
+struct Font {
+   Font(glm::vec3 colIn, Atlas* fontIn) : colour(colIn), atlas(fontIn) {};
+   ~Font() { delete atlas; };
+
+   glm::vec3 colour;
+   Atlas* atlas;
+};
 
 
 

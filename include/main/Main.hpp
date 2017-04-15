@@ -9,12 +9,6 @@
 #ifndef LEVEL_HPP
 #define LEVEL_HPP
 
-//Graphics library headers
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <entityx/entityx.h>
-namespace ex = entityx;
-
 //Game headers
 #include "main/Renderer.hpp"
 #include "main/ObjectGen.hpp"
@@ -22,6 +16,12 @@ namespace ex = entityx;
 #include "main/BuildRoom.hpp"
 #include "main/Collision.hpp"
 #include "main/Menu.hpp"
+
+//Graphics library headers
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <entityx/entityx.h>
+namespace ex = entityx;
 
 
 //Initialise graphics libaries

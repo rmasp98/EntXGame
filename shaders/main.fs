@@ -5,7 +5,7 @@ struct Material {
 };
 
 struct Light {
-   vec3 pos; 
+   vec3 pos;
    vec3 ambient, diffuse, specular;
    float linear, quad;
 };
@@ -27,10 +27,10 @@ void main() {
 
    vec3 result = vec3(0.0f);
    for (int i=0; i<lightNum; i++)
-        result += calcLights(i);     
-   
-   color = vec4(result, 0.0f);  
-} 
+        result += calcLights(i);
+
+   color = vec4(result, 1.0f);  
+}
 
 
 
@@ -51,7 +51,7 @@ vec3 calcLights(int i) {
 
    //Specular
    vec3 viewDir = normalize(viewPos - FragPos);
-   vec3 reflectDir = reflect(-lightDir, norm);  
+   vec3 reflectDir = reflect(-lightDir, norm);
    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
    vec3 specular = light[i].specular * spec * vec3(texture(material.diffuse, FragUV));
 

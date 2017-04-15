@@ -9,19 +9,14 @@
 #ifndef OBJECT_GEN_HPP
 #define OBJECT_GEN_HPP
 
-//Graphics libraries
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <GL/glew.h>
-#include <SOIL/SOIL.h>
-#include <entityx/entityx.h>
-namespace ex = entityx;
-
 //Game headers
+#include "main/Components.hpp"
 #include "common/objLoader.hpp"
 #include "common/shader.hpp"
 #include "common/texture.hpp"
-#include "main/Components.hpp"
+
+//Graphics libraries
+#include <SOIL/SOIL.h>
 
 
 class ObjectSystem : public ex::System<ObjectSystem> {
