@@ -187,6 +187,14 @@ struct Font {
 };
 
 
+struct Clickable {
+   Clickable(GLfloat xMin, GLfloat yMin, GLfloat xMax, GLfloat yMax) :
+             bound(glm::vec4(xMin, yMin, xMax, yMax)) {};
+
+   glm::vec4 bound;
+};
+
+
 
 
 

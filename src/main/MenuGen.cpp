@@ -7,7 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
-#include "main/Menu.hpp"
+#include "main/MenuGen.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -37,7 +37,7 @@ MenuSystem::MenuSystem(ex::EntityManager& entM, GLFWwindow* window) {
 		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
 
 	// Need to check that this is OK practice. The reference is stored in Font but not sure if it will survive
-	Atlas* a42 = new Atlas("assets/LiberationSans-Regular.ttf", 70, ft);
+	Atlas* a42 = new Atlas("assets/LiberationSans-Regular.ttf", 100, ft);
 
 	FT_Done_FreeType(ft);
 

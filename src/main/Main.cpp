@@ -134,7 +134,7 @@ int initGraphics(GLFWwindow*& window) {
    }
 
    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); //Allows key presses to be detected in frame
-   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); //Hide cursor
+   //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); //Hide cursor
 
    glClearColor(0.0, 0.0, 0.4, 0.0);   //Set default backgrond to dark blue
    glEnable(GL_DEPTH_TEST);            //Enable depth testing of objects

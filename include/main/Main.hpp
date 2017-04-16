@@ -15,7 +15,7 @@
 #include "main/Movement.hpp"
 #include "main/BuildRoom.hpp"
 #include "main/Collision.hpp"
-#include "main/Menu.hpp"
+#include "main/MenuGen.hpp"
 
 //Graphics library headers
 #include <GL/glew.h>
