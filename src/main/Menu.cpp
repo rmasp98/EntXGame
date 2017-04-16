@@ -18,7 +18,10 @@ GLuint VAO, VBO;
 GLuint w, h;
 
 
-MenuSystem::MenuSystem(ex::EntityManager& entM) {
+MenuSystem::MenuSystem(ex::EntityManager& entM, GLFWwindow* window) {
+
+	//Get window size for text scaling
+	glfwGetWindowSize(window, &scaleX, &scaleY);
 
 	std::string vsName = "shaders/menu.vs", fsName = "shaders/menu.fs";
    if (vsName != "" && fsName != "")
@@ -27,18 +30,18 @@ MenuSystem::MenuSystem(ex::EntityManager& entM) {
       std::cerr << "Failed to load shaders!\n";
       exit(EXIT_FAILURE);
    }
-	glUseProgram(pID);
+	//glUseProgram(pID);
 
 	FT_Library ft;
 	if(FT_Init_FreeType(&ft))
 		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
 
 	// Need to check that this is OK practice. The reference is stored in Font but not sure if it will survive
-	Atlas* a42 = new Atlas("assets/FreeSans.ttf", 48, ft);
+	Atlas* a42 = new Atlas("assets/LiberationSans-Regular.ttf", 70, ft);
 
 	FT_Done_FreeType(ft);
 
-	renderText(entM, "Hello World", *a42);
+	renderText(entM, "I am amazing!", glm::vec3(0.0f, 0.45f, 0.0f), *a42);
 
 
 }
@@ -56,56 +59,54 @@ void MenuSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex::Tim
 
 
 
-void MenuSystem::renderText(ex::EntityManager& entM, std::string text, Atlas& font) {
+void MenuSystem::renderText(ex::EntityManager& entM, std::string text, glm::vec3 pos, Atlas& font) {
 
 	ex::Entity entity = entM.create();
-
-	GLfloat scale = 1.0f/1000.0f;
 
 	GLuint numVerts = 6 * text.length();
 	std::vector<glm::vec3> verts(numVerts, glm::vec3(0)), norms(numVerts, glm::vec3(0));
 	std::vector<glm::vec2> uvs(numVerts, glm::vec2(0));
 
 	// Iterate through all characters
-
 	GLfloat xOff = 0, yOff = 0; GLuint i=0;
 	const GLubyte *p;
 	for (p = (const GLubyte *)text.c_str(); *p; p++) {
 		 character ch = font.c[*p];
 		 //Character ch = Characters[*c];
 
-		 GLfloat xpos = xOff + ch.bearing.x * scale;
-		 GLfloat ypos = yOff - (ch.size.y - ch.bearing.y) * scale;
+		 GLfloat xpos = xOff + ch.bearing.x / (GLfloat)scaleX;
+		 GLfloat ypos = yOff - (ch.size.y - ch.bearing.y) / (GLfloat)scaleY;
 
-		 GLfloat w = ch.size.x * scale;
-		 GLfloat h = ch.size.y * scale;
+		 GLfloat w = ch.size.x / (GLfloat)scaleX;
+		 GLfloat h = ch.size.y / (GLfloat)scaleY;
 		 // Update VBO for each character
 		 GLfloat right = ch.offset.x + (ch.size.x / (GLfloat)font.w);
 		 GLfloat top = ch.offset.y + (ch.size.y / (GLfloat)font.h);
 
 		 verts[6*i]   = glm::vec3(xpos, ypos + h, 0);
-		 uvs  [6*i]   = glm::vec2(ch.offset.x, ch.offset.y);
 		 verts[6*i+1] = glm::vec3(xpos, ypos, 0);
-		 uvs  [6*i+1] = glm::vec2(ch.offset.x, top);
 		 verts[6*i+2] = glm::vec3(xpos + w, ypos, 0);
+		 uvs  [6*i]   = glm::vec2(ch.offset.x, ch.offset.y);
+		 uvs  [6*i+1] = glm::vec2(ch.offset.x, top);
 		 uvs  [6*i+2] = glm::vec2(right, top);
 
 		 verts[6*i+3] = glm::vec3(xpos,     ypos + h, 0);
-		 uvs  [6*i+3] = glm::vec2(ch.offset.x, ch.offset.y);
 		 verts[6*i+4] = glm::vec3(xpos + w, ypos, 0);
-		 uvs  [6*i+4] = glm::vec2(right, top);
 		 verts[6*i+5] = glm::vec3(xpos + w, ypos + h, 0);
+		 uvs  [6*i+3] = glm::vec2(ch.offset.x, ch.offset.y);
+		 uvs  [6*i+4] = glm::vec2(right, top);
 		 uvs  [6*(i++)+5] = glm::vec2(right, ch.offset.y);
 
-		 xOff += (ch.advance.x >> 6) * scale;
-		 yOff += (ch.advance.y >> 6) * scale;
+		 xOff += (ch.advance.x >> 6) / (GLfloat)scaleX;
+		 yOff += (ch.advance.y >> 6) / (GLfloat)scaleY;
    }
 
 	entity.assign<Renderable>(verts, norms, uvs, font.texID);
 	entity.assign<Shader>(pID);
-	entity.assign<Position>(glm::vec3(0.2f, 0.3f, 0.0f), 0.0f);
-	entity.assign<Font>(glm::vec3(0.9f, 0.3f, 0.3f), &font);
 
+	pos.x -= xOff / 2.0f;
+	entity.assign<Position>(pos, 0.0f);
+	entity.assign<Font>(glm::vec3(0.9f, 0.3f, 0.3f), &font);
 
 }
 
@@ -149,7 +150,9 @@ Atlas::Atlas(std::string fontFile, GLuint fontSize, FT_Library& ft) {
 	// Generate the texture buffer
 	glGenTextures(1, &texID);
 	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+	std::vector<GLubyte> emptyData(w * h * 4, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, &emptyData[0]);
+
 
 	//Bunch of texture config
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

@@ -22,7 +22,7 @@ int main () {
 
    //Create the entity systems
    Level* firstLevel = new Level(window);
-   Menu* firstMenu = new Menu();
+   Menu* firstMenu = new Menu(window);
    GLfloat currT = glfwGetTime();
 
    //Game loop
@@ -79,9 +79,9 @@ void Level::update(ex::TimeDelta dT) { systems.update_all(dT); }
 
 
 
-Menu::Menu() {
+Menu::Menu(GLFWwindow* window) {
 
-   systems.add<MenuSystem>(entities);
+   systems.add<MenuSystem>(entities, window);
    systems.add<RenderSystem>(entities);
    systems.configure();
 

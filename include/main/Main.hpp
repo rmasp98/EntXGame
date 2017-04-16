@@ -44,7 +44,7 @@ class Level : public ex::EntityX {
 
 class Menu : public ex::EntityX {
    public:
-      explicit Menu();
+      explicit Menu(GLFWwindow* window);
       void update(ex::TimeDelta dT);
 
 };
