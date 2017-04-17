@@ -13,12 +13,12 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-const GLuint WIDTH = 800, HEIGHT = 600;
-GLuint VAO, VBO;
-GLuint w, h;
+//const GLuint WIDTH = 800, HEIGHT = 600;
+//GLuint VAO, VBO;
+//GLuint w, h;
 
 
-MenuSystem::MenuSystem(ex::EntityManager& entM, GLFWwindow* window) {
+MenuGenSystem::MenuGenSystem(ex::EntityManager& entM, GLFWwindow* window) {
 
 	//Get window size for text scaling
 	glfwGetWindowSize(window, &scaleX, &scaleY);
@@ -50,7 +50,7 @@ MenuSystem::MenuSystem(ex::EntityManager& entM, GLFWwindow* window) {
 
 
 
-void MenuSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex::TimeDelta dt) {
+void MenuGenSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex::TimeDelta dT) {
 
 
 }
@@ -59,7 +59,7 @@ void MenuSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex::Tim
 
 
 
-void MenuSystem::renderText(ex::EntityManager& entM, std::string text, glm::vec3 pos, Atlas& font) {
+void MenuGenSystem::renderText(ex::EntityManager& entM, std::string text, glm::vec3 pos, Atlas& font) {
 
 	ex::Entity entity = entM.create();
 
@@ -68,7 +68,7 @@ void MenuSystem::renderText(ex::EntityManager& entM, std::string text, glm::vec3
 	std::vector<glm::vec2> uvs(numVerts, glm::vec2(0));
 
 	// Iterate through all characters
-	GLfloat xOff = 0, yOff = 0; GLuint i=0;
+	GLfloat xOff = 0, yOff = 0, maxH=0; GLuint i=0;
 	const GLubyte *p;
 	for (p = (const GLubyte *)text.c_str(); *p; p++) {
 		 character ch = font.c[*p];
@@ -99,6 +99,8 @@ void MenuSystem::renderText(ex::EntityManager& entM, std::string text, glm::vec3
 
 		 xOff += (ch.advance.x >> 6) / (GLfloat)scaleX;
 		 yOff += (ch.advance.y >> 6) / (GLfloat)scaleY;
+
+		 maxH = std::max(maxH, h);
    }
 
 	entity.assign<Renderable>(verts, norms, uvs, font.texID);
@@ -107,6 +109,10 @@ void MenuSystem::renderText(ex::EntityManager& entM, std::string text, glm::vec3
 	pos.x -= xOff / 2.0f;
 	entity.assign<Position>(pos, 0.0f);
 	entity.assign<Font>(glm::vec3(0.9f, 0.3f, 0.3f), &font);
+	entity.assign<Clickable>((pos.x + 1) * scaleX / 2.0f,
+									 (1 - (pos.y + maxH)) * scaleY / 2.0f,
+									 (pos.x + xOff + 1) * scaleX / 2.0f,
+									 (1 - pos.y) * scaleY / 2.0f);
 
 }
 

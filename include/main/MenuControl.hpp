@@ -1,38 +1,32 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                    //
 //                              Title of the Game                                     //
-//                                  Menu.hpp                                          //
+//                               MenuControl.hpp                                      //
 //                                Ross Maspero                                        //
 //                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-
-#ifndef MENU_HPP
-#define MENU_HPP
+#ifndef MENU_CONTROL_HPP
+#define MENU_CONTROL_HPP
 
 //Game headers
 #include "main/Components.hpp"
-#include "common/objLoader.hpp"
-#include "common/shader.hpp"
-#include "common/texture.hpp"
 
-// Window Library
+//Graphic libraries
 #include <GLFW/glfw3.h>
 
-
-class MenuGenSystem : public ex::System<MenuGenSystem> {
+class MenuCtrlSystem : public ex::System<MenuCtrlSystem> {
    public:
-      explicit MenuGenSystem(ex::EntityManager& entM, GLFWwindow*);
+      explicit MenuCtrlSystem(GLFWwindow*);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
-   private:
-      GLuint pID;
-      GLint scaleX, scaleY;
+   protected:
+      GLFWwindow* win;
 
-      void renderText(ex::EntityManager&, std::string, glm::vec3, Atlas&);
 };
 
 
 
 
-#endif // MENU_HPP
+
+#endif // MENU_CONTROL_HPP

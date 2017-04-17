@@ -81,7 +81,8 @@ void Level::update(ex::TimeDelta dT) { systems.update_all(dT); }
 
 Menu::Menu(GLFWwindow* window) {
 
-   systems.add<MenuSystem>(entities, window);
+   systems.add<MenuGenSystem>(entities, window);
+   systems.add<MenuCtrlSystem>(window);
    systems.add<RenderSystem>(entities);
    systems.configure();
 
