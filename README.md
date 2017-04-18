@@ -1,11 +1,11 @@
 # EntXGame
-This game is not even close to being complete yet!!!
+This game is not even close to being complete yet!!! I am a complete self-taught novice so would appreciate any advice or improvements to the game.
 
-# Intro
+## Intro
 This is purely a learning experience in trying to create a game using relatively low level libraries (OpenGL, GLFW, EntityX). The game is based upon the Japanese puzzle game, Sokoban. The game is simply a room with boxes in and the aim of the game is to move all the boxes onto specific targets in the room. An example of this game can be seen in the figure below:
 
 
-# Install
+## Install
 Currently the game does not come with any of the required libraries so they will need to be installed beforehand. It is C++ code so obviously you will need a C++ compiler (if you choose something other than g++, you will need to alter to makefile to reflect this). The following libraries can be installed generally by the distribution you are running:
 * libGL
 * libGLU
