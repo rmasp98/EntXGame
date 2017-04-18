@@ -16,13 +16,13 @@ Currently the game does not come with any of the required libraries so they will
 * libglut
 * libx11
 * libXxf86vm
-* lpthread
-* lXrandr
-* lXi
-* lglfw
-* lGLEW
-* lSOIL
-* lfreetype
+* libpthread
+* libXrandr
+* libXi
+* libglfw
+* libGLEW
+* libSOIL
+* libfreetype
 
 There is also an additional library required that manages the Entity Component System (ECS) that the game is based upon. This can be downloaded from: https://github.com/alecthomas/entityx. Follow the instructions in the GitHub page to install the library ensuring that the install directory is /usr rather than the default /usr/local.
 
