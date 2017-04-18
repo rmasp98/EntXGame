@@ -162,13 +162,13 @@ struct Push {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Components required for the Menus
 
-// struct for a single character in a font
+// (NOT A COMPONENT) struct for a single character in a font
 struct character {
    glm::vec2 size, bearing, offset;
    glm::ivec2 advance;
 };
 
-// Struct of an atlas map of a font
+// (NOT A COMPONENT) Struct of an atlas map of a font. Functions are in MenuGen.cpp
 struct Atlas {
    GLuint texID, w, h;  // texture object, width and height of texture in pixels
    character c[128];
@@ -177,22 +177,29 @@ struct Atlas {
    ~Atlas() { glDeleteTextures(1, &texID); };
 };
 
-//Holds the font
+//Holds the font and font colours. Lo = standard, Hi = selected
 struct Font {
-   Font(glm::vec3 colIn, Atlas* fontIn) : colour(colIn), atlas(fontIn) {};
+   Font(glm::vec3 loColIn, glm::vec3 hiColIn, Atlas* fontIn) :
+        colour(loColIn), loColour(loColIn), hiColour(hiColIn), atlas(fontIn) {};
    ~Font() { delete atlas; };
 
-   glm::vec3 colour;
+   glm::vec3 colour, loColour, hiColour;
    Atlas* atlas;
 };
 
 
 struct Clickable {
-   Clickable(GLfloat xMin, GLfloat yMin, GLfloat xMax, GLfloat yMax) :
-             bound(glm::vec4(xMin, yMin, xMax, yMax)) {};
+   Clickable(GLfloat xMin, GLfloat yMin, GLfloat xMax, GLfloat yMax, GLuint button) :
+             bound(glm::vec4(xMin, yMin, xMax, yMax)), buttonID(button) {};
 
    glm::vec4 bound;
+   GLuint buttonID;
 };
+
+//Possible components:
+//  - MenuID (identifies which menu a button is associated with)
+//  - LinkMenu (contains menuID of linked menu)
+//  - NonLinkedButtons (this will somehow indicate a function that the button will run)
 
 
 

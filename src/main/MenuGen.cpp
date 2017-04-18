@@ -41,7 +41,7 @@ MenuGenSystem::MenuGenSystem(ex::EntityManager& entM, GLFWwindow* window) {
 
 	FT_Done_FreeType(ft);
 
-	renderText(entM, "I am amazing!", glm::vec3(0.0f, 0.45f, 0.0f), *a42);
+	renderText(entM, "I am really amazing!", glm::vec3(0.0f, 0.45f, 0.0f), *a42);
 
 
 }
@@ -108,11 +108,16 @@ void MenuGenSystem::renderText(ex::EntityManager& entM, std::string text, glm::v
 
 	pos.x -= xOff / 2.0f;
 	entity.assign<Position>(pos, 0.0f);
-	entity.assign<Font>(glm::vec3(0.9f, 0.3f, 0.3f), &font);
+	entity.assign<Font>(glm::vec3(0.9f, 0.3f, 0.3f),
+	 						  glm::vec3(1.0f, 1.0f, 1.0f),
+							  &font);
+
+	// Cursor Y Pos is inverted hence the order and inversion of the y coords
+	// Also everything is in texture coord, which is tranformed to pixel coords
 	entity.assign<Clickable>((pos.x + 1) * scaleX / 2.0f,
 									 (1 - (pos.y + maxH)) * scaleY / 2.0f,
 									 (pos.x + xOff + 1) * scaleX / 2.0f,
-									 (1 - pos.y) * scaleY / 2.0f);
+									 (1 - pos.y) * scaleY / 2.0f, 0);
 
 }
 

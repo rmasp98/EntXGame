@@ -114,6 +114,7 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
       glUniformMatrix4fv(glGetUniformLocation(prog.progID, "camView"), 1, GL_FALSE, &camView[0][0]);
    });
 
+   // Passes colour of font to graphic card
    entM.each<Font>([this, &mesh, &prog](ex::Entity ent, Font& font) {
       glUniform3fv(glGetUniformLocation(prog.progID, "textColour"), 1, &(font.colour[0]));
    });
