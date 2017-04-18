@@ -6,6 +6,8 @@ This is purely a learning experience in trying to create a game using relatively
  
 ![alt text](https://i.ytimg.com/vi/Ht4sC9PXCpw/hqdefault.jpg "Example Sokoban game")
 
+The long term goal for this game is to try and develop a procedurally generated game where each level is randomly generated within some given constraints. I have already created a randomly generated room but will need to do a lot of tweaking to ensure the level is always completable (probably going to be impossible to achieve in a reasonable time but we shall see).
+
 
 ## Install
 Currently the game does not come with any of the required libraries so they will need to be installed beforehand. It is C++ code so obviously you will need a C++ compiler (if you choose something other than g++, you will need to alter to makefile to reflect this). The following libraries can be installed generally by the distribution you are running:
