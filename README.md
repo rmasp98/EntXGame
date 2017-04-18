@@ -2,7 +2,9 @@
 This game is not even close to being complete yet!!! I am a complete self-taught novice so would appreciate any advice or improvements to the game.
 
 ## Intro
-This is purely a learning experience in trying to create a game using relatively low level libraries (OpenGL, GLFW, EntityX). The game is based upon the Japanese puzzle game, Sokoban. The game is simply a room with boxes in and the aim of the game is to move all the boxes onto specific targets in the room. An example of this game can be seen in the figure below:
+This is purely a learning experience in trying to create a game using relatively low level libraries (OpenGL, GLFW, EntityX). The game is based upon the Japanese puzzle game, Sokoban. The game is simply a room with boxes in and the aim of the game is to move all the boxes onto specific targets in the room. An example of this game can be seen in the gif below:
+ 
+![alt text](https://i.ytimg.com/vi/Ht4sC9PXCpw/hqdefault.jpg "Example Sokoban game")
 
 
 ## Install
