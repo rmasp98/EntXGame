@@ -30,7 +30,6 @@ MenuGenSystem::MenuGenSystem(ex::EntityManager& entM, GLFWwindow* window) {
       std::cerr << "Failed to load shaders!\n";
       exit(EXIT_FAILURE);
    }
-	//glUseProgram(pID);
 
 	FT_Library ft;
 	if(FT_Init_FreeType(&ft))
@@ -103,6 +102,7 @@ void MenuGenSystem::renderText(ex::EntityManager& entM, std::string text, glm::v
 		 maxH = std::max(maxH, h);
    }
 
+	entity.assign<Menu>();
 	entity.assign<Renderable>(verts, norms, uvs, font.texID);
 	entity.assign<Shader>(pID);
 

@@ -38,48 +38,55 @@ MoveSystem::MoveSystem(GLFWwindow* window) {
 
 void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
-   //If Birds-Eye-View (BEV) mode is active
-   if (isBEV) {
-      //Need to add a delay so it doesn't flick straight back
-      delay++;
-      if ((glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) && (!isUp)) {
-         isDown = true; delay = 0; oldBevPos = bevPos; oldViewPos = viewPos;
-      }
+   bool isMenu;
+   entM.each<IsMenu>([this, &isMenu](ex::Entity roomEnt, IsMenu& menu) {
+      isMenu = menu.isOn;
+   });
 
-      entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
-         //Currently moves in x and z but need to add zoom in and out function too.
-         moveBEV(pos);
+   if (!isMenu) {
+      //If Birds-Eye-View (BEV) mode is active
+      if (isBEV) {
+         //Need to add a delay so it doesn't flick straight back
+         delay++;
+         if ((glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) && (!isUp)) {
+            isDown = true; delay = 0; oldBevPos = bevPos; oldViewPos = viewPos;
+         }
 
-         cam.view = lookAt(bevPos, viewPos, viewOrient);
-      });
+         entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
+            //Currently moves in x and z but need to add zoom in and out function too.
+            moveBEV(pos);
 
-   } else {
-      //Look at mouse movement to determine if facing direction changed
-      entM.each<Camera, Direction>([this, dT](ex::Entity entity, Camera& cam, Direction& face) {
-         changeDirection(cam, face, dT);
-      });
+            cam.view = lookAt(bevPos, viewPos, viewOrient);
+         });
 
-      //Checks for each controllable entity that moves and moves them (currently only moves camera)
-      entM.each<Position, Acceleration>([this, dT](ex::Entity entity, Position& pos, Acceleration& accel) {
+      } else {
+         //Look at mouse movement to determine if facing direction changed
+         entM.each<Camera, Direction>([this, dT](ex::Entity entity, Camera& cam, Direction& face) {
+            changeDirection(cam, face, dT);
+         });
 
-         ex::ComponentHandle<Direction> face = entity.component<Direction>();
+         //Checks for each controllable entity that moves and moves them (currently only moves camera)
+         entM.each<Position, Acceleration>([this, dT](ex::Entity entity, Position& pos, Acceleration& accel) {
 
-         if (face)
-            moveObject(entity, pos, accel, face.get(), dT);
-         else
-            moveObject(entity, pos, accel, dT);
+            ex::ComponentHandle<Direction> face = entity.component<Direction>();
 
-      });
+            if (face)
+               moveObject(entity, pos, accel, face.get(), dT);
+            else
+               moveObject(entity, pos, accel, dT);
+
+         });
 
 
-      //Assigns the calculated values to the camera
-      entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
-         cam.view = lookAt(pos.pos, pos.pos + face.facing, viewOrient);
-         currView = pos.pos + face.facing;
-      });
+         //Assigns the calculated values to the camera
+         entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
+            cam.view = lookAt(pos.pos, pos.pos + face.facing, viewOrient);
+            currView = pos.pos + face.facing;
+         });
 
-      if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) {
-         isBEV = true; isUp = true; delay = 0; viewPos = currView;
+         if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) {
+            isBEV = true; isUp = true; delay = 0; viewPos = currView;
+         }
       }
    }
 }

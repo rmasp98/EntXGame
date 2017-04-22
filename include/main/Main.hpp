@@ -31,7 +31,6 @@ int initGraphics(GLFWwindow*&);
 //The entity system class
 class Level : public ex::EntityX {
    public:
-      //add a new system here. I think the order matters
       explicit Level(GLFWwindow* window);
       void update(ex::TimeDelta dT);
 
@@ -39,19 +38,6 @@ class Level : public ex::EntityX {
       bool isMenu;
 
 };
-
-
-
-
-class Menu : public ex::EntityX {
-   public:
-      explicit Menu(GLFWwindow* window);
-      void update(ex::TimeDelta dT);
-
-};
-
-
-
 
 
 #endif // LEVEL_HPP

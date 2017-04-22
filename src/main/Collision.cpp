@@ -18,22 +18,29 @@ CollisionSystem::CollisionSystem() {}
 
 void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
-   //Passes the room in to check if entity has collided against wall
-   entM.each<Room>([this, &entM, &evnM](ex::Entity roomEnt, Room& room) {
-   //Checks every for collision for any collidable entities
-      entM.each<Collidable, Position>([this, &room, &entM, &evnM](ex::Entity entity1, Collidable& coll, Position& pos1) {
-         wallCollision(pos1, room);
+   bool isMenu;
+   entM.each<IsMenu>([this, &isMenu](ex::Entity roomEnt, IsMenu& menu) {
+      isMenu = menu.isOn;
+   });
 
-         bool isSame=false;
-         entM.each<Collidable, Position>([this, &entity1, &isSame, &evnM](ex::Entity entity2, Collidable& coll, Position& pos2) {
-            if (entity1 == entity2)
-               isSame = true;
-            else if (isSame)
-               objectCollision(entity1, entity2, evnM);
+   if (!isMenu) {
+      //Passes the room in to check if entity has collided against wall
+      entM.each<Room>([this, &entM, &evnM](ex::Entity roomEnt, Room& room) {
+      //Checks every for collision for any collidable entities
+         entM.each<Collidable, Position>([this, &room, &entM, &evnM](ex::Entity entity1, Collidable& coll, Position& pos1) {
+            wallCollision(pos1, room);
 
+            bool isSame=false;
+            entM.each<Collidable, Position>([this, &entity1, &isSame, &evnM](ex::Entity entity2, Collidable& coll, Position& pos2) {
+               if (entity1 == entity2)
+                  isSame = true;
+               else if (isSame)
+                  objectCollision(entity1, entity2, evnM);
+
+            });
          });
       });
-   });
+   }
 }
 
 

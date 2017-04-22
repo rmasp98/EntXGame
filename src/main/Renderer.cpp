@@ -12,7 +12,9 @@
 
 
 
-RenderSystem::RenderSystem(ex::EntityManager &entM) {
+RenderSystem::RenderSystem(ex::EntityManager &entM, GLFWwindow* winIn) {
+   window = winIn;
+
    //Generates a VAO for each renderable entity (should also be added to an event create new object)
    entM.each<Renderable, Shader>([this](ex::Entity entity, Renderable &mesh, Shader& pID) {
       genBuffers(entity, mesh, pID);
@@ -22,18 +24,36 @@ RenderSystem::RenderSystem(ex::EntityManager &entM) {
 
 void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::TimeDelta dT) {
 
-   //Pass the lights to graphics card
-   addLight(entM);
-
    //Creates the model matrix based on the objects current position
    entM.each<Position, Renderable>([this](ex::Entity entity, Position& pos, Renderable& mat) {
       mat.modelMat = glm::translate(glm::mat4(1.0f), pos.pos);
    });
 
-   //Passes camera and model matrix, and then renders each object
-   entM.each<Renderable, Shader>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID) {
-      drawScene(mesh, pID, entM);
+   bool isMenu;
+   entM.each<IsMenu>([this, &isMenu](ex::Entity roomEnt, IsMenu& menu) {
+      isMenu = menu.isOn;
    });
+
+   if (!isMenu) {
+      // Hides the cursor
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+      //Pass the lights to graphics card
+      addLight(entM);
+
+      //Passes camera and model matrix, and then renders each object
+      entM.each<Renderable, Shader>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID) {
+         drawScene(mesh, pID, entM);
+      });
+   } else {
+      // Reenables cursor for the menu
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+      //Passes camera and model matrix, and then renders each object
+      entM.each<Renderable, Shader, Menu>([this, &entM](ex::Entity entity, Renderable& mesh, Shader& pID, Menu& null) {
+         drawScene(mesh, pID, entM);
+      });
+   }
 
 
 
@@ -50,6 +70,8 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
    std::vector<glm::vec2> uvsInds;
    std::vector<glm::vec3> vertInds, normInds;
 
+   glUseProgram(prog.progID);
+
    //This performs VBO indexing
    indexVBO(eVecs.verts, eVecs.uvs, eVecs.norms, inds, vertInds, uvsInds, normInds);
    eVecs.indSize = inds.size();
@@ -57,8 +79,6 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
    //Generate and bind VAO
    glGenVertexArrays(1, &eVecs.VAO);
    glBindVertexArray(eVecs.VAO);
-
-   //glUseProgram(prog.progID);
 
    //Bind vertices to shader
    glGenBuffers(1, &eVecs.vertID);
@@ -103,10 +123,10 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
 
 void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& entM) {
 
+   glUseProgram(prog.progID);
+
    //Rebind the objects VAO
    glBindVertexArray(mesh.VAO);
-
-   glUseProgram(prog.progID);
 
    entM.each<Camera>([this, &mesh, &prog](ex::Entity ent, Camera& cam) {
       //Send camera information to the buffer
@@ -145,6 +165,7 @@ void RenderSystem::addLight(ex::EntityManager& entM) {
                                      (ex::Entity entity, Light& l, Position& p, Shader& s) {
 
       pID = s.progID;
+      glUseProgram(pID);
 
       //Creates a custom name to pass the lights into an array
       std::stringstream bName;

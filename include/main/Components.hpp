@@ -30,6 +30,13 @@ namespace ex = entityx;
 //////////////////////////////////////////////////////////////////////////////////////////
 //List of global components. These components are used in all aspects of the game
 
+// Holds a Boolean to determine if the menu is on
+struct IsMenu {
+   IsMenu(bool menuIn) : isOn(menuIn) {};
+
+   bool isOn;
+};
+
 
 //Just holds some values for the camera
 struct Camera {
@@ -161,6 +168,10 @@ struct Push {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Components required for the Menus
+
+// Tells system if this is a menu entity
+struct Menu { Menu() {}; };
+
 
 // (NOT A COMPONENT) struct for a single character in a font
 struct character {

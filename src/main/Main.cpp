@@ -22,21 +22,16 @@ int main () {
 
    //Create the entity systems
    Level* firstLevel = new Level(window);
-   Menu* firstMenu = new Menu(window);
-   GLfloat currT = glfwGetTime();
 
    //Game loop
    //GLint cnt=0; GLfloat cTime = glfwGetTime();
-   bool isMenu = true;
+   GLfloat currT = glfwGetTime();
    do {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Clear screen
       glfwPollEvents(); //Check for key and mouse events
 
       //Update every system
-      if (isMenu)
-         firstMenu->update(glfwGetTime() - currT);
-      else
-         firstLevel->update(glfwGetTime() - currT);
+      firstLevel->update(glfwGetTime() - currT);
 
       currT = glfwGetTime();
 
@@ -64,31 +59,26 @@ int main () {
 
 Level::Level(GLFWwindow* window) {
 
+   ex::Entity entity = entities.create();
+   entity.assign<IsMenu>(true);
+
+   // Level Systems
    systems.add<ObjectSystem>(entities);
    systems.add<RoomSystem>(entities);
-   //systems.add<MenuSystem>(entities);
    systems.add<MoveSystem>(window);
    systems.add<CollisionSystem>();
-   systems.add<RenderSystem>(entities);
+
+   // Menu Systems
+   systems.add<MenuGenSystem>(entities, window);
+   systems.add<MenuCtrlSystem>(window);
+
+   //Global Systems
+   systems.add<RenderSystem>(entities, window);
    systems.configure();
 }
 
 void Level::update(ex::TimeDelta dT) { systems.update_all(dT); }
 
-
-
-
-
-Menu::Menu(GLFWwindow* window) {
-
-   systems.add<MenuGenSystem>(entities, window);
-   systems.add<MenuCtrlSystem>(window);
-   systems.add<RenderSystem>(entities);
-   systems.configure();
-
-}
-
-void Menu::update(ex::TimeDelta dT) { systems.update_all(dT); }
 
 
 
