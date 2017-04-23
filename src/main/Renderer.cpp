@@ -29,12 +29,12 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
       mat.modelMat = glm::translate(glm::mat4(1.0f), pos.pos);
    });
 
-   bool isMenu;
-   entM.each<IsMenu>([this, &isMenu](ex::Entity roomEnt, IsMenu& menu) {
-      isMenu = menu.isOn;
+   GLuint currScrn;
+   entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
+      currScrn = screen.id;
    });
 
-   if (!isMenu) {
+   if (currScrn == 1) {
       // Hides the cursor
       glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 

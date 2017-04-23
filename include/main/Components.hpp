@@ -31,10 +31,10 @@ namespace ex = entityx;
 //List of global components. These components are used in all aspects of the game
 
 // Holds a Boolean to determine if the menu is on
-struct IsMenu {
-   IsMenu(bool menuIn) : isOn(menuIn) {};
+struct Screen {
+   Screen(GLuint screenIn) : id(screenIn) {};
 
-   bool isOn;
+   GLuint id;
 };
 
 

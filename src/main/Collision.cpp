@@ -18,12 +18,12 @@ CollisionSystem::CollisionSystem() {}
 
 void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
-   bool isMenu;
-   entM.each<IsMenu>([this, &isMenu](ex::Entity roomEnt, IsMenu& menu) {
-      isMenu = menu.isOn;
+   GLuint currScrn;
+   entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
+      currScrn = screen.id;
    });
 
-   if (!isMenu) {
+   if (currScrn == 1) {
       //Passes the room in to check if entity has collided against wall
       entM.each<Room>([this, &entM, &evnM](ex::Entity roomEnt, Room& room) {
       //Checks every for collision for any collidable entities

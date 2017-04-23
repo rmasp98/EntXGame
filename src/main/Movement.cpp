@@ -38,12 +38,12 @@ MoveSystem::MoveSystem(GLFWwindow* window) {
 
 void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
-   bool isMenu;
-   entM.each<IsMenu>([this, &isMenu](ex::Entity roomEnt, IsMenu& menu) {
-      isMenu = menu.isOn;
+   GLuint currScrn;
+   entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
+      currScrn = screen.id;
    });
 
-   if (!isMenu) {
+   if (currScrn == 1) {
       //If Birds-Eye-View (BEV) mode is active
       if (isBEV) {
          //Need to add a delay so it doesn't flick straight back

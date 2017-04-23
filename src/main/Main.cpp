@@ -60,7 +60,7 @@ int main () {
 Level::Level(GLFWwindow* window) {
 
    ex::Entity entity = entities.create();
-   entity.assign<IsMenu>(true);
+   entity.assign<Screen>(0);
 
    // Level Systems
    systems.add<ObjectSystem>(entities);

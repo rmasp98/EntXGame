@@ -21,12 +21,12 @@ MenuCtrlSystem::MenuCtrlSystem(GLFWwindow* window) {
 
 void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex::TimeDelta dT) {
 
-   bool isMenu;
-   entM.each<IsMenu>([this, &isMenu](ex::Entity roomEnt, IsMenu& menu) {
-      isMenu = menu.isOn;
+   GLuint currScrn;
+   entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
+      currScrn = screen.id;
    });
 
-   if (isMenu) {
+   if (currScrn == 0) {
       //Finds the current cursor position
       entM.each<Clickable, Font>([this, &entM](ex::Entity entity, Clickable& click, Font& font) {
          double xPos, yPos;
@@ -36,8 +36,8 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
             font.colour = font.hiColour;
 
             if (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-               entM.each<IsMenu>([this](ex::Entity roomEnt, IsMenu& menu) {
-                  menu.isOn = false;
+               entM.each<Screen>([this](ex::Entity roomEnt, Screen& screen) {
+                  screen.id = 1;
                });
             }
          } else
