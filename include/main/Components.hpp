@@ -86,6 +86,8 @@ struct Renderable {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //This is a list of components required for the level
 
+// Flags the entity as a level object
+struct Level { Level() {}; };
 
 
 //An object that moves. This includes the maximum speed, the accerlation and current velocity
@@ -169,8 +171,12 @@ struct Push {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Components required for the Menus
 
-// Tells system if this is a menu entity
-struct Menu { Menu() {}; };
+// Tells system if this is a menu entity. Probably add parent ID too
+struct MenuID {
+   MenuID(GLuint idIn) : id(idIn) {};
+
+   GLuint parent, id;
+};
 
 
 // (NOT A COMPONENT) struct for a single character in a font
@@ -208,7 +214,6 @@ struct Clickable {
 };
 
 //Possible components:
-//  - MenuID (identifies which menu a button is associated with)
 //  - LinkMenu (contains menuID of linked menu)
 //  - NonLinkedButtons (this will somehow indicate a function that the button will run)
 

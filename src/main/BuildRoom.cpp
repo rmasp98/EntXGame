@@ -13,6 +13,8 @@ RoomSystem::RoomSystem(ex::EntityManager& entM) {
 
    //Create the room entity and assign it as a room
    ex::Entity entity = entM.create();
+   entity.assign<Level>();
+
    entity.assign<Room>();
    ex::ComponentHandle<Room> roomC = entity.component<Room>();
 

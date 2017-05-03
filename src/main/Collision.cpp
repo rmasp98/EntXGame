@@ -67,6 +67,7 @@ void CollisionSystem::wallCollision(Position& pos, Room& room) {
 
    //TODO: This is only a simple detection. Make better!
    //First check which axis the normal of the boundary is on
+   //Should check these values are initialised
    if (std::abs(room.norms[bestInd].z) < 1e-3 ) {
       //Then checks which direction it is facing
       if (room.norms[bestInd].x < 0) {

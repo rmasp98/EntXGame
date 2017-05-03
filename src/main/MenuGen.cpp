@@ -102,7 +102,7 @@ void MenuGenSystem::renderText(ex::EntityManager& entM, std::string text, glm::v
 		 maxH = std::max(maxH, h);
    }
 
-	entity.assign<Menu>();
+	entity.assign<MenuID>(0);
 	entity.assign<Renderable>(verts, norms, uvs, font.texID);
 	entity.assign<Shader>(pID);
 
@@ -117,7 +117,8 @@ void MenuGenSystem::renderText(ex::EntityManager& entM, std::string text, glm::v
 	entity.assign<Clickable>((pos.x + 1) * scaleX / 2.0f,
 									 (1 - (pos.y + maxH)) * scaleY / 2.0f,
 									 (pos.x + xOff + 1) * scaleX / 2.0f,
-									 (1 - pos.y) * scaleY / 2.0f, 0);
+									 (1 - pos.y) * scaleY / 2.0f,
+									 0);
 
 }
 

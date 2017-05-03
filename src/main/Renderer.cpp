@@ -42,7 +42,7 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
       addLight(entM);
 
       //Passes camera and model matrix, and then renders each object
-      entM.each<Renderable, Shader>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID) {
+      entM.each<Renderable, Shader, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID, Level& null) {
          drawScene(mesh, pID, entM);
       });
    } else {
@@ -50,8 +50,9 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
       glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
       //Passes camera and model matrix, and then renders each object
-      entM.each<Renderable, Shader, Menu>([this, &entM](ex::Entity entity, Renderable& mesh, Shader& pID, Menu& null) {
-         drawScene(mesh, pID, entM);
+      entM.each<Renderable, Shader, MenuID>([this, &entM, &currScrn](ex::Entity entity, Renderable& mesh, Shader& pID, MenuID& menu) {
+         if (currScrn == menu.id)
+            drawScene(mesh, pID, entM);
       });
    }
 

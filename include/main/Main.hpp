@@ -29,9 +29,9 @@ namespace ex = entityx;
 int initGraphics(GLFWwindow*&);
 
 //The entity system class
-class Level : public ex::EntityX {
+class Game : public ex::EntityX {
    public:
-      explicit Level(GLFWwindow* window);
+      explicit Game(GLFWwindow* window);
       void update(ex::TimeDelta dT);
 
    protected:

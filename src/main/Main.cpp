@@ -21,7 +21,8 @@ int main () {
    }
 
    //Create the entity systems
-   Level* firstLevel = new Level(window);
+   Game* firstGame = new Game
+   (window);
 
    //Game loop
    //GLint cnt=0; GLfloat cTime = glfwGetTime();
@@ -31,7 +32,7 @@ int main () {
       glfwPollEvents(); //Check for key and mouse events
 
       //Update every system
-      firstLevel->update(glfwGetTime() - currT);
+      firstGame->update(glfwGetTime() - currT);
 
       currT = glfwGetTime();
 
@@ -47,6 +48,7 @@ int main () {
    } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
           glfwWindowShouldClose(window) == 0);
 
+   delete firstGame;
    //Assume destroys window and all associated parts
    glfwTerminate();
 
@@ -57,7 +59,7 @@ int main () {
 
 
 
-Level::Level(GLFWwindow* window) {
+Game::Game(GLFWwindow* window) {
 
    ex::Entity entity = entities.create();
    entity.assign<Screen>(0);
@@ -77,7 +79,7 @@ Level::Level(GLFWwindow* window) {
    systems.configure();
 }
 
-void Level::update(ex::TimeDelta dT) { systems.update_all(dT); }
+void Game::update(ex::TimeDelta dT) { systems.update_all(dT); }
 
 
 

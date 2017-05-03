@@ -112,6 +112,7 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
 
 
    //Assign all values to the entity
+   entity.assign<Level>();
    entity.assign<Renderable>(verts, norms, uvs, texID);
    entity.assign<Shader>(pID);
    entity.assign<Position>(glm::vec3(1.0f, 1.0f, 0.0f), 0.5f);

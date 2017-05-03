@@ -1,4 +1,4 @@
-CC        := g++
+CXX       := g++
 LD        := g++
 FLAGS	  := -std=c++11 -Wall
 
@@ -17,7 +17,7 @@ vpath %.cpp $(SRC_DIR)
 
 define make-goal
 $1/%.o: %.cpp
-	$(CC) $(FLAGS) $(INCLUDES) -c $$< -o $$@
+	$(CXX) $(FLAGS) $(INCLUDES) -c $$< -o $$@
 endef
 
 .PHONY: all checkdirs clean
@@ -25,7 +25,7 @@ endef
 all: checkdirs $(EXE)
 
 $(EXE): $(OBJ)
-	$(LD) $(FLAGS) $^ -o $@ $(LIBS)
+	$(CXX) $(FLAGS) $^ -o $@ $(LIBS)
 
 
 checkdirs: $(BUILD_DIR)

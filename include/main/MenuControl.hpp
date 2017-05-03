@@ -22,7 +22,9 @@ class MenuCtrlSystem : public ex::System<MenuCtrlSystem> {
 
    protected:
       GLFWwindow* win;
+      GLint winXcen, winYcen;
 
+      void buttonPress(GLuint, ex::EntityManager&);
 };
 
 
