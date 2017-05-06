@@ -19,6 +19,15 @@
 // Window Library
 #include <GLFW/glfw3.h>
 
+// String library for file ingest
+#include <fstream>
+#include <sstream>
+
+// Libraries for reading and processing JSON
+#include "rapidjson/document.h"
+#include "rapidjson/istreamwrapper.h"
+namespace rj = rapidjson;
+
 
 class MenuGenSystem : public ex::System<MenuGenSystem> {
    public:
@@ -29,7 +38,15 @@ class MenuGenSystem : public ex::System<MenuGenSystem> {
       GLuint pID;
       GLint scaleX, scaleY;
 
-      void renderText(ex::EntityManager&, std::string, glm::vec3, Atlas&);
+      void makeButton(ex::EntityManager&, std::string, glm::vec3, Atlas&);
+      void readConfig(ex::EntityManager&, std::string);
+
+      void getKey(rj::Value&, std::string, std::string&);
+      void getKey(rj::Value&, std::string, GLuint&);
+      void getKey(rj::Value&, std::string, GLint&);
+      void getKey(rj::Value&, std::string, GLfloat&);
+      rj::Value& getKey(rj::Value&, std::string);
+
 };
 
 
