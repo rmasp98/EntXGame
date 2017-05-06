@@ -43,7 +43,7 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
 
       //Passes camera and model matrix, and then renders each object
       entM.each<Renderable, Shader, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID, Level& null) {
-         drawScene(mesh, pID, entM);
+         drawScene(mesh, pID, entM, entity);
       });
    } else {
       // Reenables cursor for the menu
@@ -52,7 +52,7 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
       //Passes camera and model matrix, and then renders each object
       entM.each<Renderable, Shader, MenuID>([this, &entM, &currScrn](ex::Entity entity, Renderable& mesh, Shader& pID, MenuID& menu) {
          if (currScrn == menu.id)
-            drawScene(mesh, pID, entM);
+            drawScene(mesh, pID, entM, entity);
       });
    }
 
@@ -122,7 +122,7 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
 
 
 
-void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& entM) {
+void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& entM, ex::Entity& entity) {
 
    glUseProgram(prog.progID);
 
@@ -136,9 +136,9 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
    });
 
    // Passes colour of font to graphic card
-   entM.each<Font>([this, &mesh, &prog](ex::Entity ent, Font& font) {
-      glUniform3fv(glGetUniformLocation(prog.progID, "textColour"), 1, &(font.colour[0]));
-   });
+   ex::ComponentHandle<Font> font = entity.component<Font>();
+   if (font)
+      glUniform3fv(glGetUniformLocation(prog.progID, "textColour"), 1, &(font->colour[0]));
 
    //Send object's model matrix
    glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);

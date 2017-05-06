@@ -29,7 +29,7 @@ class RenderSystem : public ex::System<RenderSystem> {
       GLFWwindow* window;
 
       void genBuffers(ex::Entity&, Renderable&, Shader&);
-      void drawScene(Renderable&, Shader&, ex::EntityManager& entM);
+      void drawScene(Renderable&, Shader&, ex::EntityManager& entM, ex::Entity&);
       void addLight(ex::EntityManager&);
 };
 

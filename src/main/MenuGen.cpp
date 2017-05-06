@@ -63,6 +63,9 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 		getKey(doc, "fontFile", fontFile); getKey(doc, "fontSize", fontSize);
 		Atlas* menuFont = new Atlas(fontFile, fontSize, ft);
 
+		glm::vec3 bColour  = getArray(doc, "baseColour");
+		glm::vec3 hiColour = getArray(doc, "highColour");
+
 		rj::Value& menu = getKey(doc, "menus");
 		for (rj::SizeType i = 0; i < menu.Size(); ++i) {
 			GLuint menuID = menu[i]["id"].GetInt();
@@ -72,13 +75,14 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 				GLuint buttonID; std::string buttonText;
 				getKey(buttons[j], "id", buttonID);
 				getKey(buttons[j], "text", buttonText);
+				glm::vec3 buttonPos = getArray(buttons[j], "position");
 
-				glm::vec3 buttonPos;
-				rj::Value& posKey = getKey(buttons[j], "position");
-				for (GLuint k = 0; k < 3; ++k)
-					buttonPos[k] = posKey[k].GetDouble();
+				ex::Entity entity = entM.create();
+				makeButton(entity, buttonText, buttonPos, *menuFont);
 
-				makeButton(entM, buttonText, buttonPos, *menuFont);
+				entity.assign<Shader>(pID);
+				entity.assign<MenuID>(menuID);
+				entity.assign<Font>(bColour, hiColour, menuFont);
 			}
 		}
 	}
@@ -131,15 +135,24 @@ rj::Value& MenuGenSystem::getKey(rj::Value& mainKey, std::string newKey) {
 	assert(keyRef.IsArray()); return keyRef;
 }
 
+glm::vec3 MenuGenSystem::getArray(rj::Value& mainKey, std::string newKey) {
+	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
+	assert(keyRef.IsArray());
+
+	glm::vec3 keyOut;
+	for (GLuint k = 0; k < 3; ++k)
+		keyOut[k] = keyRef[k].GetDouble();
+
+	return keyOut;
+}
 
 
 
 
 
 
-void MenuGenSystem::makeButton(ex::EntityManager& entM, std::string text, glm::vec3 pos, Atlas& font) {
 
-	ex::Entity entity = entM.create();
+void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 pos, Atlas& font) {
 
 	GLuint numVerts = 6 * text.length();
 	std::vector<glm::vec3> verts(numVerts, glm::vec3(0)), norms(numVerts, glm::vec3(0));
@@ -150,14 +163,13 @@ void MenuGenSystem::makeButton(ex::EntityManager& entM, std::string text, glm::v
 	const GLubyte *p;
 	for (p = (const GLubyte *)text.c_str(); *p; p++) {
 		 character ch = font.c[*p];
-		 //Character ch = Characters[*c];
 
 		 GLfloat xpos = xOff + ch.bearing.x / (GLfloat)scaleX;
 		 GLfloat ypos = yOff - (ch.size.y - ch.bearing.y) / (GLfloat)scaleY;
 
 		 GLfloat w = ch.size.x / (GLfloat)scaleX;
 		 GLfloat h = ch.size.y / (GLfloat)scaleY;
-		 // Update VBO for each character
+
 		 GLfloat right = ch.offset.x + (ch.size.x / (GLfloat)font.w);
 		 GLfloat top = ch.offset.y + (ch.size.y / (GLfloat)font.h);
 
@@ -181,15 +193,10 @@ void MenuGenSystem::makeButton(ex::EntityManager& entM, std::string text, glm::v
 		 maxH = std::max(maxH, h);
    }
 
-	entity.assign<MenuID>(0);
 	entity.assign<Renderable>(verts, norms, uvs, font.texID);
-	entity.assign<Shader>(pID);
 
 	pos.x -= xOff / 2.0f;
 	entity.assign<Position>(pos, 0.0f);
-	entity.assign<Font>(glm::vec3(0.9f, 0.3f, 0.3f),
-	 						  glm::vec3(1.0f, 1.0f, 1.0f),
-							  &font);
 
 	// Cursor Y Pos is inverted hence the order and inversion of the y coords
 	// Also everything is in texture coord, which is tranformed to pixel coords

@@ -195,10 +195,10 @@ struct Atlas {
 };
 
 //Holds the font and font colours. Lo = standard, Hi = selected
+// Need to find a way to delete Atlas when finished with 
 struct Font {
    Font(glm::vec3 loColIn, glm::vec3 hiColIn, Atlas* fontIn) :
         colour(loColIn), loColour(loColIn), hiColour(hiColIn), atlas(fontIn) {};
-   ~Font() { delete atlas; };
 
    glm::vec3 colour, loColour, hiColour;
    Atlas* atlas;

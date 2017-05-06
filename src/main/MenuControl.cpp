@@ -33,6 +33,8 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
          double xPos, yPos;
          glfwGetCursorPos(win, &xPos, &yPos);
 
+
+
          // If the cursor is on top of the button
          if ((xPos > click.bound.x) && (yPos > click.bound.y) && (xPos < click.bound.z) && (yPos < click.bound.w)) {
             font.colour = font.hiColour;
