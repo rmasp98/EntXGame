@@ -41,16 +41,16 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 	if(FT_Init_FreeType(&ft))
 		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
 
-	std::string line;
-
+	// Read the json file into rapidjson
 	std::ifstream cfgFile; cfgFile.open(fileName);
 	rj::IStreamWrapper cfgIn(cfgFile);
 
+	// If json file has been parsed successfully
 	rj::Document doc;
 	if (!doc.ParseStream(cfgIn).HasParseError()) {
 		// Get the menu shaders from config and load them
-		std::string vsName, fsName;
-		getKey(doc, "vertShader", vsName); getKey(doc, "fragShader", fsName);
+		std::string vsName = getStringKey(doc, "vertShader");
+		std::string fsName = getStringKey(doc, "fragShader");
 		if (vsName != "" && fsName != "")
 	      pID = LoadShaders(vsName.c_str(), fsName.c_str());
 	   else {
@@ -59,30 +59,50 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 	   }
 
 		// Get font values from config and load font
-		std::string fontFile; GLuint fontSize;
-		getKey(doc, "fontFile", fontFile); getKey(doc, "fontSize", fontSize);
+		std::string fontFile = getStringKey(doc, "fontFile");
+		GLuint fontSize = getUintKey(doc, "fontSize");
 		Atlas* menuFont = new Atlas(fontFile, fontSize, ft);
 
-		glm::vec3 bColour  = getArray(doc, "baseColour");
-		glm::vec3 hiColour = getArray(doc, "highColour");
+		// Read in the main font colours
+		glm::vec3 mainBC = getVec3Key(doc, "baseColour");
+		glm::vec3 mainHC = getVec3Key(doc, "highColour");
 
-		rj::Value& menu = getKey(doc, "menus");
+		// Check for the menu config and loop over each menu
+		rj::Value& menu = getArrayKey(doc, "menus");
 		for (rj::SizeType i = 0; i < menu.Size(); ++i) {
-			GLuint menuID = menu[i]["id"].GetInt();
+			GLuint menuID = getUintKey(menu[i], "id");
 
-			rj::Value& buttons = getKey(menu[i], "buttons");
+			// If there are menu specific font colours, override main colours
+			glm::vec3 menuBC;
+			if (!checkKey(menu[i], "baseColour", menuBC))
+				menuBC = mainBC;
+
+			glm::vec3 menuHC;
+			if (!checkKey(menu[i], "highColour", menuHC))
+				menuHC = mainHC;
+
+			// Loop over all buttons in the menu
+			rj::Value& buttons = getArrayKey(menu[i], "buttons");
 			for (rj::SizeType j = 0; j < buttons.Size(); ++j) {
-				GLuint buttonID; std::string buttonText;
-				getKey(buttons[j], "id", buttonID);
-				getKey(buttons[j], "text", buttonText);
-				glm::vec3 buttonPos = getArray(buttons[j], "position");
+				GLuint buttonID = getUintKey(buttons[j], "id");
+				std::string buttonText = getStringKey(buttons[j], "text");
+				glm::vec3 buttonPos = getVec3Key(buttons[j], "position");
 
 				ex::Entity entity = entM.create();
 				makeButton(entity, buttonText, buttonPos, *menuFont);
 
 				entity.assign<Shader>(pID);
 				entity.assign<MenuID>(menuID);
-				entity.assign<Font>(bColour, hiColour, menuFont);
+
+				glm::vec3 buttonBC;
+				if (!checkKey(buttons[j], "baseColour", buttonBC))
+					buttonBC = menuBC;
+
+				glm::vec3 buttonHC;
+				if (!checkKey(buttons[j], "highColour", buttonHC))
+					buttonHC = menuHC;
+
+				entity.assign<Font>(buttonBC, buttonHC, menuFont);
 			}
 		}
 	}
@@ -92,50 +112,33 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 
 
 
-/*// Keytype = 0 (object), 1 (string), 2 (int), 3 (uint), 4 (double), 5 (array)
-template<typename T>
-void MenuGenSystem::getKey(rj::Value& mainKey, std::string newKey, T& keyOut) {
-	assert(mainKey.HasMember(newKey))
-	rj::Value& keyRef = mainKey[newKey];
 
-	switch (keyRef.GetType()) {
-		case 0: assert(!keyRef.IsObject());
-		case 1: assert(!keyRef.IsString());
-		case 2: assert(!keyRef.IsInt());
-		case 3: assert(!keyRef.IsUint());
-		case 4: assert(!keyRef.IsDouble());
-		case 5: assert(!keyRef.IsObject());
-	}
-}*/
-
-
-
-void MenuGenSystem::getKey(rj::Value& mainKey, std::string newKey, std::string& keyOut) {
+std::string MenuGenSystem::getStringKey(rj::Value& mainKey, std::string newKey) {
 	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsString()); keyOut = keyRef.GetString();
+	assert(keyRef.IsString()); return keyRef.GetString();
 }
 
-void MenuGenSystem::getKey(rj::Value& mainKey, std::string newKey, GLuint& keyOut) {
+GLuint MenuGenSystem::getUintKey(rj::Value& mainKey, std::string newKey) {
 	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsUint()); keyOut = keyRef.GetUint();
+	assert(keyRef.IsUint()); return keyRef.GetUint();
 }
 
-void MenuGenSystem::getKey(rj::Value& mainKey, std::string newKey, GLint& keyOut) {
+GLint MenuGenSystem::getIntKey(rj::Value& mainKey, std::string newKey) {
 	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsInt()); keyOut = keyRef.GetInt();
+	assert(keyRef.IsInt()); return keyRef.GetInt();
 }
 
-void MenuGenSystem::getKey(rj::Value& mainKey, std::string newKey, GLfloat& keyOut) {
+GLfloat MenuGenSystem::getFloatKey(rj::Value& mainKey, std::string newKey) {
 	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsDouble()); keyOut = keyRef.GetDouble();
+	assert(keyRef.IsDouble()); return keyRef.GetDouble();
 }
 
-rj::Value& MenuGenSystem::getKey(rj::Value& mainKey, std::string newKey) {
+rj::Value& MenuGenSystem::getArrayKey(rj::Value& mainKey, std::string newKey) {
 	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
 	assert(keyRef.IsArray()); return keyRef;
 }
 
-glm::vec3 MenuGenSystem::getArray(rj::Value& mainKey, std::string newKey) {
+glm::vec3 MenuGenSystem::getVec3Key(rj::Value& mainKey, std::string newKey) {
 	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
 	assert(keyRef.IsArray());
 
@@ -144,6 +147,17 @@ glm::vec3 MenuGenSystem::getArray(rj::Value& mainKey, std::string newKey) {
 		keyOut[k] = keyRef[k].GetDouble();
 
 	return keyOut;
+}
+
+
+bool MenuGenSystem::checkKey(rj::Value& mainKey, std::string newKey, glm::vec3& keyOut) {
+	if (mainKey.HasMember(newKey.c_str()) && (mainKey[newKey.c_str()].IsArray())) {
+		for (GLuint k = 0; k < 3; ++k)
+			keyOut[k] = mainKey[newKey.c_str()][k].GetDouble();
+
+		return true;
+	} else
+		return false;
 }
 
 

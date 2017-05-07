@@ -35,18 +35,27 @@ class MenuGenSystem : public ex::System<MenuGenSystem> {
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    private:
+      struct button {
+         button(glm::vec3 bcIn, glm::vec3 hcIn) : bc(bcIn), hc(hcIn) {};
+         glm::vec3 bc, hc;
+      };
+
       GLuint pID;
       GLint scaleX, scaleY;
 
       void makeButton(ex::Entity&, std::string, glm::vec3, Atlas&);
       void readConfig(ex::EntityManager&, std::string);
 
-      void getKey(rj::Value&, std::string, std::string&);
-      void getKey(rj::Value&, std::string, GLuint&);
-      void getKey(rj::Value&, std::string, GLint&);
-      void getKey(rj::Value&, std::string, GLfloat&);
-      rj::Value& getKey(rj::Value&, std::string);
-      glm::vec3 getArray(rj::Value&, std::string);
+      std::string getStringKey(rj::Value&, std::string);
+      GLuint getUintKey(rj::Value&, std::string);
+      GLint getIntKey(rj::Value&, std::string);
+      GLfloat getFloatKey(rj::Value&, std::string);
+      glm::vec3 getVec3Key(rj::Value&, std::string);
+
+      rj::Value& getArrayKey(rj::Value&, std::string);
+      bool checkKey(rj::Value&, std::string, glm::vec3&);
+
+
 
 };
 
