@@ -173,7 +173,8 @@ struct Push {
 
 // Tells system if this is a menu entity. Probably add parent ID too
 struct MenuID {
-   MenuID(GLuint idIn) : id(idIn) {};
+   MenuID(GLuint parIn, GLuint idIn)
+          : parent(parIn), id(idIn) {};
 
    GLuint parent, id;
 };
@@ -195,7 +196,7 @@ struct Atlas {
 };
 
 //Holds the font and font colours. Lo = standard, Hi = selected
-// Need to find a way to delete Atlas when finished with 
+// Need to find a way to delete Atlas when finished with
 struct Font {
    Font(glm::vec3 loColIn, glm::vec3 hiColIn, Atlas* fontIn) :
         colour(loColIn), loColour(loColIn), hiColour(hiColIn), atlas(fontIn) {};
@@ -206,11 +207,24 @@ struct Font {
 
 
 struct Clickable {
-   Clickable(GLfloat xMin, GLfloat yMin, GLfloat xMax, GLfloat yMax, GLuint button) :
-             bound(glm::vec4(xMin, yMin, xMax, yMax)), buttonID(button) {};
+   Clickable(GLfloat xMin, GLfloat yMin, GLfloat xMax, GLfloat yMax) :
+             bound(glm::vec4(xMin, yMin, xMax, yMax)) {};
 
    glm::vec4 bound;
-   GLuint buttonID;
+};
+
+
+struct Action {
+   Action(GLuint funIn) : functionID(funIn) {};
+
+   GLuint functionID;
+};
+
+
+struct ScreenLink {
+   ScreenLink(GLuint scrnIn) : linkId(scrnIn) {};
+
+   GLuint linkId;
 };
 
 //Possible components:

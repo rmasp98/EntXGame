@@ -43,13 +43,14 @@ class MenuGenSystem : public ex::System<MenuGenSystem> {
       GLuint pID;
       GLint scaleX, scaleY;
 
-      void makeButton(ex::Entity&, std::string, glm::vec3, Atlas&);
+      void makeButton(ex::Entity&, std::string, glm::vec3, bool, GLfloat, Atlas&);
       void readConfig(ex::EntityManager&, std::string);
 
       std::string getStringKey(rj::Value&, std::string);
       GLuint getUintKey(rj::Value&, std::string);
       GLint getIntKey(rj::Value&, std::string);
       GLfloat getFloatKey(rj::Value&, std::string);
+      bool getBoolKey(rj::Value&, std::string);
       glm::vec3 getVec3Key(rj::Value&, std::string);
 
       rj::Value& getArrayKey(rj::Value&, std::string);

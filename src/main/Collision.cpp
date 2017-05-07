@@ -23,7 +23,7 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
       currScrn = screen.id;
    });
 
-   if (currScrn == 1) {
+   if (currScrn == 10) {
       //Passes the room in to check if entity has collided against wall
       entM.each<Room>([this, &entM, &evnM](ex::Entity roomEnt, Room& room) {
       //Checks every for collision for any collidable entities

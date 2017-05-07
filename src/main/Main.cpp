@@ -45,8 +45,7 @@ int main () {
       //Swap second buffer
       glfwSwapBuffers(window);
 
-   } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-          glfwWindowShouldClose(window) == 0);
+   } while (glfwWindowShouldClose(window) == 0);
 
    delete firstGame;
    //Assume destroys window and all associated parts

@@ -27,13 +27,13 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
       currScrn = screen.id;
    });
 
-   if (currScrn == 0) {
+   if (currScrn != 10) {
       //Finds the current cursor position
-      entM.each<Clickable, Font>([this, &entM](ex::Entity entity, Clickable& click, Font& font) {
+      entM.each<Clickable, Font, Action>([this, &entM]
+               (ex::Entity entity, Clickable& click, Font& font, Action& action) {
+
          double xPos, yPos;
          glfwGetCursorPos(win, &xPos, &yPos);
-
-
 
          // If the cursor is on top of the button
          if ((xPos > click.bound.x) && (yPos > click.bound.y) && (xPos < click.bound.z) && (yPos < click.bound.w)) {
@@ -41,7 +41,7 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
 
             // If the button is clicked
             if (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-               buttonPress(click.buttonID, entM);
+               buttonPress(action.functionID, entM, entity);
 
          } else
             font.colour = font.loColour;
@@ -54,16 +54,16 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
 
 
 
-void MenuCtrlSystem::buttonPress(GLuint buttonType, ex::EntityManager& entM) {
+void MenuCtrlSystem::buttonPress(GLuint functionID, ex::EntityManager& entM, ex::Entity& entity) {
 
-   switch(buttonType) {
-      case 0 : entM.each<Screen>([this](ex::Entity roomEnt, Screen& screen) {
-                  screen.id = 1;
-
-                  glfwSetCursorPos(win, winXcen/2.0f, winYcen/2.0f);
-               });
-               break;
-      //case 1 : std::cout << "Not done this yet" << std::endl;
-               //break;
-   }
+   if (functionID == 0) {
+      ex::ComponentHandle<ScreenLink> link = entity.component<ScreenLink>();
+      if (link) {
+         entM.each<Screen>([this, &link](ex::Entity roomEnt, Screen& screen) {
+            screen.id = link->linkId;
+            glfwSetCursorPos(win, winXcen/2.0f, winYcen/2.0f);
+         });
+      }
+   } else if (functionID == 1)
+      glfwSetWindowShouldClose(win, GLFW_TRUE);;
 }

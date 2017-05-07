@@ -58,12 +58,10 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 	      exit(EXIT_FAILURE);
 	   }
 
-		getKey<GLuint>(doc, "fontSize");
-
 		// Get font values from config and load font
 		std::string fontFile = getStringKey(doc, "fontFile");
-		GLuint fontSize = getUintKey(doc, "fontSize");
-		Atlas* menuFont = new Atlas(fontFile, fontSize, ft);
+		GLuint fontBaseSize = getUintKey(doc, "fontBaseSize");
+		Atlas* menuFont = new Atlas(fontFile, fontBaseSize, ft);
 
 		// Read in the main font colours
 		glm::vec3 mainBC = getVec3Key(doc, "baseColour");
@@ -71,37 +69,42 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 
 		// Check for the menu config and loop over each menu
 		rj::Value& menu = getArrayKey(doc, "menus");
-		for (rj::SizeType i = 0; i < menu.Size(); ++i) {
-			GLuint menuID = getUintKey(menu[i], "id");
+		for (rj::SizeType iMenu = 0; iMenu < menu.Size(); ++iMenu) {
+			GLuint menuID = getUintKey(menu[iMenu], "id");
 
 			// If there are menu specific font colours, override main colours
 			glm::vec3 menuBC;
-			if (!checkKey(menu[i], "baseColour", menuBC))
+			if (!checkKey(menu[iMenu], "baseColour", menuBC))
 				menuBC = mainBC;
 
 			glm::vec3 menuHC;
-			if (!checkKey(menu[i], "highColour", menuHC))
+			if (!checkKey(menu[iMenu], "highColour", menuHC))
 				menuHC = mainHC;
 
 			// Loop over all buttons in the menu
-			rj::Value& buttons = getArrayKey(menu[i], "buttons");
-			for (rj::SizeType j = 0; j < buttons.Size(); ++j) {
-				GLuint buttonID = getUintKey(buttons[j], "id");
-				std::string buttonText = getStringKey(buttons[j], "text");
-				glm::vec3 buttonPos = getVec3Key(buttons[j], "position");
-
+			rj::Value& buttons = getArrayKey(menu[iMenu], "buttons");
+			for (rj::SizeType jButton = 0; jButton < buttons.Size(); ++jButton) {
 				ex::Entity entity = entM.create();
-				makeButton(entity, buttonText, buttonPos, *menuFont);
+				makeButton(entity, getStringKey(buttons[jButton], "text"),
+							  getVec3Key(buttons[jButton], "position"),
+							  getBoolKey(buttons[jButton], "clickable"),
+							  getFloatKey(buttons[jButton], "fontSize"), *menuFont);
 
 				entity.assign<Shader>(pID);
-				entity.assign<MenuID>(menuID);
+				entity.assign<MenuID>(0, menuID);
+
+				if (buttons[jButton].HasMember("linkId")) {
+					entity.assign<ScreenLink>(getUintKey(buttons[jButton], "linkId"));
+					entity.assign<Action>(0);
+				} else if (buttons[jButton].HasMember("exit") && getBoolKey(buttons[jButton], "exit"))
+					entity.assign<Action>(1);
 
 				glm::vec3 buttonBC;
-				if (!checkKey(buttons[j], "baseColour", buttonBC))
+				if (!checkKey(buttons[jButton], "baseColour", buttonBC))
 					buttonBC = menuBC;
 
 				glm::vec3 buttonHC;
-				if (!checkKey(buttons[j], "highColour", buttonHC))
+				if (!checkKey(buttons[jButton], "highColour", buttonHC))
 					buttonHC = menuHC;
 
 				entity.assign<Font>(buttonBC, buttonHC, menuFont);
@@ -112,33 +115,6 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 	FT_Done_FreeType(ft);
 }
 
-
-
-//This doesn't work :( When you pass a type most returns fail
-/*template<typename T>
-T MenuGenSystem::getKey(rj::Value& mainKey, std::string newKey) {
-	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-
-	if (typeid(T) == typeid(std::string)) {
-		assert(keyRef.IsString()); return keyRef.GetString();
-	} else if (typeid(T) == typeid(GLuint)) {
-		assert(keyRef.IsUint()); return keyRef.GetUint();
-	} else if (typeid(T) == typeid(GLint)) {
-		assert(keyRef.IsInt()); return keyRef.GetInt();
-	} else if (typeid(T) ==  typeid(GLfloat)) {
-		assert(keyRef.IsDouble()); return keyRef.GetDouble();
-	} else if (typeid(T) ==  typeid(rj::Value&)) {
-		assert(keyRef.IsArray()); return keyRef;
-	} else if (typeid(T) ==  typeid(glm::vec3)) {
-		assert(keyRef.IsArray());
-		glm::vec3 keyOut;
-		for (GLuint k = 0; k < 3; ++k)
-		  keyOut[k] = keyRef[k].GetDouble();
-
-		return keyOut;
-	} else
-		return NULL;
-}*/
 
 
 std::string MenuGenSystem::getStringKey(rj::Value& mainKey, std::string newKey) {
@@ -159,6 +135,11 @@ GLint MenuGenSystem::getIntKey(rj::Value& mainKey, std::string newKey) {
 GLfloat MenuGenSystem::getFloatKey(rj::Value& mainKey, std::string newKey) {
 	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
 	assert(keyRef.IsDouble()); return keyRef.GetDouble();
+}
+
+bool MenuGenSystem::getBoolKey(rj::Value& mainKey, std::string newKey) {
+	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
+	assert(keyRef.IsBool()); return keyRef.GetBool();
 }
 
 rj::Value& MenuGenSystem::getArrayKey(rj::Value& mainKey, std::string newKey) {
@@ -194,7 +175,7 @@ bool MenuGenSystem::checkKey(rj::Value& mainKey, std::string newKey, glm::vec3& 
 
 
 
-void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 pos, Atlas& font) {
+void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 pos, bool click, GLfloat fSize, Atlas& font) {
 
 	GLuint numVerts = 6 * text.length();
 	std::vector<glm::vec3> verts(numVerts, glm::vec3(0)), norms(numVerts, glm::vec3(0));
@@ -206,11 +187,11 @@ void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 p
 	for (p = (const GLubyte *)text.c_str(); *p; p++) {
 		 character ch = font.c[*p];
 
-		 GLfloat xpos = xOff + ch.bearing.x / (GLfloat)scaleX;
-		 GLfloat ypos = yOff - (ch.size.y - ch.bearing.y) / (GLfloat)scaleY;
+		 GLfloat xpos = xOff + ch.bearing.x / (GLfloat)scaleX * fSize;
+		 GLfloat ypos = yOff - (ch.size.y - ch.bearing.y) / (GLfloat)scaleY * fSize;
 
-		 GLfloat w = ch.size.x / (GLfloat)scaleX;
-		 GLfloat h = ch.size.y / (GLfloat)scaleY;
+		 GLfloat w = ch.size.x / (GLfloat)scaleX * fSize;
+		 GLfloat h = ch.size.y / (GLfloat)scaleY * fSize;
 
 		 GLfloat right = ch.offset.x + (ch.size.x / (GLfloat)font.w);
 		 GLfloat top = ch.offset.y + (ch.size.y / (GLfloat)font.h);
@@ -229,8 +210,8 @@ void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 p
 		 uvs  [6*i+4] = glm::vec2(right, top);
 		 uvs  [6*(i++)+5] = glm::vec2(right, ch.offset.y);
 
-		 xOff += (ch.advance.x >> 6) / (GLfloat)scaleX;
-		 yOff += (ch.advance.y >> 6) / (GLfloat)scaleY;
+		 xOff += (ch.advance.x >> 6) / (GLfloat)scaleX * fSize;
+		 yOff += (ch.advance.y >> 6) / (GLfloat)scaleY * fSize;
 
 		 maxH = std::max(maxH, h);
    }
@@ -240,13 +221,14 @@ void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 p
 	pos.x -= xOff / 2.0f;
 	entity.assign<Position>(pos, 0.0f);
 
-	// Cursor Y Pos is inverted hence the order and inversion of the y coords
-	// Also everything is in texture coord, which is tranformed to pixel coords
-	entity.assign<Clickable>((pos.x + 1) * scaleX / 2.0f,
-									 (1 - (pos.y + maxH)) * scaleY / 2.0f,
-									 (pos.x + xOff + 1) * scaleX / 2.0f,
-									 (1 - pos.y) * scaleY / 2.0f,
-									 0);
+	if (click) {
+		// Cursor Y Pos is inverted hence the order and inversion of the y coords
+		// Also everything is in texture coord, which is tranformed to pixel coords
+		entity.assign<Clickable>((pos.x + 1) * scaleX / 2.0f,
+										 (1 - (pos.y + maxH)) * scaleY / 2.0f,
+										 (pos.x + xOff + 1) * scaleX / 2.0f,
+										 (1 - pos.y) * scaleY / 2.0f);
+	}
 
 }
 

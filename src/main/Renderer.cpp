@@ -34,9 +34,12 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
       currScrn = screen.id;
    });
 
-   if (currScrn == 1) {
+   if (currScrn >= 10) {
       // Hides the cursor
-      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+      if (currScrn == 10)
+         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+      else
+         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
       //Pass the lights to graphics card
       addLight(entM);
@@ -44,6 +47,11 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
       //Passes camera and model matrix, and then renders each object
       entM.each<Renderable, Shader, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID, Level& null) {
          drawScene(mesh, pID, entM, entity);
+      });
+
+      entM.each<Renderable, Shader, MenuID>([this, &entM, &currScrn](ex::Entity entity, Renderable& mesh, Shader& pID, MenuID& menu) {
+         if (currScrn == menu.id)
+            drawScene(mesh, pID, entM, entity);
       });
    } else {
       // Reenables cursor for the menu

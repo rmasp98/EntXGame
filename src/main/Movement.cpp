@@ -43,7 +43,7 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
       currScrn = screen.id;
    });
 
-   if (currScrn == 1) {
+   if (currScrn == 10) {
       //If Birds-Eye-View (BEV) mode is active
       if (isBEV) {
          //Need to add a delay so it doesn't flick straight back
@@ -88,6 +88,15 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
             isBEV = true; isUp = true; delay = 0; viewPos = currView;
          }
       }
+   }
+
+   if ((glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) && (currScrn >= 10)) {
+      entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
+         if (currScrn == 10)
+            screen.id = 11;
+         else
+            screen.id = 10;
+      });
    }
 }
 
