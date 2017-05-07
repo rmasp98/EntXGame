@@ -58,6 +58,8 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 	      exit(EXIT_FAILURE);
 	   }
 
+		getKey<GLuint>(doc, "fontSize");
+
 		// Get font values from config and load font
 		std::string fontFile = getStringKey(doc, "fontFile");
 		GLuint fontSize = getUintKey(doc, "fontSize");
@@ -111,6 +113,32 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 }
 
 
+
+//This doesn't work :( When you pass a type most returns fail
+/*template<typename T>
+T MenuGenSystem::getKey(rj::Value& mainKey, std::string newKey) {
+	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
+
+	if (typeid(T) == typeid(std::string)) {
+		assert(keyRef.IsString()); return keyRef.GetString();
+	} else if (typeid(T) == typeid(GLuint)) {
+		assert(keyRef.IsUint()); return keyRef.GetUint();
+	} else if (typeid(T) == typeid(GLint)) {
+		assert(keyRef.IsInt()); return keyRef.GetInt();
+	} else if (typeid(T) ==  typeid(GLfloat)) {
+		assert(keyRef.IsDouble()); return keyRef.GetDouble();
+	} else if (typeid(T) ==  typeid(rj::Value&)) {
+		assert(keyRef.IsArray()); return keyRef;
+	} else if (typeid(T) ==  typeid(glm::vec3)) {
+		assert(keyRef.IsArray());
+		glm::vec3 keyOut;
+		for (GLuint k = 0; k < 3; ++k)
+		  keyOut[k] = keyRef[k].GetDouble();
+
+		return keyOut;
+	} else
+		return NULL;
+}*/
 
 
 std::string MenuGenSystem::getStringKey(rj::Value& mainKey, std::string newKey) {

@@ -55,8 +55,6 @@ class MenuGenSystem : public ex::System<MenuGenSystem> {
       rj::Value& getArrayKey(rj::Value&, std::string);
       bool checkKey(rj::Value&, std::string, glm::vec3&);
 
-
-
 };
 
 
