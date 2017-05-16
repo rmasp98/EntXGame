@@ -27,7 +27,7 @@ class MoveSystem : public ex::System<MoveSystem>, public ex::Receiver<MoveSystem
    protected:
       GLFWwindow* win;
       GLint winXcen, winYcen, delay;
-      bool isBEV, isUp, isDown;
+      bool isBEV, isUp, isDown, isRelease;
       glm::vec3 bevPos, currView, viewOrient, oldBevPos, viewPos, oldViewPos;
 
       void moveObject(ex::Entity&, Position&, Acceleration&, Direction*, GLfloat);

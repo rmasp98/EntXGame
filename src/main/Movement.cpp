@@ -29,7 +29,7 @@ MoveSystem::MoveSystem(GLFWwindow* window) {
    //bevPos = glm::vec3(0,40,0);
 
    isBEV = false; isUp = false; isDown = false; delay = 0;
-   viewOrient = glm::vec3(0,1,0);
+   viewOrient = glm::vec3(0,1,0); isRelease = true;
 }
 
 
@@ -90,14 +90,17 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
       }
    }
 
-   if ((glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) && (currScrn >= 10)) {
+   if ((glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) && (isRelease) && (currScrn >= 10)) {
       entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
          if (currScrn == 10)
             screen.id = 11;
          else
             screen.id = 10;
       });
-   }
+      isRelease = false;
+      glfwSetCursorPos(win, winXcen, winYcen);
+   } else if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_RELEASE)
+      isRelease = true;
 }
 
 

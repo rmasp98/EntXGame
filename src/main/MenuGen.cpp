@@ -81,6 +81,12 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 			if (!checkKey(menu[iMenu], "highColour", menuHC))
 				menuHC = mainHC;
 
+			std::string bgImage = "";
+			if (menu[iMenu].HasMember("bgImage"))
+				bgImage = getStringKey(menu[iMenu], "bgImage");
+
+			genBackground(entM, bgImage, menuID);
+
 			// Loop over all buttons in the menu
 			rj::Value& buttons = getArrayKey(menu[iMenu], "buttons");
 			for (rj::SizeType jButton = 0; jButton < buttons.Size(); ++jButton) {
@@ -170,7 +176,54 @@ bool MenuGenSystem::checkKey(rj::Value& mainKey, std::string newKey, glm::vec3& 
 }
 
 
+void MenuGenSystem::genBackground(ex::EntityManager& entM, std::string bgImage, GLuint menuID) {
+	ex::Entity entity = entM.create();
 
+	//Doesn't work at the moment but I would like to get it working
+	//GLuint texID = SOIL_load_OGL_texture(bgImage.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+	//		SOIL_FLAG_INVERT_Y);
+
+	/*glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texID);
+   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);*/
+
+	//Load texture for object
+	GLint texID = 0;
+	if (bgImage != "") {
+		std::cout << "hello" << std::endl;
+   	//GLint texID = loadDDS(bgImage.c_str());
+		texID = loadDDS("assets/MenuBG.dds");
+
+		if (texID == 0)
+			std::cout << "Failed to load menu image" << std::endl;
+	}
+
+
+	std::vector<glm::vec3> verts(6, glm::vec3(0.0f)), norms(6, glm::vec3(0.0f));
+	std::vector<glm::vec2> uvs(6, glm::vec2(0.0f));
+
+	verts[0] = glm::vec3(-1.0f, 1.0f, 0.1f);
+	verts[1] = glm::vec3(-1.0f, -1.0f, 0.1f);
+	verts[2] = glm::vec3(1.0f, -1.0f, 0.1f);
+
+	uvs[0] = glm::vec2(0.0f, 1.0f);
+	uvs[1] = glm::vec2(0.0f, 0.0f);
+	uvs[2] = glm::vec2(1.0f, 0.0f);
+
+	verts[3] = glm::vec3(-1.0f, 1.0f, 0.1f);
+	verts[4] = glm::vec3(1.0f, -1.0f, 0.1f);
+	verts[5] = glm::vec3(1.0f, 1.0f, 0.1f);
+
+	uvs[3] = glm::vec2(0.0f, 1.0f);
+	uvs[4] = glm::vec2(1.0f, 0.0f);
+	uvs[5] = glm::vec2(1.0f, 1.0f);
+
+	//Currently still passing the text texture to shader
+	entity.assign<Renderable>(verts, norms, uvs, texID);
+	entity.assign<Shader>(pID);
+	entity.assign<MenuID>(0, menuID);
+}
 
 
 

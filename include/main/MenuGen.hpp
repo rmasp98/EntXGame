@@ -18,6 +18,7 @@
 
 // Window Library
 #include <GLFW/glfw3.h>
+#include <SOIL/SOIL.h>
 
 // String library for file ingest
 #include <fstream>
@@ -44,6 +45,7 @@ class MenuGenSystem : public ex::System<MenuGenSystem> {
       GLint scaleX, scaleY;
 
       void makeButton(ex::Entity&, std::string, glm::vec3, bool, GLfloat, Atlas&);
+      void genBackground(ex::EntityManager&, std::string, GLuint);
       void readConfig(ex::EntityManager&, std::string);
 
       std::string getStringKey(rj::Value&, std::string);
