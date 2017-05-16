@@ -227,13 +227,5 @@ struct ScreenLink {
    GLuint linkId;
 };
 
-//Possible components:
-//  - LinkMenu (contains menuID of linked menu)
-//  - NonLinkedButtons (this will somehow indicate a function that the button will run)
-
-
-
-
-
 
 #endif // COMPONENTS_HPP

@@ -46,6 +46,12 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
 
       //Passes camera and model matrix, and then renders each object
       entM.each<Renderable, Shader, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID, Level& null) {
+         entM.each<Camera>([this, &mesh, &pID](ex::Entity ent, Camera& cam) {
+            //Send camera information to the buffer
+            glm::mat4 camView = cam.projection * cam.view * mesh.modelMat;
+            glUniformMatrix4fv(glGetUniformLocation(pID.progID, "camView"), 1, GL_FALSE, &camView[0][0]);
+         });
+
          drawScene(mesh, pID, entM, entity);
       });
 
@@ -137,12 +143,6 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
    //Rebind the objects VAO
    glBindVertexArray(mesh.VAO);
 
-   entM.each<Camera>([this, &mesh, &prog](ex::Entity ent, Camera& cam) {
-      //Send camera information to the buffer
-      glm::mat4 camView = cam.projection * cam.view * mesh.modelMat;
-      glUniformMatrix4fv(glGetUniformLocation(prog.progID, "camView"), 1, GL_FALSE, &camView[0][0]);
-   });
-
    // Passes colour of font to graphic card
    ex::ComponentHandle<Font> font = entity.component<Font>();
    if (font) {
@@ -157,8 +157,10 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
    glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
 
    //Resets the texture and binds correct texture
-   glActiveTexture(GL_TEXTURE0);
-   glBindTexture(GL_TEXTURE_2D, mesh.texID);
+   if (mesh.texID != 0) {
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, mesh.texID);
+   }
 
    //Render the object
    glDrawElements(GL_TRIANGLES, mesh.indSize, GL_UNSIGNED_SHORT, (void*)0);

@@ -91,19 +91,21 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 			rj::Value& buttons = getArrayKey(menu[iMenu], "buttons");
 			for (rj::SizeType jButton = 0; jButton < buttons.Size(); ++jButton) {
 				ex::Entity entity = entM.create();
+
+				GLfloat fontSize = 1.0;
+				if (buttons[jButton].HasMember("fontSize"))
+					fontSize = getFloatKey(buttons[jButton], "fontSize");
+
 				makeButton(entity, getStringKey(buttons[jButton], "text"),
 							  getVec3Key(buttons[jButton], "position"),
-							  getBoolKey(buttons[jButton], "clickable"),
-							  getFloatKey(buttons[jButton], "fontSize"), *menuFont);
+							  getUintKey(buttons[jButton], "actionId"),
+							  fontSize, *menuFont);
 
 				entity.assign<Shader>(pID);
 				entity.assign<MenuID>(0, menuID);
 
-				if (buttons[jButton].HasMember("linkId")) {
+				if (buttons[jButton].HasMember("linkId"))
 					entity.assign<ScreenLink>(getUintKey(buttons[jButton], "linkId"));
-					entity.assign<Action>(0);
-				} else if (buttons[jButton].HasMember("exit") && getBoolKey(buttons[jButton], "exit"))
-					entity.assign<Action>(1);
 
 				glm::vec3 buttonBC;
 				if (!checkKey(buttons[jButton], "baseColour", buttonBC))
@@ -191,9 +193,7 @@ void MenuGenSystem::genBackground(ex::EntityManager& entM, std::string bgImage, 
 	//Load texture for object
 	GLint texID = 0;
 	if (bgImage != "") {
-		std::cout << "hello" << std::endl;
-   	//GLint texID = loadDDS(bgImage.c_str());
-		texID = loadDDS("assets/MenuBG.dds");
+   	texID = loadDDS(bgImage.c_str());
 
 		if (texID == 0)
 			std::cout << "Failed to load menu image" << std::endl;
@@ -228,7 +228,7 @@ void MenuGenSystem::genBackground(ex::EntityManager& entM, std::string bgImage, 
 
 
 
-void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 pos, bool click, GLfloat fSize, Atlas& font) {
+void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 pos, GLuint action, GLfloat fSize, Atlas& font) {
 
 	GLuint numVerts = 6 * text.length();
 	std::vector<glm::vec3> verts(numVerts, glm::vec3(0)), norms(numVerts, glm::vec3(0));
@@ -273,10 +273,11 @@ void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 p
 
 	pos.x -= xOff / 2.0f;
 	entity.assign<Position>(pos, 0.0f);
+	entity.assign<Action>(action);
 
-	if (click) {
-		// Cursor Y Pos is inverted hence the order and inversion of the y coords
-		// Also everything is in texture coord, which is tranformed to pixel coords
+	// Cursor Y Pos is inverted hence the order and inversion of the y coords
+	// Also everything is in texture coord, which is tranformed to pixel coords
+	if (action) {
 		entity.assign<Clickable>((pos.x + 1) * scaleX / 2.0f,
 										 (1 - (pos.y + maxH)) * scaleY / 2.0f,
 										 (pos.x + xOff + 1) * scaleX / 2.0f,

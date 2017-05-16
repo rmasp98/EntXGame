@@ -12,9 +12,9 @@ void main()
    if (renderType == 0) {
       vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, FragUV).r);
       colour = vec4(textColour, 1.0) * sampled;
-   } else if (renderType == 1) {
+   } else if (renderType == 1) 
       colour = vec4(texture(text, FragUV).rgb, 1.0);
-   } else if (renderType == 2) {
+   else if (renderType == 2)
       colour = vec4(0.0, 0.0, 0.0, 0.5);
-   }
+
 }
