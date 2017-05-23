@@ -19,4 +19,3 @@ void main() {
    FragNorm = mat3(transpose(inverse(model))) * vertexNorm;
    FragUV = vertexUV;
 }
-

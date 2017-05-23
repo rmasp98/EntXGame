@@ -196,14 +196,15 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
          accel.vel.z *= accel.maxSpeed / speed;
       }
 
+      //Need to normalise facing
       pos.pos += (accel.vel.z * facing->dir + accel.vel.x * facing->right) * dT * velMod;
 
    }
 
    //If jumping and return to ground, stop jump
-   if ((jump) && (pos.pos.y < 2.0f)) {
+   if ((jump) && (pos.pos.y < 3.0f)) {
       jump->isJump = false;
-      pos.pos.y = 2.0f;
+      pos.pos.y = 3.0f;
    }
 }
 
@@ -248,12 +249,12 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
 
 void MoveSystem::moveBEV(Position& camPos) {
 
-   GLfloat t = 100.0f;
+   GLfloat t = 100.0f, moveSpd = 0.1;
 
    if (isUp) {
       GLfloat yT = (1 - cos(glm::pi<GLfloat>()*delay/t))/2.0f;
       bevPos = glm::vec3(camPos.pos.x,
-                         camPos.pos.y + (40.0f - camPos.pos.y)*yT,
+                         camPos.pos.y + (20.0f - camPos.pos.y)*yT,
                          camPos.pos.z);
 
       viewOrient = yT * glm::vec3(1,0,0) + (1 - yT) * glm::vec3(0,1,0);
@@ -273,19 +274,19 @@ void MoveSystem::moveBEV(Position& camPos) {
       }
    } else {
       if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
-         bevPos += glm::vec3(0.0f, 0.0f, -1.0f);
-         viewPos += glm::vec3(0.0f, 0.0f, -1.0f);
+         bevPos += glm::vec3(0.0f, 0.0f, -1.0f) * moveSpd;
+         viewPos += glm::vec3(0.0f, 0.0f, -1.0f) * moveSpd;
       } else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) {
-         bevPos += glm::vec3(0.0f, 0.0f, 1.0f);
-         viewPos += glm::vec3(0.0f, 0.0f, 1.0f);
+         bevPos += glm::vec3(0.0f, 0.0f, 1.0f) * moveSpd;
+         viewPos += glm::vec3(0.0f, 0.0f, 1.0f) * moveSpd;
       }
 
       if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) {
-         bevPos += glm::vec3(1.0f, 0.0f, 0.0f);
-         viewPos += glm::vec3(1.0f, 0.0f, 0.0f);
+         bevPos += glm::vec3(1.0f, 0.0f, 0.0f) * moveSpd;
+         viewPos += glm::vec3(1.0f, 0.0f, 0.0f) * moveSpd;
       } else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) {
-         bevPos += glm::vec3(-1.0f, 0.0f, 0.0f);
-         viewPos += glm::vec3(-1.0f, 0.0f, 0.0f);
+         bevPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
+         viewPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
       }
    }
 }

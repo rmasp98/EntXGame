@@ -19,7 +19,8 @@ RoomSystem::RoomSystem(ex::EntityManager& entM) {
    ex::ComponentHandle<Room> roomC = entity.component<Room>();
 
    //Creates the base of the room. This is where the game logic should be!
-   roomC->blocks = createBlocks(100);
+   //roomC->blocks = createBlocks(100);
+   roomC->blocks = createBlocks();
 
    //Get shader from the objectGen entities
    GLuint pID;
@@ -42,11 +43,52 @@ RoomSystem::RoomSystem(ex::EntityManager& entM) {
 
 void RoomSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
-
 }
 
 
+std::vector< glm::tvec2<GLint> > RoomSystem::createBlocks() {
 
+   std::vector< glm::tvec2<GLint> > bPos(30, glm::tvec2<GLint>(0));
+
+   bPos[0] = glm::tvec2<GLint>(0, 0);
+   bPos[1] = glm::tvec2<GLint>(-2, 0);
+   bPos[2] = glm::tvec2<GLint>(-3, 0);
+   bPos[3] = glm::tvec2<GLint>(-4, 0);
+   bPos[4] = glm::tvec2<GLint>(-5, 0);
+
+   bPos[5] = glm::tvec2<GLint>(0, 1);
+   bPos[6] = glm::tvec2<GLint>(-4, 1);
+   bPos[7] = glm::tvec2<GLint>(-5, 1);
+
+   bPos[8] = glm::tvec2<GLint>(1, 2);
+   bPos[9] = glm::tvec2<GLint>(0, 2);
+   bPos[10] = glm::tvec2<GLint>(-1, 2);
+   bPos[11] = glm::tvec2<GLint>(-3, 2);
+   bPos[12] = glm::tvec2<GLint>(-4, 2);
+   bPos[13] = glm::tvec2<GLint>(-5, 2);
+
+   bPos[14] = glm::tvec2<GLint>(1, 3);
+   bPos[15] = glm::tvec2<GLint>(0, 3);
+   bPos[16] = glm::tvec2<GLint>(-1, 3);
+   bPos[17] = glm::tvec2<GLint>(-2, 3);
+   bPos[18] = glm::tvec2<GLint>(-3, 3);
+   bPos[19] = glm::tvec2<GLint>(-4, 3);
+   bPos[20] = glm::tvec2<GLint>(-5, 3);
+
+   bPos[21] = glm::tvec2<GLint>(1, 4);
+   bPos[22] = glm::tvec2<GLint>(0, 4);
+   bPos[23] = glm::tvec2<GLint>(-1, 4);
+   bPos[24] = glm::tvec2<GLint>(-2, 4);
+   bPos[25] = glm::tvec2<GLint>(-3, 4);
+   bPos[26] = glm::tvec2<GLint>(-4, 4);
+   bPos[27] = glm::tvec2<GLint>(-5, 4);
+
+   bPos[28] = glm::tvec2<GLint>(-4, 5);
+   bPos[29] = glm::tvec2<GLint>(-5, 5);
+
+   return bPos;
+
+}
 
 
 std::vector< glm::tvec2<GLint> > RoomSystem::createBlocks(GLint numBlocks) {
@@ -154,7 +196,7 @@ void RoomSystem::createBound(ex::ComponentHandle<Room>& rC) {
    //Scale the boundary to the real world size
    for (GLuint i=0; i<rC->bound.size(); i++) {
       for (GLuint j=0; j<rC->bound[i].size(); j++)
-         rC->bound[i][j] = rC->bound[i][j] * 4.0;
+         rC->bound[i][j] = rC->bound[i][j] * 2.0;
    }
 }
 
@@ -169,7 +211,7 @@ void RoomSystem::createBound(ex::ComponentHandle<Room>& rC) {
 void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::ComponentHandle<Room>& rC, GLuint pID) {
 
    //Scales floor and roof. Should fix
-   GLfloat rScale = 4;
+   GLfloat rScale = 2;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Build the walls
@@ -223,12 +265,12 @@ void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::Compone
       }
 
       //Every 15 blocks (probably should be configurable), it creates a light
-      if ((i % 15) == 0) {
+      if ((i % 10) == 0) {
          ex::Entity lightEnt = entM.create();
-         glm::vec3 amb(0.5f), diff(1.0f), spec(0.3f), pos(rC->blocks[i][0]*rScale, 4.5, rC->blocks[i][1]*rScale);
+         glm::vec3 amb(0.1f), diff(0.5f), spec(0.05f), pos(rC->blocks[i][0]*rScale, 4.5, rC->blocks[i][1]*rScale);
 
-         lightEnt.assign<Light>(amb, diff, spec);
-         lightEnt.assign<Position>(pos, 0.0f);
+         lightEnt.assign<Light>(amb, diff, spec, 0.07, 0.017);
+         lightEnt.assign<Position>(pos, glm::vec3(0.0f));
          lightEnt.assign<Shader>(pID);
       }
    }

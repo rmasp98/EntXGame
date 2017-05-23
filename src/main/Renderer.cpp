@@ -121,11 +121,6 @@ void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) 
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eVecs.indID);
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, inds.size() * sizeof(unsigned short), &inds[0] , GL_STATIC_DRAW);
 
-   // Bind our texture in Texture Unit 0
-   glUniform1i(glGetUniformLocation(prog.progID, "material.diffuse"), 0);
-   glUniform1i(glGetUniformLocation(prog.progID, "material.specular"), 0);
-   glUniform1f(glGetUniformLocation(prog.progID, "material.shininess"), 32.0f);
-
    //Unbind VAO
    glBindVertexArray(0);
 
@@ -199,10 +194,11 @@ void RenderSystem::addLight(ex::EntityManager& entM) {
       glUniform3f(glGetUniformLocation(s.progID, &(bName.str() + "specular")[0]),
                                        l.specular.x, l.specular.y, l.specular.z);
 
-      glUniform1f(glGetUniformLocation(s.progID, &(bName.str() + "linear")[0]), 0.07);
-      glUniform1f(glGetUniformLocation(s.progID, &(bName.str() + "quad")[0]), 0.017);
+      glUniform1f(glGetUniformLocation(s.progID, &(bName.str() + "linear")[0]), l.linear);
+      glUniform1f(glGetUniformLocation(s.progID, &(bName.str() + "quad")[0]), l.quad);
    });
 
    //Passes the number of lights to the buffer
    glUniform1i(glGetUniformLocation(pID, "lightNum"), iNum);
+
 }

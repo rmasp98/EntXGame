@@ -59,10 +59,10 @@ struct Shader {
 
 //An object with position. There is also a buffer for collision detection
 struct Position {
-   Position(glm::vec3 posIn, GLfloat buffIn) : pos(posIn), buffer(buffIn) {}
+   Position(glm::vec3 posIn, glm::vec3 buffIn) : pos(posIn), buffer(buffIn) {}
 
    glm::vec3 pos;
-   GLfloat buffer;
+   glm::vec3 buffer;
 };
 
 
@@ -127,10 +127,11 @@ struct Jump {
 
 //This is for light entities. Contains the ambient, diffuse and specular components of the light
 struct Light {
-   Light(glm::vec3 ambIn, glm::vec3 difIn, glm::vec3 specIn)
-   : ambient(ambIn), diffuse(difIn), specular(specIn) {}
+   Light(glm::vec3 ambIn, glm::vec3 difIn, glm::vec3 specIn, GLfloat linIn, GLfloat quadIn)
+   : ambient(ambIn), diffuse(difIn), specular(specIn), linear(linIn), quad(quadIn) {}
 
    glm::vec3 ambient, diffuse, specular;
+   GLfloat linear, quad;
 };
 
 
@@ -163,6 +164,14 @@ struct Push {
    glm::vec3 pushDir;
    bool isPush;
 };
+
+
+
+
+struct Goal {
+   Goal() {}
+
+}
 
 
 

@@ -272,7 +272,7 @@ void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 p
 	entity.assign<Renderable>(verts, norms, uvs, font.texID);
 
 	pos.x -= xOff / 2.0f;
-	entity.assign<Position>(pos, 0.0f);
+	entity.assign<Position>(pos, glm::vec3(0.0f));
 	entity.assign<Action>(action);
 
 	// Cursor Y Pos is inverted hence the order and inversion of the y coords

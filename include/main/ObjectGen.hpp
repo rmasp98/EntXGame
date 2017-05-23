@@ -27,8 +27,8 @@ class ObjectSystem : public ex::System<ObjectSystem> {
    protected:
       ex::EntityManager* entMan;
 
-      void genLevel();
-      void genObject(std::string, std::string, GLint);
+      void genLevel(GLuint);
+      void genObject(std::string, std::string, GLint, std::vector<glm::vec3>&);
 };
 
 

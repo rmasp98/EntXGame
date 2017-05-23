@@ -72,20 +72,20 @@ void CollisionSystem::wallCollision(Position& pos, Room& room) {
       //Then checks which direction it is facing
       if (room.norms[bestInd].x < 0) {
          //Then checks if it is inside or outside the boundary + the objects buffer
-         if (pos.pos.x > room.bound[bestInd][0] - pos.buffer)
+         if (pos.pos.x > room.bound[bestInd][0] - pos.buffer.x)
             //If it is, move the object back inside the room
-            pos.pos.x = room.bound[bestInd][0] - pos.buffer;
+            pos.pos.x = room.bound[bestInd][0] - pos.buffer.x;
       } else if (room.norms[bestInd].x > 0) {
-         if (pos.pos.x < room.bound[bestInd][0] + pos.buffer)
-            pos.pos.x = room.bound[bestInd][0] + pos.buffer;
+         if (pos.pos.x < room.bound[bestInd][0] + pos.buffer.x)
+            pos.pos.x = room.bound[bestInd][0] + pos.buffer.x;
       }
    } else if (std::abs(room.norms[bestInd].x) < 1e-3) {
       if (room.norms[bestInd].z < 0) {
-         if (pos.pos.z > room.bound[bestInd][1] - pos.buffer)
-            pos.pos.z = room.bound[bestInd][1] - pos.buffer;
+         if (pos.pos.z > room.bound[bestInd][1] - pos.buffer.z)
+            pos.pos.z = room.bound[bestInd][1] - pos.buffer.z;
       } else if (room.norms[bestInd].z > 0) {
-         if (pos.pos.z < room.bound[bestInd][1] + pos.buffer)
-            pos.pos.z = room.bound[bestInd][1] + pos.buffer;
+         if (pos.pos.z < room.bound[bestInd][1] + pos.buffer.z)
+            pos.pos.z = room.bound[bestInd][1] + pos.buffer.z;
       }
    }
 }
@@ -99,10 +99,13 @@ void CollisionSystem::objectCollision(ex::Entity& ent1, ex::Entity& ent2, ex::Ev
    ex::ComponentHandle<Position> pos1 = ent1.component<Position>();
    ex::ComponentHandle<Position> pos2 = ent2.component<Position>();
    if (pos1 && pos2) {
+      //This will allow blocks to move other blocks. FIX!!
       glm::vec3 distVec = glm::vec3(pos1->pos.x - pos2->pos.x, 0.0f, pos1->pos.z - pos2->pos.z);
-      GLfloat dist = glm::length(distVec);
-      if (dist < pos1->buffer + pos2->buffer) {
-         pos1->pos = pos2->pos + (pos1->buffer + pos2->buffer)*distVec/dist;
+      if ((std::abs(distVec.x) < pos1->buffer.x + pos2->buffer.x) && (std::abs(distVec.z) < pos1->buffer.z + pos2->buffer.z)) {
+         if (std::abs(distVec.x) > std::abs(distVec.z))
+            pos1->pos.x = pos2->pos.x + ((distVec.x > 0) ? 1.0 : -1.0) * (pos1->buffer.x + pos2->buffer.x);
+         else
+            pos1->pos.z = pos2->pos.z + ((distVec.z > 0) ? 1.0 : -1.0) * (pos1->buffer.z + pos2->buffer.z);
 
          ex::ComponentHandle<Camera> cam = ent1.component<Camera>();
          ex::ComponentHandle<Push> push = ent2.component<Push>();
