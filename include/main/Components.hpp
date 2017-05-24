@@ -171,7 +171,7 @@ struct Push {
 struct Goal {
    Goal() {}
 
-}
+};
 
 
 

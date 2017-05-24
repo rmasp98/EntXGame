@@ -28,16 +28,12 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
       entM.each<Room>([this, &entM, &evnM](ex::Entity roomEnt, Room& room) {
       //Checks every for collision for any collidable entities
          entM.each<Collidable, Position>([this, &room, &entM, &evnM](ex::Entity entity1, Collidable& coll, Position& pos1) {
-            wallCollision(pos1, room);
-
-            bool isSame=false;
-            entM.each<Collidable, Position>([this, &entity1, &isSame, &evnM](ex::Entity entity2, Collidable& coll, Position& pos2) {
-               if (entity1 == entity2)
-                  isSame = true;
-               else if (isSame)
+            entM.each<Collidable, Position>([this, &entity1, &evnM](ex::Entity entity2, Collidable& coll, Position& pos2) {
+               if (entity1 != entity2)
                   objectCollision(entity1, entity2, evnM);
-
             });
+
+            wallCollision(pos1, room);
          });
       });
    }
@@ -99,7 +95,7 @@ void CollisionSystem::objectCollision(ex::Entity& ent1, ex::Entity& ent2, ex::Ev
    ex::ComponentHandle<Position> pos1 = ent1.component<Position>();
    ex::ComponentHandle<Position> pos2 = ent2.component<Position>();
    if (pos1 && pos2) {
-      //This will allow blocks to move other blocks. FIX!!
+      //TODO: This will allow blocks to move other blocks. FIX!!
       glm::vec3 distVec = glm::vec3(pos1->pos.x - pos2->pos.x, 0.0f, pos1->pos.z - pos2->pos.z);
       if ((std::abs(distVec.x) < pos1->buffer.x + pos2->buffer.x) && (std::abs(distVec.z) < pos1->buffer.z + pos2->buffer.z)) {
          if (std::abs(distVec.x) > std::abs(distVec.z))
@@ -109,15 +105,10 @@ void CollisionSystem::objectCollision(ex::Entity& ent1, ex::Entity& ent2, ex::Ev
 
          ex::ComponentHandle<Camera> cam = ent1.component<Camera>();
          ex::ComponentHandle<Push> push = ent2.component<Push>();
-         ex::ComponentHandle<Acceleration> vel1 = ent1.component<Acceleration>();
-         ex::ComponentHandle<Acceleration> vel2 = ent2.component<Acceleration>();
-         if (cam && push && vel1 && vel2) {
+         if (cam && push) {
             push->isPush = true;
             push->pushDir = pos1->pos - pos2->pos;
-            //Vel2 has not been updated yet so will set vel1 to 0
-            //vel1->vel = glm::length(vel2->vel) < vel1->maxSpeed ? vel2->vel : vel1->vel;
          }
-
       }
    } else {
       std::cerr << "Something went very wrong! Collision failed\n";
