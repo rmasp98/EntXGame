@@ -1,40 +1,32 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                    //
 //                              Title of the Game                                     //
-//                                Movement.hpp                                        //
+//                              BirdsEyeView.hpp                                      //
 //                                Ross Maspero                                        //
 //                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MOVEMENT_HPP
-#define MOVEMENT_HPP
+#ifndef INPUT_HPP
+#define INPUT_HPP
 
 //Game headers
 #include "main/Components.hpp"
-
-//Generic libraries
-#include <cmath>
 
 //Graphic libraries
 #include <GLFW/glfw3.h>
 
 
-class MoveSystem : public ex::System<MoveSystem>, public ex::Receiver<MoveSystem> {
+//System for building the puzzle room
+class InputSystem : public ex::System<InputSystem> {
    public:
-      explicit MoveSystem(GLFWwindow*);
+      explicit InputSystem(GLFWwindow*);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    protected:
       GLFWwindow* win;
-      GLint winXcen, winYcen;
       bool isRelease;
+      GLint winXcen, winYcen;
 
-      void moveObject(ex::Entity&, Position&, Acceleration&, Direction*, GLfloat);
-      void moveObject(ex::Entity&, Position&, Acceleration&, GLfloat);
-      void changeDirection(Camera&, Direction&, GLfloat);
 };
 
-
-
-
-#endif // MOVEMENT_HPP
+#endif // INPUT_HPP

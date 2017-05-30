@@ -22,14 +22,6 @@ MoveSystem::MoveSystem(GLFWwindow* window) {
 
    //Move cursor to the center
    glfwSetCursorPos(win, winXcen, winYcen);
-
-   //Starts game from BEV coming down
-   //isBEV = true; isUp = false; isDown = true; delay = 0;
-   //viewOrient = glm::vec3(1,0,0);
-   //bevPos = glm::vec3(0,40,0);
-
-   isBEV = false; isUp = false; isDown = false; delay = 0;
-   viewOrient = glm::vec3(0,1,0); isRelease = true;
 }
 
 
@@ -44,63 +36,36 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
    });
 
    if (currScrn == 10) {
-      //If Birds-Eye-View (BEV) mode is active
-      if (isBEV) {
-         //Need to add a delay so it doesn't flick straight back
-         delay++;
-         if ((glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) && (!isUp)) {
-            isDown = true; delay = 0; oldBevPos = bevPos; oldViewPos = viewPos;
-         }
+      //Look at mouse movement to determine if facing direction changed
+      entM.each<Camera, Direction>([this, dT](ex::Entity entity, Camera& cam, Direction& face) {
+         changeDirection(cam, face, dT);
+      });
 
-         entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
-            //Currently moves in x and z but need to add zoom in and out function too.
-            moveBEV(pos);
+      //Checks for each controllable entity that moves and moves them (currently only moves camera)
+      entM.each<Position, Acceleration>([this, dT](ex::Entity entity, Position& pos, Acceleration& accel) {
 
-            cam.view = lookAt(bevPos, viewPos, viewOrient);
+         ex::ComponentHandle<Direction> face = entity.component<Direction>();
+
+         if (face)
+            moveObject(entity, pos, accel, face.get(), dT);
+         else
+            moveObject(entity, pos, accel, dT);
+
+      });
+
+      //Assigns the calculated values to the camera
+      entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
+         cam.view = lookAt(pos.pos, pos.pos + face.facing, glm::vec3(0,1,0));
+      });
+
+      if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) {
+         entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
+            screen.id = 11;
          });
-
-      } else {
-         //Look at mouse movement to determine if facing direction changed
-         entM.each<Camera, Direction>([this, dT](ex::Entity entity, Camera& cam, Direction& face) {
-            changeDirection(cam, face, dT);
-         });
-
-         //Checks for each controllable entity that moves and moves them (currently only moves camera)
-         entM.each<Position, Acceleration>([this, dT](ex::Entity entity, Position& pos, Acceleration& accel) {
-
-            ex::ComponentHandle<Direction> face = entity.component<Direction>();
-
-            if (face)
-               moveObject(entity, pos, accel, face.get(), dT);
-            else
-               moveObject(entity, pos, accel, dT);
-
-         });
-
-
-         //Assigns the calculated values to the camera
-         entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
-            cam.view = lookAt(pos.pos, pos.pos + face.facing, viewOrient);
-            currView = pos.pos + face.facing;
-         });
-
-         if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) {
-            isBEV = true; isUp = true; delay = 0; viewPos = currView;
-         }
       }
    }
 
-   if ((glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) && (isRelease) && (currScrn >= 10)) {
-      entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
-         if (currScrn == 10)
-            screen.id = 11;
-         else
-            screen.id = 10;
-      });
-      isRelease = false;
-      glfwSetCursorPos(win, winXcen, winYcen);
-   } else if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_RELEASE)
-      isRelease = true;
+
 }
 
 
@@ -197,7 +162,8 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
       }
 
       //Need to normalise facing
-      pos.pos += (accel.vel.z * facing->dir + accel.vel.x * facing->right) * dT * velMod;
+      glm::vec3 dirNorm = glm::normalize(facing->dir), rightNorm = glm::normalize(facing->right);
+      pos.pos += (accel.vel.z * dirNorm + accel.vel.x * rightNorm) * dT * velMod;
 
    }
 
@@ -240,53 +206,4 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
    }
 
    pos.pos += accel.vel * dT;
-}
-
-
-
-
-
-
-void MoveSystem::moveBEV(Position& camPos) {
-
-   GLfloat t = 100.0f, moveSpd = 0.1;
-
-   if (isUp) {
-      GLfloat yT = (1 - cos(glm::pi<GLfloat>()*delay/t))/2.0f;
-      bevPos = glm::vec3(camPos.pos.x,
-                         camPos.pos.y + (20.0f - camPos.pos.y)*yT,
-                         camPos.pos.z);
-
-      viewOrient = yT * glm::vec3(1,0,0) + (1 - yT) * glm::vec3(0,1,0);
-
-      if (delay == t)
-         isUp = false;
-
-   } else if (isDown) {
-      GLfloat yT = (1 - cos(glm::pi<GLfloat>()*delay/t))/2.0f;
-
-      bevPos = yT * camPos.pos + (1 - yT) * oldBevPos;
-      viewOrient = (1 - yT) * glm::vec3(1,0,0) + yT * glm::vec3(0,1,0);
-      viewPos = yT * currView + (1 - yT) * oldViewPos;
-
-      if (delay == t) {
-         isDown = false; isBEV = false;
-      }
-   } else {
-      if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
-         bevPos += glm::vec3(0.0f, 0.0f, -1.0f) * moveSpd;
-         viewPos += glm::vec3(0.0f, 0.0f, -1.0f) * moveSpd;
-      } else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) {
-         bevPos += glm::vec3(0.0f, 0.0f, 1.0f) * moveSpd;
-         viewPos += glm::vec3(0.0f, 0.0f, 1.0f) * moveSpd;
-      }
-
-      if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) {
-         bevPos += glm::vec3(1.0f, 0.0f, 0.0f) * moveSpd;
-         viewPos += glm::vec3(1.0f, 0.0f, 0.0f) * moveSpd;
-      } else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) {
-         bevPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
-         viewPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
-      }
-   }
 }

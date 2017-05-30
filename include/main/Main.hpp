@@ -12,7 +12,9 @@
 //Game headers
 #include "main/Renderer.hpp"
 #include "main/ObjectGen.hpp"
+#include "main/Input.hpp"
 #include "main/Movement.hpp"
+#include "main/BirdsEyeView.hpp"
 #include "main/BuildRoom.hpp"
 #include "main/Collision.hpp"
 #include "main/MenuGen.hpp"

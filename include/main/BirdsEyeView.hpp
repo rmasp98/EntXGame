@@ -1,40 +1,37 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                    //
 //                              Title of the Game                                     //
-//                                Movement.hpp                                        //
+//                              BirdsEyeView.hpp                                      //
 //                                Ross Maspero                                        //
 //                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MOVEMENT_HPP
-#define MOVEMENT_HPP
+#ifndef BIRDS_EYE_VIEW_HPP
+#define BIRDS_EYE_VIEW_HPP
 
 //Game headers
 #include "main/Components.hpp"
-
-//Generic libraries
-#include <cmath>
 
 //Graphic libraries
 #include <GLFW/glfw3.h>
 
 
-class MoveSystem : public ex::System<MoveSystem>, public ex::Receiver<MoveSystem> {
+//System for building the puzzle room
+class BevSystem : public ex::System<BevSystem> {
    public:
-      explicit MoveSystem(GLFWwindow*);
+      explicit BevSystem(GLFWwindow*);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    protected:
+      glm::vec3 bevPos, currView, viewOrient, oldBevPos, viewPos, oldViewPos;
+      GLuint delay;
       GLFWwindow* win;
-      GLint winXcen, winYcen;
-      bool isRelease;
+      bool isBodge;
 
-      void moveObject(ex::Entity&, Position&, Acceleration&, Direction*, GLfloat);
-      void moveObject(ex::Entity&, Position&, Acceleration&, GLfloat);
-      void changeDirection(Camera&, Direction&, GLfloat);
+      void moveUp(ex::EntityManager&);
+      void moveDown(ex::EntityManager&);
+      void moveBev();
+
 };
 
-
-
-
-#endif // MOVEMENT_HPP
+#endif // BIRDS_EYE_VIEW_HPP

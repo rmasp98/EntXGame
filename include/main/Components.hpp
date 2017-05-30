@@ -34,7 +34,7 @@ namespace ex = entityx;
 struct Screen {
    Screen(GLuint screenIn) : id(screenIn) {};
 
-   GLuint id;
+   GLuint id, prevId;
 };
 
 
