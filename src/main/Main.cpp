@@ -61,7 +61,7 @@ int main () {
 Game::Game(GLFWwindow* window) {
 
    ex::Entity entity = entities.create();
-   entity.assign<Screen>(0);
+   entity.assign<Screen>(0, -1);
 
    // Level Systems
    systems.add<ObjectSystem>(entities);

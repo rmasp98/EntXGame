@@ -60,7 +60,11 @@ void MenuCtrlSystem::buttonPress(GLuint functionID, ex::EntityManager& entM, ex:
       ex::ComponentHandle<ScreenLink> link = entity.component<ScreenLink>();
       if (link) {
          entM.each<Screen>([this, &link](ex::Entity roomEnt, Screen& screen) {
-            screen.id = link->linkId;
+            if (link->linkId >= 0)
+               screen.id = link->linkId;
+            else if (screen.prevId >= 0)
+               screen.id = screen.prevId;
+
             glfwSetCursorPos(win, winXcen/2.0f, winYcen/2.0f);
          });
       }

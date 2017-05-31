@@ -24,7 +24,6 @@ void BevSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Time
       currScrn = screen.id;
    });
 
-   //Change this screen number later
    if (currScrn == 11) {
       delay++;
       moveUp(entM);

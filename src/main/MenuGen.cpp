@@ -104,8 +104,9 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 				entity.assign<Shader>(pID);
 				entity.assign<MenuID>(0, menuID);
 
+				//Probably should have a check that if actionId==1 then there is a linkId
 				if (buttons[jButton].HasMember("linkId"))
-					entity.assign<ScreenLink>(getUintKey(buttons[jButton], "linkId"));
+					entity.assign<ScreenLink>(getIntKey(buttons[jButton], "linkId"));
 
 				glm::vec3 buttonBC;
 				if (!checkKey(buttons[jButton], "baseColour", buttonBC))

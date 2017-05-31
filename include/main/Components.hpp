@@ -32,9 +32,10 @@ namespace ex = entityx;
 
 // Holds a Boolean to determine if the menu is on
 struct Screen {
-   Screen(GLuint screenIn) : id(screenIn) {};
+   Screen(GLuint screenIn, GLint prevIn) : id(screenIn), prevId(prevIn) {};
 
-   GLuint id, prevId;
+   GLuint id;
+   GLint prevId;
 };
 
 
@@ -231,9 +232,9 @@ struct Action {
 
 
 struct ScreenLink {
-   ScreenLink(GLuint scrnIn) : linkId(scrnIn) {};
+   ScreenLink(GLint scrnIn) : linkId(scrnIn) {};
 
-   GLuint linkId;
+   GLint linkId;
 };
 
 
