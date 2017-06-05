@@ -66,7 +66,7 @@ Game::Game(GLFWwindow* window) {
    // Level Systems
    systems.add<ObjectSystem>(entities);
    systems.add<RoomSystem>(entities);
-   systems.add<InputSystem>(window);
+   systems.add<InputSystem>(window, entities);
    systems.add<MoveSystem>(window);
    systems.add<BevSystem>(window);
    systems.add<CollisionSystem>();

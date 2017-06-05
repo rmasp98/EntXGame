@@ -19,7 +19,7 @@
 //System for building the puzzle room
 class InputSystem : public ex::System<InputSystem> {
    public:
-      explicit InputSystem(GLFWwindow*);
+      explicit InputSystem(GLFWwindow*, ex::EntityManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    protected:

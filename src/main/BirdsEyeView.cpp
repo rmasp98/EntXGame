@@ -13,6 +13,8 @@ BevSystem::BevSystem(GLFWwindow* window) {
    //Passes in the window for use throughout this system
    win = window;
    delay = 0;
+   moveSpd = 0.1;
+   tMax = 100.0f;
 }
 
 
@@ -29,6 +31,11 @@ void BevSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Time
       moveUp(entM);
    } else if (currScrn == 12) {
       moveBev();
+      zoomBev();
+
+      entM.each<Camera>([this](ex::Entity entity, Camera& cam) {
+         cam.view = lookAt(bevPos, viewPos, viewOrient);
+      });
 
       if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) {
          entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
@@ -46,11 +53,10 @@ void BevSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Time
 
 void BevSystem::moveUp(ex::EntityManager& entM) {
 
-   GLfloat t = 100.0f;
-   entM.each<Camera, Position, Direction>([this, &t](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
+   entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
       currView = pos.pos + face.facing;
       viewPos = currView;
-      GLfloat yT = (1 - cos(glm::pi<GLfloat>()*delay/t))/2.0f;
+      GLfloat yT = (1 - cos(glm::pi<GLfloat>()*delay/tMax))/2.0f;
       bevPos = glm::vec3(pos.pos.x,
                          pos.pos.y + (20.0f - pos.pos.y)*yT,
                          pos.pos.z);
@@ -60,7 +66,7 @@ void BevSystem::moveUp(ex::EntityManager& entM) {
       cam.view = lookAt(bevPos, viewPos, viewOrient);
    });
 
-   if (delay == t) {
+   if (delay >= tMax) {
       entM.each<Screen>([this](ex::Entity roomEnt, Screen& screen) {
          screen.id = 12;
       });
@@ -73,9 +79,8 @@ void BevSystem::moveUp(ex::EntityManager& entM) {
 
 void BevSystem::moveDown(ex::EntityManager& entM) {
 
-   GLfloat t = 100.0f;
-   entM.each<Camera, Position, Direction>([this, &t](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
-      GLfloat yT = (1 - cos(glm::pi<GLfloat>()*delay/t))/2.0f;
+   entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
+      GLfloat yT = (1 - cos(glm::pi<GLfloat>()*delay/tMax))/2.0f;
       bevPos = yT * pos.pos + (1 - yT) * oldBevPos;
       viewOrient = (1 - yT) * glm::vec3(1,0,0) + yT * glm::vec3(0,1,0);
       viewPos = yT * currView + (1 - yT) * oldViewPos;
@@ -83,7 +88,7 @@ void BevSystem::moveDown(ex::EntityManager& entM) {
       cam.view = lookAt(bevPos, viewPos, viewOrient);
    });
 
-   if (delay == t) {
+   if (delay >= tMax) {
       entM.each<Screen>([this](ex::Entity roomEnt, Screen& screen) {
          screen.id = 10;
       });
@@ -95,8 +100,6 @@ void BevSystem::moveDown(ex::EntityManager& entM) {
 
 
 void BevSystem::moveBev() {
-
-   GLfloat moveSpd = 0.1;
 
    if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
       bevPos += glm::vec3(0.0f, 0.0f, -1.0f) * moveSpd;
@@ -113,4 +116,11 @@ void BevSystem::moveBev() {
       bevPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
       viewPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
    }
+}
+
+
+
+// Need to make a zoom in zoom out function
+void BevSystem::zoomBev() {
+
 }

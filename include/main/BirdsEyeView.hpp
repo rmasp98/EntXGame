@@ -25,12 +25,14 @@ class BevSystem : public ex::System<BevSystem> {
    protected:
       glm::vec3 bevPos, currView, viewOrient, oldBevPos, viewPos, oldViewPos;
       GLuint delay;
+      GLfloat moveSpd, tMax;
       GLFWwindow* win;
       bool isBodge;
 
       void moveUp(ex::EntityManager&);
       void moveDown(ex::EntityManager&);
       void moveBev();
+      void zoomBev();
 
 };
 

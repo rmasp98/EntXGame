@@ -10,7 +10,7 @@
 #include "main/Input.hpp"
 
 
-InputSystem::InputSystem(GLFWwindow* window) {
+InputSystem::InputSystem(GLFWwindow* window, ex::EntityManager& entM) {
 
    //Passes in the window for use throughout this system
    win = window;
@@ -31,6 +31,15 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
    entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
       currScrn = screen.id;
    });
+
+
+
+
+
+
+
+
+
 
    //This will need to be fixed so that it returns to 10 only when started at 10
    if ((glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) && (isRelease) && (currScrn >= 10)) {
