@@ -81,6 +81,12 @@ struct Renderable {
 };
 
 
+struct Input {
+   Input(std::vector<GLdouble> cursIn) : active(0), cursor(cursIn), winCen(cursIn) {}
+
+   GLuint active;
+   std::vector<GLdouble> cursor, winCen;
+};
 
 
 

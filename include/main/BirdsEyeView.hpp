@@ -19,15 +19,15 @@
 //System for building the puzzle room
 class BevSystem : public ex::System<BevSystem> {
    public:
-      explicit BevSystem(GLFWwindow*);
+      explicit BevSystem(ex::EntityManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    protected:
       glm::vec3 bevPos, currView, viewOrient, oldBevPos, viewPos, oldViewPos;
       GLuint delay;
       GLfloat moveSpd, tMax;
-      GLFWwindow* win;
       bool isBodge;
+      Input* input;
 
       void moveUp(ex::EntityManager&);
       void moveDown(ex::EntityManager&);

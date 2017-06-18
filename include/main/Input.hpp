@@ -24,9 +24,12 @@ class InputSystem : public ex::System<InputSystem> {
 
    protected:
       GLFWwindow* win;
-      bool isRelease;
-      GLint winXcen, winYcen;
+      std::vector<GLdouble> winCen;
+      std::vector<GLint> keys;
+      GLuint oldKeyState;
+      GLuint keyState;
 
+      void assignKeys();
 };
 
 #endif // INPUT_HPP

@@ -11,17 +11,12 @@
 
 
 
-MoveSystem::MoveSystem(GLFWwindow* window) {
+MoveSystem::MoveSystem(ex::EntityManager& entM) {
 
-   //Passes in the window for use throughout this system
-   win = window;
+   entM.each<Input>([this](ex::Entity null, Input& tempInput) {
+      input = &tempInput;
+   });
 
-   //Determine the center point of window for mouse reset
-   glfwGetWindowSize(win, &winXcen, &winYcen);
-   winXcen /= 2; winYcen /= 2;
-
-   //Move cursor to the center
-   glfwSetCursorPos(win, winXcen, winYcen);
 }
 
 
@@ -37,8 +32,8 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
 
    if (currScrn == 10) {
       //Look at mouse movement to determine if facing direction changed
-      entM.each<Camera, Direction>([this, dT](ex::Entity entity, Camera& cam, Direction& face) {
-         changeDirection(cam, face, dT);
+      entM.each<Direction>([this, &dT](ex::Entity null, Direction& face) {
+         changeDirection(face, dT);
       });
 
       //Checks for each controllable entity that moves and moves them (currently only moves camera)
@@ -58,7 +53,7 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
          cam.view = lookAt(pos.pos, pos.pos + face.facing, glm::vec3(0,1,0));
       });
 
-      if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) {
+      if (input->active & 128) {
          entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
             screen.id = 11;
          });
@@ -72,15 +67,11 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
 
 
 
-void MoveSystem::changeDirection(Camera& cam, Direction& dir, GLfloat dT) {
-
-   //Finds the current cursor position
-   double xPos, yPos;
-   glfwGetCursorPos(win, &xPos, &yPos);
+void MoveSystem::changeDirection(Direction& dir, GLfloat dT) {
 
    //Determines the angle of the camera based on how far the cursor position has changed
-   dir.angle.x += dir.mouseSpeed * dT * GLfloat(winXcen - xPos);
-   double dTheta = dir.mouseSpeed * dT * GLfloat(winYcen - yPos);
+   dir.angle.x += dir.mouseSpeed * dT * GLfloat(input->winCen[0] - input->cursor[0]);
+   double dTheta = dir.mouseSpeed * dT * GLfloat(input->winCen[1] - input->cursor[1]);
 
    //Makes sure that camera can't look up or down too far
    if (dir.angle.y + dTheta <= -0.9 * glm::pi<GLfloat>() / 2.0f)
@@ -98,10 +89,6 @@ void MoveSystem::changeDirection(Camera& cam, Direction& dir, GLfloat dT) {
    //Creates the movement (2D) vectors (posible should normalise)
    dir.dir = glm::vec3(dir.facing.x, 0, dir.facing.z);
    dir.right = glm::vec3(dir.facing.z, 0, -dir.facing.x);
-
-   //Reset the cursor position
-   glfwSetCursorPos(win, winXcen, winYcen);
-
 }
 
 
@@ -113,7 +100,7 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
    bool isSprint = false;
    GLfloat velMod = 1.0;
    //This then updates position and adds a sprint if shift is pressed
-   if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || isSprint)
+   if ((input->active & 2) || isSprint)
       velMod = 2.0;
 
    //Some entities don't have jump so need to account for that
@@ -121,7 +108,7 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
    ex::ComponentHandle<Jump> jump = ent.component<Jump>();
    if (jump) {
       //If spacebar is pressed initiate jump
-      if ((glfwGetKey(win, GLFW_KEY_SPACE) == GLFW_PRESS) && (!jump->isJump)) {
+      if ((input->active & 4) && (!jump->isJump)) {
          jump->isJump = true; accel.vel.y = jump->jumpSpeed;
       }
 
@@ -136,9 +123,9 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
       pos.pos += (accel.vel.z * facing->dir + accel.vel.x * facing->right) * dT * velMod;
    } else {
       //If A/D is pressed, increase x speed up to max speed otherwise decelerate down to 0
-      if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
+      if (input->active & 16)
          accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);
-      else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
+      else if (input->active & 64)
          accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -accel.maxSpeed);
       else
          //This ensures that it stops at zero and doesn't accelerate in the opposite direction
@@ -146,9 +133,9 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
                                            : std::max(accel.vel.x - accel.accel*dT, 0.0f);
 
       //Same as above but for z direction
-      if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
+      if (input->active & 8)
          accel.vel.z = std::min(accel.vel.z + accel.accel*dT, accel.maxSpeed);
-      else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
+      else if (input->active & 32)
          accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -accel.maxSpeed);
       else
          accel.vel.z = accel.vel.z < 0 ? std::min(accel.vel.z + accel.accel*dT, 0.0f)

@@ -9,12 +9,15 @@
 #include "main/BirdsEyeView.hpp"
 
 
-BevSystem::BevSystem(GLFWwindow* window) {
-   //Passes in the window for use throughout this system
-   win = window;
+BevSystem::BevSystem(ex::EntityManager& entM) {
+
    delay = 0;
    moveSpd = 0.1;
    tMax = 100.0f;
+
+   entM.each<Input>([this](ex::Entity null, Input& tempInput) {
+      input = &tempInput;
+   });
 }
 
 
@@ -37,7 +40,7 @@ void BevSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Time
          cam.view = lookAt(bevPos, viewPos, viewOrient);
       });
 
-      if (glfwGetKey(win, GLFW_KEY_M) == GLFW_PRESS) {
+      if (input->active & 128) {
          entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
             screen.id = 13;
          });
@@ -101,18 +104,18 @@ void BevSystem::moveDown(ex::EntityManager& entM) {
 
 void BevSystem::moveBev() {
 
-   if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) {
+   if (input->active & 16) {
       bevPos += glm::vec3(0.0f, 0.0f, -1.0f) * moveSpd;
       viewPos += glm::vec3(0.0f, 0.0f, -1.0f) * moveSpd;
-   } else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) {
+   } else if (input->active & 64) {
       bevPos += glm::vec3(0.0f, 0.0f, 1.0f) * moveSpd;
       viewPos += glm::vec3(0.0f, 0.0f, 1.0f) * moveSpd;
    }
 
-   if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) {
+   if (input->active & 8) {
       bevPos += glm::vec3(1.0f, 0.0f, 0.0f) * moveSpd;
       viewPos += glm::vec3(1.0f, 0.0f, 0.0f) * moveSpd;
-   } else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) {
+   } else if (input->active & 32) {
       bevPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
       viewPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
    }

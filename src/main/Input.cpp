@@ -16,10 +16,17 @@ InputSystem::InputSystem(GLFWwindow* window, ex::EntityManager& entM) {
    win = window;
 
    //Determine the center point of window for mouse reset
-   glfwGetWindowSize(win, &winXcen, &winYcen);
-   winXcen /= 2; winYcen /= 2;
+   GLint tempCen[2];
+   glfwGetWindowSize(win, &tempCen[0], &tempCen[1]);
 
-   isRelease = true;
+   winCen.resize(2,0);
+   winCen[0] = (GLdouble)tempCen[0] / 2.0; winCen[1] = (GLdouble)tempCen[1] / 2.0;
+
+   ex::Entity entity = entM.create();
+   entity.assign<Input>(winCen);
+
+   oldKeyState = 0;
+   assignKeys();
 
 }
 
@@ -32,17 +39,32 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
       currScrn = screen.id;
    });
 
+   keyState = 1;
+   for (GLuint i=0; i < keys.size(); i++) {
+      if (glfwGetKey(win, keys[i]) == GLFW_PRESS)
+         keyState += glm::pow(2,i);
+   }
 
+   // Keys that have just been pressed = (keys that have changed) & keys that are pressed
+   GLuint activeKeys = (keyState ^ oldKeyState) & keyState;
+   oldKeyState = keyState;
 
+   //Finds the current cursor position
+   std::vector<GLdouble> cursor(2, 0);
+   glfwGetCursorPos(win, &cursor[0], &cursor[1]);
 
+   if (currScrn == 10)
+      glfwSetCursorPos(win, winCen[0], winCen[1]);
 
-
-
+   entM.each<Input>([this, &activeKeys, &cursor](ex::Entity roomEnt, Input& input) {
+      input.active = activeKeys;
+      input.cursor = cursor;
+   });
 
 
 
    //This will need to be fixed so that it returns to 10 only when started at 10
-   if ((glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS) && (isRelease) && (currScrn >= 10)) {
+   if ((activeKeys & 1) && (currScrn >= 10)) {
       entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
          if (currScrn >= 20)
             screen.id = screen.prevId;
@@ -50,9 +72,25 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
             screen.id = 20; screen.prevId = currScrn;
          }
       });
-      isRelease = false;
-      glfwSetCursorPos(win, winXcen, winYcen);
-   } else if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_RELEASE)
-      isRelease = true;
 
+      glfwSetCursorPos(win, winCen[0], winCen[1]);
+   }
+}
+
+
+
+
+
+
+void InputSystem::assignKeys() {
+   //This will later go in a function that will read from file.
+   keys.resize(10,0);
+   keys[0] = 256; //Escape
+   keys[1] = 340; //Left_SHIFT
+   keys[2] = 32;  //Space
+   keys[3] = 87;  //W
+   keys[4] = 65;  //A
+   keys[5] = 83;  //S
+   keys[6] = 68;  //D
+   keys[7] = 77;  //M
 }

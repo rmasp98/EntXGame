@@ -15,23 +15,19 @@
 //Generic libraries
 #include <cmath>
 
-//Graphic libraries
-#include <GLFW/glfw3.h>
-
 
 class MoveSystem : public ex::System<MoveSystem>, public ex::Receiver<MoveSystem> {
    public:
-      explicit MoveSystem(GLFWwindow*);
+      explicit MoveSystem(ex::EntityManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    protected:
-      GLFWwindow* win;
-      GLint winXcen, winYcen;
       bool isRelease;
+      Input* input;
 
       void moveObject(ex::Entity&, Position&, Acceleration&, Direction*, GLfloat);
       void moveObject(ex::Entity&, Position&, Acceleration&, GLfloat);
-      void changeDirection(Camera&, Direction&, GLfloat);
+      void changeDirection(Direction&, GLfloat);
 };
 
 

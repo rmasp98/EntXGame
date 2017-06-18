@@ -67,8 +67,8 @@ Game::Game(GLFWwindow* window) {
    systems.add<ObjectSystem>(entities);
    systems.add<RoomSystem>(entities);
    systems.add<InputSystem>(window, entities);
-   systems.add<MoveSystem>(window);
-   systems.add<BevSystem>(window);
+   systems.add<MoveSystem>(entities);
+   systems.add<BevSystem>(entities);
    systems.add<CollisionSystem>();
 
    // Menu Systems
