@@ -53,7 +53,7 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
          cam.view = lookAt(pos.pos, pos.pos + face.facing, glm::vec3(0,1,0));
       });
 
-      if (input->active & 128) {
+      if (input->active & input->keyMap["bev"]) {
          entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
             screen.id = 11;
          });
@@ -100,7 +100,7 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
    bool isSprint = false;
    GLfloat velMod = 1.0;
    //This then updates position and adds a sprint if shift is pressed
-   if ((input->active & 2) || isSprint)
+   if ((input->active & input->keyMap["sprint"]) || isSprint)
       velMod = 2.0;
 
    //Some entities don't have jump so need to account for that
@@ -108,7 +108,7 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
    ex::ComponentHandle<Jump> jump = ent.component<Jump>();
    if (jump) {
       //If spacebar is pressed initiate jump
-      if ((input->active & 4) && (!jump->isJump)) {
+      if ((input->active & input->keyMap["jump"]) && (!jump->isJump)) {
          jump->isJump = true; accel.vel.y = jump->jumpSpeed;
       }
 
@@ -123,9 +123,9 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
       pos.pos += (accel.vel.z * facing->dir + accel.vel.x * facing->right) * dT * velMod;
    } else {
       //If A/D is pressed, increase x speed up to max speed otherwise decelerate down to 0
-      if (input->active & 16)
+      if (input->active & input->keyMap["left"])
          accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);
-      else if (input->active & 64)
+      else if (input->active & input->keyMap["right"])
          accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -accel.maxSpeed);
       else
          //This ensures that it stops at zero and doesn't accelerate in the opposite direction
@@ -133,9 +133,9 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
                                            : std::max(accel.vel.x - accel.accel*dT, 0.0f);
 
       //Same as above but for z direction
-      if (input->active & 8)
+      if (input->active & input->keyMap["forward"])
          accel.vel.z = std::min(accel.vel.z + accel.accel*dT, accel.maxSpeed);
-      else if (input->active & 32)
+      else if (input->active & input->keyMap["backward"])
          accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -accel.maxSpeed);
       else
          accel.vel.z = accel.vel.z < 0 ? std::min(accel.vel.z + accel.accel*dT, 0.0f)

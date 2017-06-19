@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                    //
 //                              Title of the Game                                     //
-//                                Movement.cpp                                        //
+//                                 Input.cpp                                          //
 //                                Ross Maspero                                        //
 //                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -22,11 +22,12 @@ InputSystem::InputSystem(GLFWwindow* window, ex::EntityManager& entM) {
    winCen.resize(2,0);
    winCen[0] = (GLdouble)tempCen[0] / 2.0; winCen[1] = (GLdouble)tempCen[1] / 2.0;
 
+   assignKeys("config/keys.cfg");
+
    ex::Entity entity = entM.create();
-   entity.assign<Input>(winCen);
+   entity.assign<Input>(winCen, keyMap);
 
    oldKeyState = 0;
-   assignKeys();
 
 }
 
@@ -39,14 +40,18 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
       currScrn = screen.id;
    });
 
-   keyState = 1;
-   for (GLuint i=0; i < keys.size(); i++) {
-      if (glfwGetKey(win, keys[i]) == GLFW_PRESS)
-         keyState += glm::pow(2,i);
+   keyState = 0;
+   GLuint it=0;
+   for (auto const &ent1 : keys) {
+      if (glfwGetKey(win, ent1.second) == GLFW_PRESS)
+         keyState += glm::pow(2,it);
+      it++;
    }
 
-   // Keys that have just been pressed = (keys that have changed) & keys that are pressed
-   GLuint activeKeys = (keyState ^ oldKeyState) & keyState;
+   // key state changed if keyState xor (not the same as) oldKeyState
+   GLuint stateChange = keyState ^ oldKeyState;
+   // active keys if the key is a hold key or has changed and is pressed down
+   GLuint activeKeys = (holdKeys | stateChange) & keyState;
    oldKeyState = keyState;
 
    //Finds the current cursor position
@@ -61,10 +66,8 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
       input.cursor = cursor;
    });
 
-
-
    //This will need to be fixed so that it returns to 10 only when started at 10
-   if ((activeKeys & 1) && (currScrn >= 10)) {
+   if ((activeKeys & keyMap["menu"]) && (currScrn >= 10)) {
       entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
          if (currScrn >= 20)
             screen.id = screen.prevId;
@@ -82,15 +85,46 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
 
 
 
-void InputSystem::assignKeys() {
-   //This will later go in a function that will read from file.
-   keys.resize(10,0);
-   keys[0] = 256; //Escape
-   keys[1] = 340; //Left_SHIFT
-   keys[2] = 32;  //Space
-   keys[3] = 87;  //W
-   keys[4] = 65;  //A
-   keys[5] = 83;  //S
-   keys[6] = 68;  //D
-   keys[7] = 77;  //M
+void InputSystem::assignKeys(std::string fileName) {
+
+   std::map<std::string, bool> holdKeyTemp;
+   holdKeys = 0;
+
+   // Read the json file into rapidjson
+	std::ifstream cfgFile; cfgFile.open(fileName);
+	rj::IStreamWrapper cfgIn(cfgFile);
+
+   // If json file has been parsed successfully
+	rj::Document doc;
+	if (!doc.ParseStream(cfgIn).HasParseError()) {
+      // Check for the menu config and loop over each menu
+		rj::Value& type = getArrayKey(doc, "inputType");
+		for (rj::SizeType iType = 0; iType < type.Size(); ++iType) {
+         if (getStringKey(type[iType], "type") == "keyboard") {
+            rj::Value& keysIn = getArrayKey(type[iType], "keys");
+            for (rj::SizeType jKey = 0; jKey < keysIn.Size(); ++jKey) {
+               std::string keyName = getStringKey(keysIn[jKey], "name");
+               keys[keyName] = getUintKey(keysIn[jKey], "keyVal");
+
+               // Find out if key is a hold key
+               holdKeyTemp[keyName] = false;
+               if (keysIn[jKey].HasMember("holdKey")) {
+                  if (getBoolKey(keysIn[jKey], "holdKey"))
+                     holdKeyTemp[keyName] = true;
+               }
+            }
+         }
+      }
+   }
+
+   // Finish set up of keys, setting hold keys and key mapping
+   GLuint it=0;
+   for (auto const &ent1 : keys) {
+      // If it is a hold key add it to binary chain
+      if (holdKeyTemp[ent1.first])
+         holdKeys += pow(2, it);
+
+      // Place where key is in the binary chain based on map order
+      keyMap[ent1.first] = glm::pow(2, it++);
+   }
 }

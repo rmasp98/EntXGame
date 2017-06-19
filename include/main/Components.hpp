@@ -11,6 +11,7 @@
 
 //Generic libraries
 #include <vector>
+#include <map>
 
 //Graphics libraries
 #include <GL/glew.h>
@@ -82,10 +83,12 @@ struct Renderable {
 
 
 struct Input {
-   Input(std::vector<GLdouble> cursIn) : active(0), cursor(cursIn), winCen(cursIn) {}
+   Input(std::vector<GLdouble> cursIn, std::map<std::string, GLuint> keysIn)
+         : active(0), cursor(cursIn), winCen(cursIn), keyMap(keysIn) {}
 
    GLuint active;
    std::vector<GLdouble> cursor, winCen;
+   std::map<std::string, GLuint> keyMap;
 };
 
 

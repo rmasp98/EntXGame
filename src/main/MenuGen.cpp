@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                    //
 //                              Title of the Game                                     //
-//                                  Menu.cpp                                          //
+//                                MenuGen.cpp                                         //
 //                                Ross Maspero                                        //
 //                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -126,57 +126,6 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 
 
 
-std::string MenuGenSystem::getStringKey(rj::Value& mainKey, std::string newKey) {
-	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsString()); return keyRef.GetString();
-}
-
-GLuint MenuGenSystem::getUintKey(rj::Value& mainKey, std::string newKey) {
-	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsUint()); return keyRef.GetUint();
-}
-
-GLint MenuGenSystem::getIntKey(rj::Value& mainKey, std::string newKey) {
-	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsInt()); return keyRef.GetInt();
-}
-
-GLfloat MenuGenSystem::getFloatKey(rj::Value& mainKey, std::string newKey) {
-	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsDouble()); return keyRef.GetDouble();
-}
-
-bool MenuGenSystem::getBoolKey(rj::Value& mainKey, std::string newKey) {
-	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsBool()); return keyRef.GetBool();
-}
-
-rj::Value& MenuGenSystem::getArrayKey(rj::Value& mainKey, std::string newKey) {
-	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsArray()); return keyRef;
-}
-
-glm::vec3 MenuGenSystem::getVec3Key(rj::Value& mainKey, std::string newKey) {
-	assert(mainKey.HasMember(newKey.c_str())); rj::Value& keyRef = mainKey[newKey.c_str()];
-	assert(keyRef.IsArray());
-
-	glm::vec3 keyOut;
-	for (GLuint k = 0; k < 3; ++k)
-		keyOut[k] = keyRef[k].GetDouble();
-
-	return keyOut;
-}
-
-
-bool MenuGenSystem::checkKey(rj::Value& mainKey, std::string newKey, glm::vec3& keyOut) {
-	if (mainKey.HasMember(newKey.c_str()) && (mainKey[newKey.c_str()].IsArray())) {
-		for (GLuint k = 0; k < 3; ++k)
-			keyOut[k] = mainKey[newKey.c_str()][k].GetDouble();
-
-		return true;
-	} else
-		return false;
-}
 
 
 void MenuGenSystem::genBackground(ex::EntityManager& entM, std::string bgImage, GLuint menuID) {

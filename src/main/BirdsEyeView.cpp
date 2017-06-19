@@ -40,7 +40,7 @@ void BevSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Time
          cam.view = lookAt(bevPos, viewPos, viewOrient);
       });
 
-      if (input->active & 128) {
+      if (input->active & input->keyMap["bev"]) {
          entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
             screen.id = 13;
          });
@@ -104,18 +104,18 @@ void BevSystem::moveDown(ex::EntityManager& entM) {
 
 void BevSystem::moveBev() {
 
-   if (input->active & 16) {
+   if (input->active & input->keyMap["left"]) {
       bevPos += glm::vec3(0.0f, 0.0f, -1.0f) * moveSpd;
       viewPos += glm::vec3(0.0f, 0.0f, -1.0f) * moveSpd;
-   } else if (input->active & 64) {
+   } else if (input->active & input->keyMap["right"]) {
       bevPos += glm::vec3(0.0f, 0.0f, 1.0f) * moveSpd;
       viewPos += glm::vec3(0.0f, 0.0f, 1.0f) * moveSpd;
    }
 
-   if (input->active & 8) {
+   if (input->active & input->keyMap["forward"]) {
       bevPos += glm::vec3(1.0f, 0.0f, 0.0f) * moveSpd;
       viewPos += glm::vec3(1.0f, 0.0f, 0.0f) * moveSpd;
-   } else if (input->active & 32) {
+   } else if (input->active & input->keyMap["backward"]) {
       bevPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
       viewPos += glm::vec3(-1.0f, 0.0f, 0.0f) * moveSpd;
    }

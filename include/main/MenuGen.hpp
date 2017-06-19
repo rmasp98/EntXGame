@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                    //
 //                              Title of the Game                                     //
-//                                  Menu.hpp                                          //
+//                                MenuGen.hpp                                         //
 //                                Ross Maspero                                        //
 //                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -15,6 +15,7 @@
 #include "common/objLoader.hpp"
 #include "common/shader.hpp"
 #include "common/texture.hpp"
+#include "main/Json.hpp"
 
 // Window Library
 #include <GLFW/glfw3.h>
@@ -24,10 +25,6 @@
 #include <fstream>
 #include <sstream>
 
-// Libraries for reading and processing JSON
-#include "rapidjson/document.h"
-#include "rapidjson/istreamwrapper.h"
-namespace rj = rapidjson;
 
 
 class MenuGenSystem : public ex::System<MenuGenSystem> {
@@ -47,16 +44,6 @@ class MenuGenSystem : public ex::System<MenuGenSystem> {
       void makeButton(ex::Entity&, std::string, glm::vec3, GLuint, GLfloat, Atlas&);
       void genBackground(ex::EntityManager&, std::string, GLuint);
       void readConfig(ex::EntityManager&, std::string);
-
-      std::string getStringKey(rj::Value&, std::string);
-      GLuint getUintKey(rj::Value&, std::string);
-      GLint getIntKey(rj::Value&, std::string);
-      GLfloat getFloatKey(rj::Value&, std::string);
-      bool getBoolKey(rj::Value&, std::string);
-      glm::vec3 getVec3Key(rj::Value&, std::string);
-
-      rj::Value& getArrayKey(rj::Value&, std::string);
-      bool checkKey(rj::Value&, std::string, glm::vec3&);
 
 };
 
