@@ -33,6 +33,7 @@ InputSystem::InputSystem(GLFWwindow* window, ex::EntityManager& entM) {
 
 
 
+
 void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
    GLuint currScrn;
@@ -42,8 +43,8 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
 
    keyState = 0;
    GLuint it=0;
-   for (auto const &ent1 : keys) {
-      if (glfwGetKey(win, ent1.second) == GLFW_PRESS)
+   for (auto const &ent1 : keyMap) {
+      if (glfwGetKey(win, ent1.second[0]) == GLFW_PRESS)
          keyState += glm::pow(2,it);
       it++;
    }
@@ -67,7 +68,7 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
    });
 
    //This will need to be fixed so that it returns to 10 only when started at 10
-   if ((activeKeys & keyMap["menu"]) && (currScrn >= 10)) {
+   if ((activeKeys & keyMap["menu"][1]) && (currScrn >= 10)) {
       entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
          if (currScrn >= 20)
             screen.id = screen.prevId;
@@ -104,7 +105,7 @@ void InputSystem::assignKeys(std::string fileName) {
             rj::Value& keysIn = getArrayKey(type[iType], "keys");
             for (rj::SizeType jKey = 0; jKey < keysIn.Size(); ++jKey) {
                std::string keyName = getStringKey(keysIn[jKey], "name");
-               keys[keyName] = getUintKey(keysIn[jKey], "keyVal");
+               keyMap[keyName][0] = getUintKey(keysIn[jKey], "keyVal");
 
                // Find out if key is a hold key
                holdKeyTemp[keyName] = false;
@@ -119,12 +120,12 @@ void InputSystem::assignKeys(std::string fileName) {
 
    // Finish set up of keys, setting hold keys and key mapping
    GLuint it=0;
-   for (auto const &ent1 : keys) {
+   for (auto const &ent1 : keyMap) {
       // If it is a hold key add it to binary chain
       if (holdKeyTemp[ent1.first])
          holdKeys += pow(2, it);
 
       // Place where key is in the binary chain based on map order
-      keyMap[ent1.first] = glm::pow(2, it++);
+      keyMap[ent1.first][1] = glm::pow(2, it++);
    }
 }

@@ -31,8 +31,8 @@ class InputSystem : public ex::System<InputSystem> {
       GLFWwindow* win;
       GLuint oldKeyState, keyState, holdKeys;
       std::vector<GLdouble> winCen;
-      std::map<std::string, GLint> keys;
-      std::map<std::string, GLuint> keyMap;
+      //std::map<std::string, GLint> keys;
+      std::map<std::string, GLuint[2]> keyMap;
 
       void assignKeys(std::string);
 };

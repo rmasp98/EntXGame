@@ -88,35 +88,102 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 			genBackground(entM, bgImage, menuID);
 
 			// Loop over all buttons in the menu
+
 			rj::Value& buttons = getArrayKey(menu[iMenu], "buttons");
 			for (rj::SizeType jButton = 0; jButton < buttons.Size(); ++jButton) {
-				ex::Entity entity = entM.create();
+				/*if (buttons[jButton].HasMember("autoGen") && getBoolKey(buttons[jButton], "autoGen")) {
+					std::map<std::string, GLuint[2]> keyMap;
+				   entM.each<Input>([this, &keyMap](ex::Entity roomEnt, Input& input) {
+				      keyMap = input.keyMap;
+				   });
+
+					GLfloat fontSize = 1.0;
+					if (menu[iMenu].HasMember("fontSize"))
+						fontSize = getFloatKey(menu[iMenu], "fontSize");
+
+					GLuint it=0;
+					for (auto const &ent1 : keyMap) {
+						for (GLuint iKey=0; iKey<2; iKey++) {
+							ex::Entity entity = entM.create();
+
+							//Need tp set pos
+							glm::vec3 pos((iKey - 0.5) * 0.5, 0.2 - it * 0.15, 0.0f);
+							makeButton(entity, ent1.first, pos, 0, fontSize, *menuFont);
+
+							entity.assign<Shader>(pID);
+							entity.assign<MenuID>(1, menuID);
+
+							glm::vec3 buttonBC;
+							if (!checkKey(menu[iMenu], "baseColour", buttonBC))
+								buttonBC = menuBC;
+
+							glm::vec3 buttonHC;
+							if (!checkKey(menu[iMenu], "highColour", buttonHC))
+								buttonHC = menuHC;
+
+							entity.assign<Font>(buttonBC, buttonHC, menuFont);
+						} it++;
+					}
+				} else {*/
+
+
+				std::vector<std::string> text;
+				std::vector<glm::vec3> pos;
+				std::vector<GLuint> action;
+				if (buttons[jButton].HasMember("autoGen") && getBoolKey(buttons[jButton], "autoGen")) {
+					std::map<std::string, GLuint[2]> keyMap;
+				   entM.each<Input>([this, &keyMap](ex::Entity roomEnt, Input& input) {
+				      keyMap = input.keyMap;
+				   });
+
+					glm::vec3 offset = getVec3Key(buttons[jButton], "position");
+					GLfloat space = getFloatKey(buttons[jButton], "space");
+
+					GLuint it=0;
+					for (auto const &ent1 : keyMap) {
+						//key action name
+						text.push_back(ent1.first);
+						pos.push_back(offset + glm::vec3(space * -1, it * (-0.1), 0.0f)); //calculate this
+						action.push_back(0);
+
+						//Key action assignment
+						text.push_back("hello");
+						pos.push_back(offset + glm::vec3(space, it++ * (-0.1), 0.0f));
+						action.push_back(3);
+					}
+				} else {
+					text.push_back(getStringKey(buttons[jButton], "text"));
+					pos.push_back(getVec3Key(buttons[jButton], "position"));
+					action.push_back(getUintKey(buttons[jButton], "actionId"));
+				}
 
 				GLfloat fontSize = 1.0;
 				if (buttons[jButton].HasMember("fontSize"))
 					fontSize = getFloatKey(buttons[jButton], "fontSize");
 
-				makeButton(entity, getStringKey(buttons[jButton], "text"),
-							  getVec3Key(buttons[jButton], "position"),
-							  getUintKey(buttons[jButton], "actionId"),
-							  fontSize, *menuFont);
+				for (GLuint kButtons=0; kButtons<text.size(); kButtons++) {
+					ex::Entity entity = entM.create();
 
-				entity.assign<Shader>(pID);
-				entity.assign<MenuID>(0, menuID);
+					makeButton(entity, text[kButtons], pos[kButtons], action[kButtons],
+								  fontSize, *menuFont);
 
-				//Probably should have a check that if actionId==1 then there is a linkId
-				if (buttons[jButton].HasMember("linkId"))
-					entity.assign<ScreenLink>(getIntKey(buttons[jButton], "linkId"));
+					entity.assign<Shader>(pID);
+					entity.assign<MenuID>(0, menuID);
 
-				glm::vec3 buttonBC;
-				if (!checkKey(buttons[jButton], "baseColour", buttonBC))
-					buttonBC = menuBC;
+					//Probably should have a check that if actionId==1 then there is a linkId
+					if (buttons[jButton].HasMember("linkId"))
+						entity.assign<ScreenLink>(getIntKey(buttons[jButton], "linkId"));
 
-				glm::vec3 buttonHC;
-				if (!checkKey(buttons[jButton], "highColour", buttonHC))
-					buttonHC = menuHC;
+					glm::vec3 buttonBC;
+					if (!checkKey(buttons[jButton], "baseColour", buttonBC))
+						buttonBC = menuBC;
 
-				entity.assign<Font>(buttonBC, buttonHC, menuFont);
+					glm::vec3 buttonHC;
+					if (!checkKey(buttons[jButton], "highColour", buttonHC))
+						buttonHC = menuHC;
+
+					entity.assign<Font>(buttonBC, buttonHC, menuFont);
+				}
 			}
 		}
 	}

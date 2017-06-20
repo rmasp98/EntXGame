@@ -83,12 +83,12 @@ struct Renderable {
 
 
 struct Input {
-   Input(std::vector<GLdouble> cursIn, std::map<std::string, GLuint> keysIn)
+   Input(std::vector<GLdouble> cursIn, std::map<std::string, GLuint[2]> keysIn)
          : active(0), cursor(cursIn), winCen(cursIn), keyMap(keysIn) {}
 
    GLuint active;
    std::vector<GLdouble> cursor, winCen;
-   std::map<std::string, GLuint> keyMap;
+   std::map<std::string, GLuint[2]> keyMap;
 };
 
 
@@ -245,6 +245,8 @@ struct ScreenLink {
 
    GLint linkId;
 };
+
+
 
 
 #endif // COMPONENTS_HPP

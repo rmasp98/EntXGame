@@ -29,7 +29,7 @@
 
 class MenuGenSystem : public ex::System<MenuGenSystem> {
    public:
-      explicit MenuGenSystem(ex::EntityManager& entM, GLFWwindow*);
+      explicit MenuGenSystem(ex::EntityManager&, GLFWwindow*);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    private:
