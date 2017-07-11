@@ -31,24 +31,21 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
    });
 
    if (currScrn == 10) {
-      //Look at mouse movement to determine if facing direction changed
-      entM.each<Direction>([this, &dT](ex::Entity null, Direction& face) {
+      entM.each<Position, Acceleration, Direction, Jump>([this, dT]
+         (ex::Entity entity, Position& pos, Acceleration& accel, Direction& face, Jump& jump) {
+         //Look at mouse movement to determine if facing direction changed
          changeDirection(face, dT);
+
+         //Look at keyboard movement to determine if position has changed
+         moveCharacter(entity, pos, accel, face, jump, dT);
       });
 
       //Checks for each controllable entity that moves and moves them (currently only moves camera)
-      entM.each<Position, Acceleration>([this, dT](ex::Entity entity, Position& pos, Acceleration& accel) {
-
-         ex::ComponentHandle<Direction> face = entity.component<Direction>();
-
-         if (face)
-            moveObject(entity, pos, accel, face.get(), dT);
-         else
-            moveObject(entity, pos, accel, dT);
-
+      entM.each<Position, Acceleration, Push>([this, dT](ex::Entity entity, Position& pos, Acceleration& accel, Push& push) {
+         moveObject(entity, pos, accel, push, dT);
       });
 
-      //Assigns the calculated values to the camera
+      //Assigns the calculated values to the camera (This needs to be moved to update event)
       entM.each<Camera, Position, Direction>([this](ex::Entity entity, Camera& cam, Position& pos, Direction& face) {
          cam.view = lookAt(pos.pos, pos.pos + face.facing, glm::vec3(0,1,0));
       });
@@ -59,10 +56,21 @@ void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Tim
          });
       }
    }
-
-
 }
 
+
+void MoveSystem::configure(ex::EventManager &evtM) { evtM.subscribe<UpdatePos>(*this); }
+
+
+
+
+void MoveSystem::receive(const UpdatePos& uPos) {
+
+   uPos.entM.each<Position, Acceleration>([this](ex::Entity entity, Position& pos, Acceleration& null) {
+      pos.pos = pos.tempPos;
+   });
+
+}
 
 
 
@@ -95,38 +103,36 @@ void MoveSystem::changeDirection(Direction& dir, GLfloat dT) {
 
 
 
-void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel, Direction* facing, GLfloat dT) {
+void MoveSystem::moveCharacter(ex::Entity& ent, Position& pos, Acceleration& accel, Direction& facing, Jump& jump, GLfloat dT) {
 
-   bool isSprint = false;
-   GLfloat velMod = 1.0;
    //This then updates position and adds a sprint if shift is pressed
-   if ((input->active & input->keyMap["sprint"][1]) || isSprint)
-      velMod = 2.0;
+   GLfloat velMax = accel.maxSpeed;
+   if (input->active & input->keyMap["sprint"][1])
+      velMax = 2.0 * accel.maxSpeed;
 
-   //Some entities don't have jump so need to account for that
-   bool isJump = false;
-   ex::ComponentHandle<Jump> jump = ent.component<Jump>();
-   if (jump) {
-      //If spacebar is pressed initiate jump
-      if ((input->active & input->keyMap["jump"][1]) && (!jump->isJump)) {
-         jump->isJump = true; accel.vel.y = jump->jumpSpeed;
-      }
-
-      isJump = jump->isJump;
+   //If spacebar is pressed initiate jump
+   if ((input->active & input->keyMap["jump"][1]) && (!jump.isJump)) {
+      jump.isJump = true; accel.vel.y = jump.jumpSpeed;
    }
 
    //If jump is true, keypresses have no affect
-   if (isJump) {
+   if (jump.isJump) {
       //Updates the y position and velocity and the updates xz position
-      pos.pos.y += accel.vel.y * dT;
-      accel.vel.y += jump->gravity * dT;
-      pos.pos += (accel.vel.z * facing->dir + accel.vel.x * facing->right) * dT * velMod;
+      pos.tempPos.y += accel.vel.y * dT;
+      accel.vel.y += jump.gravity * dT;
+      pos.tempPos += (accel.vel.z * facing.dir + accel.vel.x * facing.right) * dT;
+
+      //If jumping and return to ground, stop jump (remove hardcoded number)
+      if (pos.tempPos.y < 3.0f) {
+         jump.isJump = false;
+         pos.tempPos.y = 3.0f;
+      }
    } else {
       //If A/D is pressed, increase x speed up to max speed otherwise decelerate down to 0
       if (input->active & input->keyMap["left"][1])
-         accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);
+         accel.vel.x = std::min(accel.vel.x + accel.accel*dT, velMax);
       else if (input->active & input->keyMap["right"][1])
-         accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -accel.maxSpeed);
+         accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -velMax);
       else
          //This ensures that it stops at zero and doesn't accelerate in the opposite direction
          accel.vel.x = accel.vel.x < 0 ? std::min(accel.vel.x + accel.accel*dT, 0.0f)
@@ -134,30 +140,23 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
 
       //Same as above but for z direction
       if (input->active & input->keyMap["forward"][1])
-         accel.vel.z = std::min(accel.vel.z + accel.accel*dT, accel.maxSpeed);
+         accel.vel.z = std::min(accel.vel.z + accel.accel*dT, velMax);
       else if (input->active & input->keyMap["backward"][1])
-         accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -accel.maxSpeed);
+         accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -velMax);
       else
          accel.vel.z = accel.vel.z < 0 ? std::min(accel.vel.z + accel.accel*dT, 0.0f)
                                            : std::max(accel.vel.z - accel.accel*dT, 0.0f);
 
-      //This normalises the speed to max speed if travelling diagonally
+      //This normalises the speed to max speed if travelling diagonally (breaks sprint deceleration)
       GLfloat speed = sqrt(accel.vel.x*accel.vel.x + accel.vel.z*accel.vel.z);
-      if (speed > accel.maxSpeed) {
-         accel.vel.x *= accel.maxSpeed / speed;
-         accel.vel.z *= accel.maxSpeed / speed;
+      if (speed > velMax) {
+         accel.vel.x *= velMax / speed;
+         accel.vel.z *= velMax / speed;
       }
 
       //Need to normalise facing
-      glm::vec3 dirNorm = glm::normalize(facing->dir), rightNorm = glm::normalize(facing->right);
-      pos.pos += (accel.vel.z * dirNorm + accel.vel.x * rightNorm) * dT * velMod;
-
-   }
-
-   //If jumping and return to ground, stop jump
-   if ((jump) && (pos.pos.y < 3.0f)) {
-      jump->isJump = false;
-      pos.pos.y = 3.0f;
+      glm::vec3 dirNorm = glm::normalize(facing.dir), rightNorm = glm::normalize(facing.right);
+      pos.tempPos += (accel.vel.z * dirNorm + accel.vel.x * rightNorm) * dT;
    }
 }
 
@@ -165,32 +164,29 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
 
 
 
-void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel, GLfloat dT) {
+void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel, Push& push, GLfloat dT) {
 
-   ex::ComponentHandle<Push> push = ent.component<Push>();
-   if (push) {
-      if (push->isPush) {
-         if (std::abs(push->pushDir.x) > std::abs(push->pushDir.z)) {
-            if (push->pushDir.x < 0)
-               accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);
-            else
-               accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -accel.maxSpeed);
-         } else {
-            if (push->pushDir.z < 0)
-               accel.vel.z = std::min(accel.vel.z + accel.accel*dT, accel.maxSpeed);
-            else
-               accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -accel.maxSpeed);
-         }
-
-         push->isPush = false;
+   if (push.isPush) {
+      if (std::abs(push.pushDir.x) > std::abs(push.pushDir.z)) {
+         if (push.pushDir.x < 0)
+            accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);
+         else
+            accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -accel.maxSpeed);
       } else {
-         accel.vel.x = accel.vel.x < 0 ? std::min(accel.vel.x + accel.accel*dT, 0.0f)
-                                       : std::max(accel.vel.x - accel.accel*dT, 0.0f);
-
-         accel.vel.z = accel.vel.z < 0 ? std::min(accel.vel.z + accel.accel*dT, 0.0f)
-                                       : std::max(accel.vel.z - accel.accel*dT, 0.0f);
+         if (push.pushDir.z < 0)
+            accel.vel.z = std::min(accel.vel.z + accel.accel*dT, accel.maxSpeed);
+         else
+            accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -accel.maxSpeed);
       }
+
+      push.isPush = false;
+   } else {
+      accel.vel.x = accel.vel.x < 0 ? std::min(accel.vel.x + accel.accel*dT, 0.0f)
+                                    : std::max(accel.vel.x - accel.accel*dT, 0.0f);
+
+      accel.vel.z = accel.vel.z < 0 ? std::min(accel.vel.z + accel.accel*dT, 0.0f)
+                                    : std::max(accel.vel.z - accel.accel*dT, 0.0f);
    }
 
-   pos.pos += accel.vel * dT;
+   pos.tempPos += accel.vel * dT;
 }

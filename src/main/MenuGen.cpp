@@ -136,6 +136,8 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 				      keyMap = input.keyMap;
 				   });
 
+					//glfwGetKeyName(keycode, 0);
+
 					glm::vec3 offset = getVec3Key(buttons[jButton], "position");
 					GLfloat space = getFloatKey(buttons[jButton], "space");
 

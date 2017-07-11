@@ -20,13 +20,15 @@ class MoveSystem : public ex::System<MoveSystem>, public ex::Receiver<MoveSystem
    public:
       explicit MoveSystem(ex::EntityManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
+      void configure(ex::EventManager&);
+      void receive(const UpdatePos&);
 
    protected:
       bool isRelease;
       Input* input;
 
-      void moveObject(ex::Entity&, Position&, Acceleration&, Direction*, GLfloat);
-      void moveObject(ex::Entity&, Position&, Acceleration&, GLfloat);
+      void moveCharacter(ex::Entity&, Position&, Acceleration&, Direction&, Jump&, GLfloat);
+      void moveObject(ex::Entity&, Position&, Acceleration&, Push&, GLfloat);
       void changeDirection(Direction&, GLfloat);
 };
 

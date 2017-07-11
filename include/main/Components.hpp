@@ -63,8 +63,7 @@ struct Shader {
 struct Position {
    Position(glm::vec3 posIn, glm::vec3 buffIn) : pos(posIn), buffer(buffIn) {}
 
-   glm::vec3 pos;
-   glm::vec3 buffer;
+   glm::vec3 pos, tempPos, buffer;
 };
 
 
@@ -181,6 +180,14 @@ struct Push {
 struct Goal {
    Goal() {}
 
+};
+
+
+
+struct UpdatePos {
+   UpdatePos(ex::EntityManager& emIn) : entM(emIn) {}
+
+   ex::EntityManager& entM;
 };
 
 
