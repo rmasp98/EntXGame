@@ -23,17 +23,25 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
       currScrn = screen.id;
    });
 
+
+   //collision should only check things where tempPos is different to pos
    if (currScrn == 10) {
       //Passes the room in to check if entity has collided against wall
       entM.each<Room>([this, &entM, &evnM](ex::Entity roomEnt, Room& room) {
       //Checks every for collision for any collidable entities
          entM.each<Collidable, Position>([this, &room, &entM, &evnM](ex::Entity entity1, Collidable& coll, Position& pos1) {
-            entM.each<Collidable, Position>([this, &entity1, &evnM](ex::Entity entity2, Collidable& coll, Position& pos2) {
-               if (entity1 != entity2)
-                  objectCollision(entity1, entity2, evnM);
-            });
+            // If entity has moved
+            if (glm::distance(pos1.pos, pos1.tempPos) > 1e-3) {
+               entM.each<Collidable, Position>([this, &entity1, &evnM](ex::Entity entity2, Collidable& coll, Position& pos2) {
+                  if (entity1 != entity2)
+                     objectCollision(entity1, entity2, evnM);
+               });
 
-            wallCollision(pos1, room);
+
+               //if
+
+               wallCollision(pos1, room);
+            }
          });
       });
 
@@ -96,24 +104,26 @@ void CollisionSystem::objectCollision(ex::Entity& ent1, ex::Entity& ent2, ex::Ev
 
    ex::ComponentHandle<Position> pos1 = ent1.component<Position>();
    ex::ComponentHandle<Position> pos2 = ent2.component<Position>();
+   ex::ComponentHandle<Push> push = ent2.component<Push>();
    if (pos1 && pos2) {
       //TODO: This will allow blocks to move other blocks. FIX!!
       glm::vec3 distVec = glm::vec3(pos1->tempPos.x - pos2->tempPos.x, 0.0f, pos1->tempPos.z - pos2->tempPos.z);
       if ((std::abs(distVec.x) < pos1->buffer.x + pos2->buffer.x) && (std::abs(distVec.z) < pos1->buffer.z + pos2->buffer.z)) {
-         pos1->tempPos = pos1->pos; pos2->tempPos = pos2->pos;
-
-         /*if (std::abs(distVec.x) > std::abs(distVec.z))
+         if (std::abs(distVec.x) > std::abs(distVec.z))
             pos1->tempPos.x = pos2->tempPos.x + ((distVec.x > 0) ? 1.0 : -1.0) * (pos1->buffer.x + pos2->buffer.x);
          else
-            pos1->tempPos.z = pos2->tempPos.z + ((distVec.z > 0) ? 1.0 : -1.0) * (pos1->buffer.z + pos2->buffer.z);*/
+            pos1->tempPos.z = pos2->tempPos.z + ((distVec.z > 0) ? 1.0 : -1.0) * (pos1->buffer.z + pos2->buffer.z);
 
          ex::ComponentHandle<Camera> cam = ent1.component<Camera>();
-         ex::ComponentHandle<Push> push = ent2.component<Push>();
          if (cam && push) {
-            push->isPush = true;
-            push->pushDir = pos1->tempPos - pos2->tempPos;
+            if (!push->state) {
+               push->isPush = true;
+               push->pushDir = pos1->tempPos - pos2->tempPos;
+            }
          }
-      }
+      } else if (push)
+         push->count = 0;
+
    } else {
       std::cerr << "Something went very wrong! Collision failed\n";
    }

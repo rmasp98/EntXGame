@@ -168,10 +168,12 @@ struct Collidable {
 
 //Holds the direction and whether the object is being pushed
 struct Push {
-   Push() : pushDir(glm::vec3(0.0f)), isPush(false) {}
+   Push(bool stateIn) : pushDir(glm::vec3(0.0f)), isPush(false), state(stateIn), count(0) {}
 
    glm::vec3 pushDir;
    bool isPush;
+   GLbyte state;
+   GLuint count;
 };
 
 

@@ -155,6 +155,8 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
    if (mesh.texID != 0) {
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, mesh.texID);
+
+      glUniform1f(glGetUniformLocation(prog.progID, "material.shininess"), 1.0);
    }
 
    //Render the object

@@ -118,9 +118,9 @@ void MoveSystem::moveCharacter(ex::Entity& ent, Position& pos, Acceleration& acc
    //If jump is true, keypresses have no affect
    if (jump.isJump) {
       //Updates the y position and velocity and the updates xz position
-      pos.tempPos.y += accel.vel.y * dT;
+      pos.pos.y += accel.vel.y * dT;
       accel.vel.y += jump.gravity * dT;
-      pos.tempPos += (accel.vel.z * facing.dir + accel.vel.x * facing.right) * dT;
+      pos.tempPos = pos.pos + (accel.vel.z * facing.dir + accel.vel.x * facing.right) * dT;
 
       //If jumping and return to ground, stop jump (remove hardcoded number)
       if (pos.tempPos.y < 3.0f) {
@@ -156,7 +156,7 @@ void MoveSystem::moveCharacter(ex::Entity& ent, Position& pos, Acceleration& acc
 
       //Need to normalise facing
       glm::vec3 dirNorm = glm::normalize(facing.dir), rightNorm = glm::normalize(facing.right);
-      pos.tempPos += (accel.vel.z * dirNorm + accel.vel.x * rightNorm) * dT;
+      pos.tempPos = pos.pos + (accel.vel.z * dirNorm + accel.vel.x * rightNorm) * dT;
    }
 }
 
@@ -167,19 +167,20 @@ void MoveSystem::moveCharacter(ex::Entity& ent, Position& pos, Acceleration& acc
 void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel, Push& push, GLfloat dT) {
 
    if (push.isPush) {
-      if (std::abs(push.pushDir.x) > std::abs(push.pushDir.z)) {
-         if (push.pushDir.x < 0)
-            accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);
-         else
-            accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -accel.maxSpeed);
-      } else {
-         if (push.pushDir.z < 0)
-            accel.vel.z = std::min(accel.vel.z + accel.accel*dT, accel.maxSpeed);
-         else
-            accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -accel.maxSpeed);
+      if (push.count++ > 10) {
+         if (std::abs(push.pushDir.x) > std::abs(push.pushDir.z)) {
+            if (push.pushDir.x < 0)
+               accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);
+            else
+               accel.vel.x = std::max(accel.vel.x - accel.accel*dT, -accel.maxSpeed);
+         } else {
+            if (push.pushDir.z < 0)
+               accel.vel.z = std::min(accel.vel.z + accel.accel*dT, accel.maxSpeed);
+            else
+               accel.vel.z = std::max(accel.vel.z - accel.accel*dT, -accel.maxSpeed);
+         }
+         push.isPush = false;
       }
-
-      push.isPush = false;
    } else {
       accel.vel.x = accel.vel.x < 0 ? std::min(accel.vel.x + accel.accel*dT, 0.0f)
                                     : std::max(accel.vel.x - accel.accel*dT, 0.0f);
@@ -188,5 +189,5 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
                                     : std::max(accel.vel.z - accel.accel*dT, 0.0f);
    }
 
-   pos.tempPos += accel.vel * dT;
+   pos.tempPos = pos.pos + accel.vel * dT;
 }

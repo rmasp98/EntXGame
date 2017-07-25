@@ -103,14 +103,17 @@ int initGraphics(GLFWwindow*& window) {
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Should find out about other profiles
 
    //Gets information about the primary monitor
-   const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
    //Creates the window
-   window = glfwCreateWindow(mode->width, mode->height, "First Program", NULL, NULL);
+   //window = glfwCreateWindow(mode->width, mode->height, "First Program", NULL, NULL);
+
+   window = glfwCreateWindow(1920, 1080, "First Program", monitor, NULL);
 
    //This one sets up full screen but there is currently a bug that produces a blue strip
    //window = glfwCreateWindow(mode->width, mode->height, "First Program", mode, NULL);
@@ -137,7 +140,7 @@ int initGraphics(GLFWwindow*& window) {
    glEnable(GL_CULL_FACE);             //Don't draw backfacing triangles#
 
    glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    return 0;
 }

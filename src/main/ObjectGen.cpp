@@ -143,7 +143,7 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
       entity.assign<Shader>(pID);
       entity.assign<Position>(pos[iBox], glm::vec3(1.0f));
       entity.assign<Collidable>();
-      entity.assign<Acceleration>(2.0f, 5.0f);
-      entity.assign<Push>();
+      entity.assign<Acceleration>(1.5f, 8.0f);
+      entity.assign<Push>(0);
    }
 }
