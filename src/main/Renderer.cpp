@@ -140,16 +140,16 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
 
    // Passes colour of font to graphic card
    ex::ComponentHandle<Font> font = entity.component<Font>();
-   if (font) {
-      glUniform3fv(glGetUniformLocation(prog.progID, "textColour"), 1, &(font->colour[0]));
+   if (font)
       glUniform1i(glGetUniformLocation(prog.progID, "renderType"), 0);
-   } else if (mesh.texID != 0)
+   else if (mesh.texID != 0)
       glUniform1i(glGetUniformLocation(prog.progID, "renderType"), 1);
    else
       glUniform1i(glGetUniformLocation(prog.progID, "renderType"), 2);
 
    //Send object's model matrix
    glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
+   glUniform3fv(glGetUniformLocation(prog.progID, "colour"), 1, &(mesh.colour[0]));
 
    //Resets the texture and binds correct texture
    if (mesh.texID != 0) {

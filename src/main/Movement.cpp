@@ -167,7 +167,7 @@ void MoveSystem::moveCharacter(ex::Entity& ent, Position& pos, Acceleration& acc
 void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel, Push& push, GLfloat dT) {
 
    if (push.isPush) {
-      if (push.count++ > 10) {
+      if (push.count++ > push.delay) {
          if (std::abs(push.pushDir.x) > std::abs(push.pushDir.z)) {
             if (push.pushDir.x < 0)
                accel.vel.x = std::min(accel.vel.x + accel.accel*dT, accel.maxSpeed);

@@ -61,7 +61,7 @@ struct Shader {
 
 //An object with position. There is also a buffer for collision detection
 struct Position {
-   Position(glm::vec3 posIn, glm::vec3 buffIn) : pos(posIn), buffer(buffIn) {}
+   Position(glm::vec3 posIn, glm::vec3 buffIn) : pos(posIn), tempPos(posIn), buffer(buffIn) {}
 
    glm::vec3 pos, tempPos, buffer;
 };
@@ -72,15 +72,19 @@ struct Position {
 //Vertex Array object, graphics ids for verts, uv coords, norms, VBO indices; number of verts and texture ID
 struct Renderable {
    Renderable(std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn, GLint texIn)
-   : verts(vertIn), norms(normIn), uvs(uvIn), texID(texIn), modelMat(glm::mat4(1.0f)) {}
+   : verts(vertIn), norms(normIn), uvs(uvIn), texID(texIn), modelMat(glm::mat4(1.0f)), colour(glm::vec3(1.0f)) {}
 
    std::vector<glm::vec3> verts, norms;
    std::vector<glm::vec2> uvs;
    GLuint VAO, vertID, uvID, normID, indID, indSize, texID;
    glm::mat4 modelMat;
+   glm::vec3 colour;
 };
 
 
+
+
+// Holds list off active keys, mouse information and the mapping of those keys
 struct Input {
    Input(std::vector<GLdouble> cursIn, std::map<std::string, GLuint[2]> keysIn)
          : active(0), cursor(cursIn), winCen(cursIn), keyMap(keysIn) {}
@@ -168,17 +172,17 @@ struct Collidable {
 
 //Holds the direction and whether the object is being pushed
 struct Push {
-   Push(bool stateIn) : pushDir(glm::vec3(0.0f)), isPush(false), state(stateIn), count(0) {}
+   Push(GLuint dsIn, GLuint dlIn) : pushDir(glm::vec3(0.0f)), isPush(false), count(0),
+                                    delay(dsIn), delShort(dsIn), delLong(dlIn) {}
 
    glm::vec3 pushDir;
    bool isPush;
-   GLbyte state;
-   GLuint count;
+   GLuint count, delay, delShort, delLong;
 };
 
 
 
-
+// This flags any entities that represent a goal
 struct Goal {
    Goal() {}
 
@@ -186,6 +190,7 @@ struct Goal {
 
 
 
+// Event to send signal for updating pos from tempPos
 struct UpdatePos {
    UpdatePos(ex::EntityManager& emIn) : entM(emIn) {}
 
@@ -227,9 +232,9 @@ struct Atlas {
 // Need to find a way to delete Atlas when finished with
 struct Font {
    Font(glm::vec3 loColIn, glm::vec3 hiColIn, Atlas* fontIn) :
-        colour(loColIn), loColour(loColIn), hiColour(hiColIn), atlas(fontIn) {};
+        loColour(loColIn), hiColour(hiColIn), atlas(fontIn) {};
 
-   glm::vec3 colour, loColour, hiColour;
+   glm::vec3 loColour, hiColour;
    Atlas* atlas;
 };
 

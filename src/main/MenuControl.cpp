@@ -29,22 +29,22 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
 
    if (currScrn != 10) {
       //Finds the current cursor position
-      entM.each<Clickable, Font, Action, MenuID>([this, &entM, &currScrn]
-               (ex::Entity entity, Clickable& click, Font& font, Action& action, MenuID& menu) {
+      entM.each<Clickable, Font, Action, MenuID, Renderable>([this, &entM, &currScrn]
+               (ex::Entity entity, Clickable& click, Font& font, Action& action, MenuID& menu, Renderable& mesh) {
 
          double xPos, yPos;
          glfwGetCursorPos(win, &xPos, &yPos);
 
          // If the cursor is on top of the button
          if ((xPos > click.bound.x) && (yPos > click.bound.y) && (xPos < click.bound.z) && (yPos < click.bound.w)) {
-            font.colour = font.hiColour;
+            mesh.colour = font.hiColour;
 
             // If the button is clicked
             if ((menu.id == currScrn) && (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS))
                buttonPress(action.functionID, entM, entity);
 
          } else
-            font.colour = font.loColour;
+            mesh.colour = font.loColour;
       });
    }
 }

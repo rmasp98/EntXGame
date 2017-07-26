@@ -185,6 +185,11 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 						buttonHC = menuHC;
 
 					entity.assign<Font>(buttonBC, buttonHC, menuFont);
+
+					// Quick bodge to set the default button colour
+					ex::ComponentHandle<Renderable> mesh = entity.component<Renderable>();
+					if (mesh)
+						mesh->colour = buttonBC;
 				}
 			}
 		}

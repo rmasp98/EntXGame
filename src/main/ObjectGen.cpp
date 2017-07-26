@@ -144,6 +144,6 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
       entity.assign<Position>(pos[iBox], glm::vec3(1.0f));
       entity.assign<Collidable>();
       entity.assign<Acceleration>(1.5f, 8.0f);
-      entity.assign<Push>(0);
+      entity.assign<Push>(10, 30);
    }
 }

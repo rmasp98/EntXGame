@@ -15,9 +15,10 @@ in vec3 FragPos;
 in vec3 FragNorm;
 in vec2 FragUV;
 
-out vec4 color;
+out vec4 colourOut;
 
 uniform vec3 viewPos;
+uniform vec3 colour;
 uniform Material material;
 uniform Light light[200];
 uniform int lightNum;
@@ -30,7 +31,7 @@ void main() {
    for (int i=0; i<lightNum; i++)
       result += calcLights(i);
 
-   color = vec4(result, 1.0f);
+   colourOut = vec4(result * colour, 1.0f);
 }
 
 

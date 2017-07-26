@@ -27,21 +27,39 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
    //collision should only check things where tempPos is different to pos
    if (currScrn == 10) {
       //Passes the room in to check if entity has collided against wall
-      entM.each<Room>([this, &entM, &evnM](ex::Entity roomEnt, Room& room) {
+      entM.each<Room>([this, &entM](ex::Entity roomEnt, Room& room) {
       //Checks every for collision for any collidable entities
-         entM.each<Collidable, Position>([this, &room, &entM, &evnM](ex::Entity entity1, Collidable& coll, Position& pos1) {
+         entM.each<Collidable, Position>([this, &room, &entM](ex::Entity entity1, Collidable& coll, Position& pos1) {
             // If entity has moved
             if (glm::distance(pos1.pos, pos1.tempPos) > 1e-3) {
-               entM.each<Collidable, Position>([this, &entity1, &evnM](ex::Entity entity2, Collidable& coll, Position& pos2) {
-                  if (entity1 != entity2)
-                     objectCollision(entity1, entity2, evnM);
+               entM.each<Collidable, Position, Push>([this, &entity1, &pos1](ex::Entity entity2, Collidable& coll, Position& pos2, Push& push) {
+                  if (entity1 != entity2) {
+                     if (testCollision(pos1, pos2)) {
+                        objectCollision(pos1, pos2, push, entity1);
+                     } else
+                        push.count = 0;
+                  }
                });
-
-
-               //if
 
                wallCollision(pos1, room);
             }
+         });
+      });
+
+      entM.each<Collidable, Position, Renderable, Push>([this, &entM](ex::Entity entity1, Collidable& coll, Position& pos1, Renderable& mesh, Push& push) {
+         bool isDone = false;
+         entM.each<Goal, Position>([this, &pos1, &mesh, &isDone, &push](ex::Entity entity2, Goal& goal, Position& pos2) {
+            if (testCollision(pos1, pos2)) {
+               mesh.colour = glm::vec3(1.0f, 0.5f, 0.5f);
+               isDone = true;
+               push.delay = push.delLong;
+            }
+
+            if (!isDone) {
+               mesh.colour = glm::vec3(1.0f, 1.0f, 1.0f);
+               push.delay = push.delShort;
+            }
+
          });
       });
 
@@ -100,31 +118,28 @@ void CollisionSystem::wallCollision(Position& pos, Room& room) {
 
 
 
-void CollisionSystem::objectCollision(ex::Entity& ent1, ex::Entity& ent2, ex::EventManager& evM) {
+bool CollisionSystem::testCollision(Position& pos1, Position& pos2) {
 
-   ex::ComponentHandle<Position> pos1 = ent1.component<Position>();
-   ex::ComponentHandle<Position> pos2 = ent2.component<Position>();
-   ex::ComponentHandle<Push> push = ent2.component<Push>();
-   if (pos1 && pos2) {
-      //TODO: This will allow blocks to move other blocks. FIX!!
-      glm::vec3 distVec = glm::vec3(pos1->tempPos.x - pos2->tempPos.x, 0.0f, pos1->tempPos.z - pos2->tempPos.z);
-      if ((std::abs(distVec.x) < pos1->buffer.x + pos2->buffer.x) && (std::abs(distVec.z) < pos1->buffer.z + pos2->buffer.z)) {
-         if (std::abs(distVec.x) > std::abs(distVec.z))
-            pos1->tempPos.x = pos2->tempPos.x + ((distVec.x > 0) ? 1.0 : -1.0) * (pos1->buffer.x + pos2->buffer.x);
-         else
-            pos1->tempPos.z = pos2->tempPos.z + ((distVec.z > 0) ? 1.0 : -1.0) * (pos1->buffer.z + pos2->buffer.z);
+   glm::vec3 distVec = glm::vec3(pos1.tempPos.x - pos2.tempPos.x, 0.0f, pos1.tempPos.z - pos2.tempPos.z);
+   if ((std::abs(distVec.x) < pos1.buffer.x + pos2.buffer.x) && (std::abs(distVec.z) < pos1.buffer.z + pos2.buffer.z))
+      return true;
 
-         ex::ComponentHandle<Camera> cam = ent1.component<Camera>();
-         if (cam && push) {
-            if (!push->state) {
-               push->isPush = true;
-               push->pushDir = pos1->tempPos - pos2->tempPos;
-            }
-         }
-      } else if (push)
-         push->count = 0;
+   return false;
+}
 
-   } else {
-      std::cerr << "Something went very wrong! Collision failed\n";
+
+
+void CollisionSystem::objectCollision(Position& pos1, Position& pos2, Push& push, ex::Entity& ent1) {
+   glm::vec3 distVec = glm::vec3(pos1.tempPos.x - pos2.tempPos.x, 0.0f, pos1.tempPos.z - pos2.tempPos.z);
+   if (std::abs(distVec.x) > std::abs(distVec.z))
+      pos1.tempPos.x = pos2.tempPos.x + ((distVec.x > 0) ? 1.0 : -1.0) * (pos1.buffer.x + pos2.buffer.x);
+   else
+      pos1.tempPos.z = pos2.tempPos.z + ((distVec.z > 0) ? 1.0 : -1.0) * (pos1.buffer.z + pos2.buffer.z);
+
+   // If object is pushable
+   ex::ComponentHandle<Camera> cam = ent1.component<Camera>();
+   if (cam) {
+      push.isPush = true;
+      push.pushDir = pos1.tempPos - pos2.tempPos;
    }
 }
