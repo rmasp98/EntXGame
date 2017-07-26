@@ -22,6 +22,7 @@ class CollisionSystem : public ex::System<CollisionSystem> {
       void wallCollision(Position&, Room&);
       bool testCollision(Position&, Position&);
       void objectCollision(Position&, Position&, Push&, ex::Entity&);
+      void moveToTarget(Acceleration&, Position&, Position&, GLfloat);
 };
 
 

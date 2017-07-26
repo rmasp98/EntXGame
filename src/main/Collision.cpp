@@ -46,22 +46,48 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
          });
       });
 
-      entM.each<Collidable, Position, Renderable, Push>([this, &entM](ex::Entity entity1, Collidable& coll, Position& pos1, Renderable& mesh, Push& push) {
+      entM.each<Collidable, Position, Renderable, Push, Acceleration>([this, &entM, &dT]
+           (ex::Entity entity1, Collidable& coll, Position& pos1, Renderable& mesh, Push& push, Acceleration& accel) {
          bool isDone = false;
-         entM.each<Goal, Position>([this, &pos1, &mesh, &isDone, &push](ex::Entity entity2, Goal& goal, Position& pos2) {
+         entM.each<Goal, Position>([this, &pos1, &mesh, &isDone, &push, &accel, &dT](ex::Entity entity2, Goal& goal, Position& pos2) {
             if (testCollision(pos1, pos2)) {
                mesh.colour = glm::vec3(1.0f, 0.5f, 0.5f);
                isDone = true;
                push.delay = push.delLong;
-            }
+               goal.complete = true;
 
-            if (!isDone) {
-               mesh.colour = glm::vec3(1.0f, 1.0f, 1.0f);
-               push.delay = push.delShort;
+               if ((push.state != 2) && (glm::distance(glm::vec2(pos1.tempPos.x, pos1.tempPos.z), glm::vec2(pos2.tempPos.x, pos2.tempPos.z)) > 1e-3)) {
+                  push.state = 0;
+                  moveToTarget(accel, pos1, pos2, dT);
+               } else
+                  push.state = 2;
             }
-
          });
+
+         if (!isDone) {
+            mesh.colour = glm::vec3(1.0f, 1.0f, 1.0f);
+            push.delay = push.delShort;
+            push.state = 1;
+         }
       });
+
+
+      // This should not be here. It should go into its own system
+      GLuint count=0, total=0;
+      entM.each<Goal>([this, &count, &total](ex::Entity entity2, Goal& goal) {
+         total++;
+         if (goal.complete)
+            count++;
+
+         goal.complete = false;
+      });
+
+      entM.each<Screen>([this, &count, &total](ex::Entity roomEnt, Screen& screen) {
+         if (count == total)
+            screen.id = 0;
+      });
+
+
 
       evnM.emit<UpdatePos>(entM);
    }
@@ -129,6 +155,9 @@ bool CollisionSystem::testCollision(Position& pos1, Position& pos2) {
 
 
 
+
+
+
 void CollisionSystem::objectCollision(Position& pos1, Position& pos2, Push& push, ex::Entity& ent1) {
    glm::vec3 distVec = glm::vec3(pos1.tempPos.x - pos2.tempPos.x, 0.0f, pos1.tempPos.z - pos2.tempPos.z);
    if (std::abs(distVec.x) > std::abs(distVec.z))
@@ -138,8 +167,27 @@ void CollisionSystem::objectCollision(Position& pos1, Position& pos2, Push& push
 
    // If object is pushable
    ex::ComponentHandle<Camera> cam = ent1.component<Camera>();
-   if (cam) {
+   if (cam && push.state) {
       push.isPush = true;
       push.pushDir = pos1.tempPos - pos2.tempPos;
    }
+}
+
+
+
+
+
+
+void CollisionSystem::moveToTarget(Acceleration& accel, Position& bPos, Position& gPos, GLfloat dT) {
+
+   accel.vel.x += glm::normalize(gPos.tempPos.x - bPos.tempPos.x) * accel.accel*dT;
+   accel.vel.z += glm::normalize(gPos.tempPos.z - bPos.tempPos.z) * accel.accel*dT;
+
+   GLfloat speed = sqrt(accel.vel.x*accel.vel.x + accel.vel.z*accel.vel.z);
+   if (speed > accel.maxSpeed) {
+      accel.vel.x *= accel.maxSpeed / speed;
+      accel.vel.z *= accel.maxSpeed / speed;
+   }
+
+
 }

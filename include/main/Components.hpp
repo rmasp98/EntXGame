@@ -172,11 +172,12 @@ struct Collidable {
 
 //Holds the direction and whether the object is being pushed
 struct Push {
-   Push(GLuint dsIn, GLuint dlIn) : pushDir(glm::vec3(0.0f)), isPush(false), count(0),
-                                    delay(dsIn), delShort(dsIn), delLong(dlIn) {}
+   Push(GLuint dsIn, GLuint dlIn) : pushDir(glm::vec3(0.0f)), isPush(false), state(1),
+                                    count(0), delay(dsIn), delShort(dsIn), delLong(dlIn) {}
 
    glm::vec3 pushDir;
    bool isPush;
+   GLbyte state;
    GLuint count, delay, delShort, delLong;
 };
 
@@ -184,8 +185,9 @@ struct Push {
 
 // This flags any entities that represent a goal
 struct Goal {
-   Goal() {}
+   Goal() : complete(false) {}
 
+   bool complete;
 };
 
 
