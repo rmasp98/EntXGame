@@ -12,23 +12,80 @@
 
 
 
-ObjectSystem::ObjectSystem(ex::EntityManager& entM) {
+ObjectSystem::ObjectSystem(ex::EntityManager& entM, ex::EventManager& evtM) {
+
+   //TODO need to load all the object information from a file
 
    //Entity manager is used in many functions so stored as local variable
    entMan = &entM;
+   evtMan = &evtM;
 
-   //Load the shaders (need to add shader names to config file)
-   std::string vsName = "shaders/main.vs", fsName = "shaders/main.fs";
-   GLuint pID;
-   if (vsName != "" && fsName != "")
-      pID = LoadShaders(vsName.c_str(), fsName.c_str());
-   else {
-      std::cerr << "Failed to load shaders!\n";
-      exit(EXIT_FAILURE);
-   }
+}
 
-   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   //Create camera
+
+
+
+
+void ObjectSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenObjects>(*this); }
+
+
+
+
+void ObjectSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
+
+
+}
+
+
+
+
+
+void ObjectSystem::receive(const GenObjects& gen) {
+
+   newLevel();
+
+   entMan->each<Screen>([this](ex::Entity roomEnt, Screen& screen) {
+      screen.id = 10;
+   });
+}
+
+
+
+
+void ObjectSystem::newLevel() {
+
+   entMan->each<Level, Camera>([this](ex::Entity entity, Level& lNULL, Camera& cNULL) {
+      entity.destroy();
+   });
+
+   entMan->each<Level, Goal>([this](ex::Entity entity, Level& lNULL, Goal& gNULL) {
+      entity.destroy();
+   });
+
+   entMan->each<Level, Push, Position>([this](ex::Entity entity, Level& lNULL, Push& pNULL, Position& posnull) {
+      entity.destroy();
+   });
+
+   //Get shader from the objectGen entities
+   entMan->each<Room, Shader>([this](ex::Entity ent, Room& rNULL, Shader& shader) {
+      pID = shader.progID;
+   });
+
+   // Generate camera
+   genCamera();
+
+   //Generate first level (should probably move this to update within if statement)
+   genLevel();
+
+}
+
+
+
+
+
+//Create camera
+void ObjectSystem::genCamera() {
+
    ex::Entity entity = entMan->create();
    //Camera perspective: angle of view, xy ratio, minimum distance, maximum distance
    glm::mat4 projection = glm::perspective(45.0f, 4.0f/3.0f, 0.1f, 200.0f);
@@ -47,21 +104,7 @@ ObjectSystem::ObjectSystem(ex::EntityManager& entM) {
    //If object will collide
    entity.assign<Collidable>();
 
-   //Generate first level (should probably move this to update within if statement)
-   genLevel(pID);
-
 }
-
-
-
-
-
-void ObjectSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
-
-
-
-}
-
 
 
 
@@ -69,11 +112,12 @@ void ObjectSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::T
 
 
 //TODO: Currently hardcode a lot of values which should be read from a config file
-void ObjectSystem::genLevel(GLuint pID) {
+void ObjectSystem::genLevel() {
 
-   entMan->each<Camera, Position>([this](ex::Entity roomEnt, Camera& null, Position& pos) {
-      pos.pos = glm::vec3(0.0f, 3.0f, 0.0f);
-   });
+   // entMan->each<Camera, Position>([this](ex::Entity roomEnt, Camera& null, Position& pos) {
+   //    pos.pos = glm::vec3(0.0f, 3.0f, 0.0f);
+   // });
+
 
    /////////////////////////////////////////////////////////////////////////////
    //Generate objects in the room (i.e. blocks)
@@ -104,6 +148,7 @@ void ObjectSystem::genLevel(GLuint pID) {
       lightEnt.assign<Position>(boxGoal[iGoal], glm::vec3(0.0f));
       lightEnt.assign<Shader>(pID);
       lightEnt.assign<Goal>();
+      lightEnt.assign<Level>();
    }
 }
 
@@ -133,7 +178,6 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
       exit(EXIT_FAILURE);
    }
 
-
    for (GLuint iBox=0; iBox < pos.size(); iBox++) {
       ex::Entity entity = entMan->create();
 
@@ -145,5 +189,7 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
       entity.assign<Collidable>();
       entity.assign<Acceleration>(1.5f, 8.0f);
       entity.assign<Push>(10, 30);
+
+      evtMan->emit<GenBuffers>(entity);
    }
 }

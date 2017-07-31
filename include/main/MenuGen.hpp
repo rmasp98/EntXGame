@@ -27,10 +27,12 @@
 
 
 
-class MenuGenSystem : public ex::System<MenuGenSystem> {
+class MenuGenSystem : public ex::System<MenuGenSystem>, public ex::Receiver<MenuGenSystem> {
    public:
-      explicit MenuGenSystem(ex::EntityManager&, GLFWwindow*);
+      explicit MenuGenSystem(ex::EntityManager&, ex::EventManager&, GLFWwindow*);
+      void configure(ex::EventManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
+      void receive(const GenMenu&);
 
    private:
       struct button {
@@ -42,8 +44,8 @@ class MenuGenSystem : public ex::System<MenuGenSystem> {
       GLint scaleX, scaleY;
 
       void makeButton(ex::Entity&, std::string, glm::vec3, GLuint, GLfloat, Atlas&);
-      void genBackground(ex::EntityManager&, std::string, GLuint);
-      void readConfig(ex::EntityManager&, std::string);
+      void genBackground(ex::EntityManager&, ex::EventManager&, std::string, GLuint);
+      void readConfig(ex::EntityManager&, ex::EventManager&, std::string);
 
 };
 

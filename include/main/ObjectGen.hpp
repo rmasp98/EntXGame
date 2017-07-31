@@ -19,15 +19,21 @@
 #include <SOIL/SOIL.h>
 
 
-class ObjectSystem : public ex::System<ObjectSystem> {
+class ObjectSystem : public ex::System<ObjectSystem>, public ex::Receiver<ObjectSystem> {
    public:
-      explicit ObjectSystem(ex::EntityManager&);
+      explicit ObjectSystem(ex::EntityManager&, ex::EventManager&);
+      void configure(ex::EventManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
+      void receive(const GenObjects&);
 
    protected:
       ex::EntityManager* entMan;
+      ex::EventManager* evtMan;
+      GLuint pID;
 
-      void genLevel(GLuint);
+      void newLevel();
+      void genCamera();
+      void genLevel();
       void genObject(std::string, std::string, GLint, std::vector<glm::vec3>&);
 };
 

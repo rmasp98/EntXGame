@@ -9,11 +9,56 @@
 #include "main/BuildRoom.hpp"
 
 
-RoomSystem::RoomSystem(ex::EntityManager& entM) {
+RoomSystem::RoomSystem(ex::EntityManager& entM, ex::EventManager& evtM) {
+
+   //Load the shaders (need to add shader names to config file)
+   std::string vsName = "shaders/main.vs", fsName = "shaders/main.fs";
+   if (vsName != "" && fsName != "")
+      pID = LoadShaders(vsName.c_str(), fsName.c_str());
+   else {
+      std::cerr << "Failed to load shaders!\n";
+      exit(EXIT_FAILURE);
+   }
+}
+
+
+
+
+void RoomSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenRoom>(*this); }
+
+
+
+
+void RoomSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
+
+}
+
+
+
+
+
+void RoomSystem::receive(const GenRoom& gen) {
+
+   genRoom(gen.entM, gen.evtM);
+   gen.evtM.emit<GenObjects>();
+
+}
+
+
+
+
+
+
+void RoomSystem::genRoom(ex::EntityManager& entM, ex::EventManager& evtM) {
+
+   entM.each<Level, Room>([this](ex::Entity entity, Level& lNULL, Room& rNULL) {
+      entity.destroy();
+   });
 
    //Create the room entity and assign it as a room
    ex::Entity entity = entM.create();
    entity.assign<Level>();
+   entity.assign<Shader>(pID);
 
    entity.assign<Room>();
    ex::ComponentHandle<Room> roomC = entity.component<Room>();
@@ -22,28 +67,16 @@ RoomSystem::RoomSystem(ex::EntityManager& entM) {
    //roomC->blocks = createBlocks(100);
    roomC->blocks = createBlocks();
 
-   //Get shader from the objectGen entities
-   GLuint pID;
-   entM.each<Shader>([this, &pID](ex::Entity ent, Shader& shader) {
-      pID = shader.progID;
-   });
-   entity.assign<Shader>(pID);
-
    //Determine the boundary around the blocks
    createBound(roomC);
 
    //Use everything to generate the vertices, norms and UVs
    buildRoom(entM, entity, roomC, pID);
 
-}
-
-
-
-
-
-void RoomSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
+   evtM.emit<GenBuffers>(entity);
 
 }
+
 
 
 std::vector< glm::tvec2<GLint> > RoomSystem::createBlocks() {
@@ -272,6 +305,8 @@ void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::Compone
          lightEnt.assign<Light>(amb, diff, spec, 0.07, 0.017);
          lightEnt.assign<Position>(pos, glm::vec3(0.0f));
          lightEnt.assign<Shader>(pID);
+         lightEnt.assign<Level>();
+         lightEnt.assign<Room>();
       }
    }
 
@@ -306,5 +341,6 @@ void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::Compone
 
    //Assign all the verts, norms, UVs and texture ID to the room entity
    ent.assign<Renderable>(roomVerts, roomNorms, roomUVs, texID);
+   ent.assign<Collidable>();
 
 }

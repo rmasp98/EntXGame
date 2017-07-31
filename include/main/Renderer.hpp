@@ -20,15 +20,17 @@
 #include <GLFW/glfw3.h>
 
 
-class RenderSystem : public ex::System<RenderSystem> {
+class RenderSystem : public ex::System<RenderSystem>, public ex::Receiver<RenderSystem> {
    public:
       explicit RenderSystem(ex::EntityManager&, GLFWwindow*);
+      void configure(ex::EventManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
+      void receive(const GenBuffers&);
 
    protected:
       GLFWwindow* window;
 
-      void genBuffers(ex::Entity&, Renderable&, Shader&);
+      void genBuffers(ex::Entity&);
       void drawScene(Renderable&, Shader&, ex::EntityManager& entM, ex::Entity&);
       void addLight(ex::EntityManager&);
 };

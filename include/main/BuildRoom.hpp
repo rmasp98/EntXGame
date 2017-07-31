@@ -20,12 +20,17 @@
 
 
 //System for building the puzzle room
-class RoomSystem : public ex::System<RoomSystem> {
+class RoomSystem : public ex::System<RoomSystem>, public ex::Receiver<RoomSystem> {
    public:
-      explicit RoomSystem(ex::EntityManager&);
+      explicit RoomSystem(ex::EntityManager&, ex::EventManager&);
+      void configure(ex::EventManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
+      void receive(const GenRoom&);
 
    protected:
+      GLuint pID;
+
+      void genRoom(ex::EntityManager&, ex::EventManager&);
       std::vector< glm::tvec2<GLint> > createBlocks(GLint);
       std::vector< glm::tvec2<GLint> > createBlocks();
       void createBound(ex::ComponentHandle<Room>&);

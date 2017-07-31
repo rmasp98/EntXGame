@@ -13,13 +13,15 @@
 
 
 RenderSystem::RenderSystem(ex::EntityManager &entM, GLFWwindow* winIn) {
-   window = winIn;
 
-   //Generates a VAO for each renderable entity (should also be added to an event create new object)
-   entM.each<Renderable, Shader>([this](ex::Entity entity, Renderable &mesh, Shader& pID) {
-      genBuffers(entity, mesh, pID);
-   });
+   window = winIn;
+   
 }
+
+
+void RenderSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenBuffers>(*this); }
+
+
 
 
 void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::TimeDelta dT) {
@@ -78,52 +80,65 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
 
 
 
+
+void RenderSystem::receive(const GenBuffers& gen) {
+
+   // Need to figure way to remove unused buffers (maybe, does use same ids...)
+   genBuffers(gen.entity);
+
+}
+
+
 //This creates the VAOs, which are later used to quick switch between objects to render
-void RenderSystem::genBuffers(ex::Entity& ent, Renderable& eVecs, Shader& prog) {
+void RenderSystem::genBuffers(ex::Entity& ent) {
 
-   std::vector<unsigned short> inds;
-   std::vector<glm::vec2> uvsInds;
-   std::vector<glm::vec3> vertInds, normInds;
+   ex::ComponentHandle<Renderable> eVecs = ent.component<Renderable>();
+   ex::ComponentHandle<Shader> prog = ent.component<Shader>();
 
-   glUseProgram(prog.progID);
+   if (eVecs && prog) {
+      std::vector<unsigned short> inds;
+      std::vector<glm::vec2> uvsInds;
+      std::vector<glm::vec3> vertInds, normInds;
 
-   //This performs VBO indexing
-   indexVBO(eVecs.verts, eVecs.uvs, eVecs.norms, inds, vertInds, uvsInds, normInds);
-   eVecs.indSize = inds.size();
+      glUseProgram(prog->progID);
 
-   //Generate and bind VAO
-   glGenVertexArrays(1, &eVecs.VAO);
-   glBindVertexArray(eVecs.VAO);
+      //This performs VBO indexing
+      indexVBO(eVecs->verts, eVecs->uvs, eVecs->norms, inds, vertInds, uvsInds, normInds);
+      eVecs->indSize = inds.size();
 
-   //Bind vertices to shader
-   glGenBuffers(1, &eVecs.vertID);
-   glBindBuffer(GL_ARRAY_BUFFER, eVecs.vertID);
-   glBufferData(GL_ARRAY_BUFFER, vertInds.size() * sizeof(glm::vec3), &vertInds[0], GL_STATIC_DRAW);
-   glEnableVertexAttribArray(0);
-   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+      //Generate and bind VAO
+      glGenVertexArrays(1, &eVecs->VAO);
+      glBindVertexArray(eVecs->VAO);
 
-   //Bind texture locations to shader
-   glGenBuffers(1, &eVecs.uvID);
-   glBindBuffer(GL_ARRAY_BUFFER, eVecs.uvID);
-   glBufferData(GL_ARRAY_BUFFER, uvsInds.size() * sizeof(glm::vec2), &uvsInds[0], GL_STATIC_DRAW);
-   glEnableVertexAttribArray(1);
-   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+      //Bind vertices to shader
+      glGenBuffers(1, &eVecs->vertID);
+      glBindBuffer(GL_ARRAY_BUFFER, eVecs->vertID);
+      glBufferData(GL_ARRAY_BUFFER, vertInds.size() * sizeof(glm::vec3), &vertInds[0], GL_STATIC_DRAW);
+      glEnableVertexAttribArray(0);
+      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-   //Bind normals to shader
-   glGenBuffers(1, &eVecs.normID);
-   glBindBuffer(GL_ARRAY_BUFFER, eVecs.normID);
-   glBufferData(GL_ARRAY_BUFFER, normInds.size() * sizeof(glm::vec3), &normInds[0], GL_STATIC_DRAW);
-   glEnableVertexAttribArray(2);
-   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+      //Bind texture locations to shader
+      glGenBuffers(1, &eVecs->uvID);
+      glBindBuffer(GL_ARRAY_BUFFER, eVecs->uvID);
+      glBufferData(GL_ARRAY_BUFFER, uvsInds.size() * sizeof(glm::vec2), &uvsInds[0], GL_STATIC_DRAW);
+      glEnableVertexAttribArray(1);
+      glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-   //Bind VBO indices to shader
-   glGenBuffers(1, &eVecs.indID);
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eVecs.indID);
-   glBufferData(GL_ELEMENT_ARRAY_BUFFER, inds.size() * sizeof(unsigned short), &inds[0] , GL_STATIC_DRAW);
+      //Bind normals to shader
+      glGenBuffers(1, &eVecs->normID);
+      glBindBuffer(GL_ARRAY_BUFFER, eVecs->normID);
+      glBufferData(GL_ARRAY_BUFFER, normInds.size() * sizeof(glm::vec3), &normInds[0], GL_STATIC_DRAW);
+      glEnableVertexAttribArray(2);
+      glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-   //Unbind VAO
-   glBindVertexArray(0);
+      //Bind VBO indices to shader
+      glGenBuffers(1, &eVecs->indID);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eVecs->indID);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, inds.size() * sizeof(unsigned short), &inds[0] , GL_STATIC_DRAW);
 
+      //Unbind VAO
+      glBindVertexArray(0);
+   }
 }
 
 

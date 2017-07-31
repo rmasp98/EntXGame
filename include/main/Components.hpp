@@ -96,11 +96,31 @@ struct Input {
 
 
 
+
+struct GenBuffers {
+   GenBuffers(ex::Entity& entIn) : entity(entIn) {}
+
+   ex::Entity& entity;
+};
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //This is a list of components required for the level
 
 // Flags the entity as a level object
 struct Level { Level() {}; };
+
+
+// Events for generating a new set of objects or room
+struct GenObjects { GenObjects() {}; };
+struct GenRoom {
+   GenRoom(ex::EntityManager& entIn, ex::EventManager& evtIn)
+           : entM(entIn), evtM(evtIn) {};
+
+   ex::EntityManager& entM;
+   ex::EventManager& evtM;
+};
 
 
 //An object that moves. This includes the maximum speed, the accerlation and current velocity
@@ -260,6 +280,16 @@ struct ScreenLink {
    ScreenLink(GLint scrnIn) : linkId(scrnIn) {};
 
    GLint linkId;
+};
+
+
+
+struct GenMenu {
+   GenMenu(ex::EntityManager& entIn, ex::EventManager& evtIn)
+         : entM(entIn), evtM(evtIn) {};
+
+   ex::EntityManager& entM;
+   ex::EventManager& evtM;
 };
 
 

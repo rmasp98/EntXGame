@@ -25,6 +25,10 @@ MoveSystem::MoveSystem(ex::EntityManager& entM) {
 
 void MoveSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
+   entM.each<Room>([this](ex::Entity roomEnt, Room& screen) {
+      //std::cout << "hello" << std::endl;
+   });
+
    GLuint currScrn;
    entM.each<Screen>([this, &currScrn](ex::Entity roomEnt, Screen& screen) {
       currScrn = screen.id;

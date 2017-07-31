@@ -27,7 +27,7 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
    //collision should only check things where tempPos is different to pos
    if (currScrn == 10) {
       //Passes the room in to check if entity has collided against wall
-      entM.each<Room>([this, &entM](ex::Entity roomEnt, Room& room) {
+      entM.each<Room, Collidable>([this, &entM](ex::Entity roomEnt, Room& room, Collidable& cNULL) {
       //Checks every for collision for any collidable entities
          entM.each<Collidable, Position>([this, &room, &entM](ex::Entity entity1, Collidable& coll, Position& pos1) {
             // If entity has moved

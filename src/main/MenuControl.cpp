@@ -29,7 +29,7 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
 
    if (currScrn != 10) {
       //Finds the current cursor position
-      entM.each<Clickable, Font, Action, MenuID, Renderable>([this, &entM, &currScrn]
+      entM.each<Clickable, Font, Action, MenuID, Renderable>([this, &entM, &evtM, &currScrn]
                (ex::Entity entity, Clickable& click, Font& font, Action& action, MenuID& menu, Renderable& mesh) {
 
          double xPos, yPos;
@@ -41,7 +41,7 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
 
             // If the button is clicked
             if ((menu.id == currScrn) && (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS))
-               buttonPress(action.functionID, entM, entity);
+               buttonPress(action.functionID, entM, evtM, entity);
 
          } else
             mesh.colour = font.loColour;
@@ -54,7 +54,7 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
 
 
 
-void MenuCtrlSystem::buttonPress(GLuint functionID, ex::EntityManager& entM, ex::Entity& entity) {
+void MenuCtrlSystem::buttonPress(GLuint functionID, ex::EntityManager& entM, ex::EventManager& evtM, ex::Entity& entity) {
 
    if (functionID == 1) {
       ex::ComponentHandle<ScreenLink> link = entity.component<ScreenLink>();
@@ -69,5 +69,9 @@ void MenuCtrlSystem::buttonPress(GLuint functionID, ex::EntityManager& entM, ex:
          });
       }
    } else if (functionID == 2)
-      glfwSetWindowShouldClose(win, GLFW_TRUE);;
+      glfwSetWindowShouldClose(win, GLFW_TRUE);
+   else if (functionID == 3) {
+      evtM.emit<GenRoom>(entM, evtM);
+   } else if (functionID == 4)
+      evtM.emit<GenObjects>();
 }

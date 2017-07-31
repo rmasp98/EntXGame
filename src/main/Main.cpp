@@ -64,8 +64,8 @@ Game::Game(GLFWwindow* window) {
    entity.assign<Screen>(0, -1);
 
    // Level Systems
-   systems.add<ObjectSystem>(entities);
-   systems.add<RoomSystem>(entities);
+   systems.add<ObjectSystem>(entities, events);
+   systems.add<RoomSystem>(entities, events);
    systems.add<InputSystem>(window, entities);
    systems.add<MoveSystem>(entities);
    systems.add<BevSystem>(entities);
@@ -73,12 +73,14 @@ Game::Game(GLFWwindow* window) {
 
 
    // Menu Systems
-   systems.add<MenuGenSystem>(entities, window);
+   systems.add<MenuGenSystem>(entities, events, window);
    systems.add<MenuCtrlSystem>(window);
 
    //Global Systems
    systems.add<RenderSystem>(entities, window);
    systems.configure();
+
+   events.emit<GenMenu>(entities, events);
 }
 
 void Game::update(ex::TimeDelta dT) { systems.update_all(dT); }

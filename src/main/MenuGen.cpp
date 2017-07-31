@@ -14,14 +14,19 @@
 
 
 
-MenuGenSystem::MenuGenSystem(ex::EntityManager& entM, GLFWwindow* window) {
+MenuGenSystem::MenuGenSystem(ex::EntityManager& entM, ex::EventManager& evtM, GLFWwindow* window) {
 
 	//Get window size for text scaling
 	glfwGetWindowSize(window, &scaleX, &scaleY);
 
 	// Read in the config file and generates the menus from there
-	readConfig(entM, "config/menu.cfg");
+	//readConfig(entM, evtM, "config/menu.cfg");
 }
+
+
+
+
+void MenuGenSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenMenu>(*this); }
 
 
 
@@ -34,8 +39,12 @@ void MenuGenSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex::
 
 
 
+void MenuGenSystem::receive(const GenMenu& gen) { readConfig(gen.entM, gen.evtM, "config/menu.cfg"); }
 
-void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
+
+
+
+void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, std::string fileName) {
 
 	FT_Library ft;
 	if(FT_Init_FreeType(&ft))
@@ -85,10 +94,9 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 			if (menu[iMenu].HasMember("bgImage"))
 				bgImage = getStringKey(menu[iMenu], "bgImage");
 
-			genBackground(entM, bgImage, menuID);
+			genBackground(entM, evtM, bgImage, menuID);
 
 			// Loop over all buttons in the menu
-
 			rj::Value& buttons = getArrayKey(menu[iMenu], "buttons");
 			for (rj::SizeType jButton = 0; jButton < buttons.Size(); ++jButton) {
 				/*if (buttons[jButton].HasMember("autoGen") && getBoolKey(buttons[jButton], "autoGen")) {
@@ -190,6 +198,8 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 					ex::ComponentHandle<Renderable> mesh = entity.component<Renderable>();
 					if (mesh)
 						mesh->colour = buttonBC;
+
+					evtM.emit<GenBuffers>(entity);
 				}
 			}
 		}
@@ -202,7 +212,7 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, std::string fileName) {
 
 
 
-void MenuGenSystem::genBackground(ex::EntityManager& entM, std::string bgImage, GLuint menuID) {
+void MenuGenSystem::genBackground(ex::EntityManager& entM, ex::EventManager& evtM, std::string bgImage, GLuint menuID) {
 	ex::Entity entity = entM.create();
 
 	//Doesn't work at the moment but I would like to get it working
@@ -247,6 +257,8 @@ void MenuGenSystem::genBackground(ex::EntityManager& entM, std::string bgImage, 
 	entity.assign<Renderable>(verts, norms, uvs, texID);
 	entity.assign<Shader>(pID);
 	entity.assign<MenuID>(0, menuID);
+
+	evtM.emit<GenBuffers>(entity);
 }
 
 
