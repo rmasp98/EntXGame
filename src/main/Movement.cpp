@@ -185,7 +185,7 @@ void MoveSystem::moveObject(ex::Entity& ent, Position& pos, Acceleration& accel,
          }
          push.isPush = false;
       }
-   } else {
+   } else if (push.state != 0) {
       accel.vel.x = accel.vel.x < 0 ? std::min(accel.vel.x + accel.accel*dT, 0.0f)
                                     : std::max(accel.vel.x - accel.accel*dT, 0.0f);
 

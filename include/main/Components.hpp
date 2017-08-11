@@ -197,7 +197,7 @@ struct Push {
 
    glm::vec3 pushDir;
    bool isPush;
-   GLbyte state;
+   GLuint state;
    GLuint count, delay, delShort, delLong;
 };
 

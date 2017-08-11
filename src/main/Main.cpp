@@ -8,6 +8,7 @@
 
 
 #include "main/Main.hpp"
+//#include <fstream>
 
 
 int main () {
@@ -24,23 +25,32 @@ int main () {
    Game* firstGame = new Game
    (window);
 
+   std::ofstream timeFile; timeFile.open("times.dat");
+   //timeFile << "#Frame\tInput\tMove\tBev\tCollision\tMenu\tRender\ttotal" << std::endl;
+
+
    //Game loop
-   //GLint cnt=0; GLfloat cTime = glfwGetTime();
+   GLint cnt=0; GLfloat cTime = glfwGetTime(), cTime2 = glfwGetTime(); firstGame->frameCount=0;
    GLfloat currT = glfwGetTime();
    do {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Clear screen
       glfwPollEvents(); //Check for key and mouse events
 
       //Update every system
-      firstGame->update(glfwGetTime() - currT);
+      firstGame->update(glfwGetTime() - currT, timeFile);
+
+      // if (cnt++ % 100 == 0)
+      //    std::cout << glfwGetTime() - currT << std::endl;
 
       currT = glfwGetTime();
+      // timeFile << currT - cTime2 << std::endl;
+      // cTime2 = glfwGetTime();
 
       //Checks the frame rate
-      /*if (cnt++ % 100 == 0) {
-         std::cout << 100/(currT - cTime) << std::endl;
-         cTime = glfwGetTime();
-      }*/
+      // if (cnt++ % 100 == 0) {
+      //    std::cout << 100/(currT - cTime) << std::endl;
+      //    cTime = glfwGetTime();
+      // }
 
       //Swap second buffer
       glfwSwapBuffers(window);
@@ -83,7 +93,53 @@ Game::Game(GLFWwindow* window) {
    events.emit<GenMenu>(entities, events);
 }
 
-void Game::update(ex::TimeDelta dT) { systems.update_all(dT); }
+
+
+
+
+
+
+void Game::update(ex::TimeDelta dT, std::ofstream& fOut) {
+
+   // GLfloat cTime = glfwGetTime();
+   // fOut << frameCount++ << ",\t";
+
+   //systems.update_all(dT);
+
+   //systems.update<ObjectSystem>(dT);
+   //systems.update<RoomSystem>(dT);
+   systems.update<InputSystem>(dT);
+
+   // fOut << glfwGetTime() - cTime << ",\t";
+   // cTime = glfwGetTime();
+
+   systems.update<MoveSystem>(dT);
+
+   // fOut << glfwGetTime() - cTime << ",\t";
+   // cTime = glfwGetTime();
+
+   systems.update<BevSystem>(dT);
+
+   // fOut << glfwGetTime() - cTime << ",\t";
+   // cTime = glfwGetTime();
+
+   systems.update<CollisionSystem>(dT);
+
+   // fOut << glfwGetTime() - cTime << ",\t";
+   // cTime = glfwGetTime();
+
+   //systems.update<MenuGenSystem>(dT);
+   systems.update<MenuCtrlSystem>(dT);
+
+   // fOut << glfwGetTime() - cTime << ",\t";
+   // //glFinish();
+   // cTime = glfwGetTime();
+
+   systems.update<RenderSystem>(dT);
+
+   //glFinish();
+   //fOut << glfwGetTime() - cTime << ",\t";
+}
 
 
 
@@ -115,7 +171,8 @@ int initGraphics(GLFWwindow*& window) {
    //Creates the window
    //window = glfwCreateWindow(mode->width, mode->height, "First Program", NULL, NULL);
 
-   window = glfwCreateWindow(1920, 1080, "First Program", monitor, NULL);
+   //window = glfwCreateWindow(1920, 1080, "First Program", monitor, NULL);
+   window = glfwCreateWindow(960, 540, "First Program", monitor, NULL);
 
    //This one sets up full screen but there is currently a bug that produces a blue strip
    //window = glfwCreateWindow(mode->width, mode->height, "First Program", mode, NULL);

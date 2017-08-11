@@ -29,6 +29,9 @@ class RenderSystem : public ex::System<RenderSystem>, public ex::Receiver<Render
 
    protected:
       GLFWwindow* window;
+      GLuint queryID[2], queryFrontBuffer=1, queryBackBuffer=0;
+
+      void swapQueryBuffers();
 
       void genBuffers(ex::Entity&);
       void drawScene(Renderable&, Shader&, ex::EntityManager& entM, ex::Entity&);

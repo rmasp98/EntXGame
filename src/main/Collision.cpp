@@ -34,10 +34,12 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
             if (glm::distance(pos1.pos, pos1.tempPos) > 1e-3) {
                entM.each<Collidable, Position, Push>([this, &entity1, &pos1](ex::Entity entity2, Collidable& coll, Position& pos2, Push& push) {
                   if (entity1 != entity2) {
-                     if (testCollision(pos1, pos2)) {
+                     ex::ComponentHandle<Camera> cam = entity1.component<Camera>();
+                     if (testCollision(pos1, pos2))
                         objectCollision(pos1, pos2, push, entity1);
-                     } else
+                     else if (cam)
                         push.count = 0;
+
                   }
                });
 
@@ -45,6 +47,7 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
             }
          });
       });
+
 
       entM.each<Collidable, Position, Renderable, Push, Acceleration>([this, &entM, &dT]
            (ex::Entity entity1, Collidable& coll, Position& pos1, Renderable& mesh, Push& push, Acceleration& accel) {
@@ -85,6 +88,7 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
       entM.each<Screen>([this, &count, &total](ex::Entity roomEnt, Screen& screen) {
          if (count == total)
             screen.id = 0;
+
       });
 
 
@@ -180,14 +184,13 @@ void CollisionSystem::objectCollision(Position& pos1, Position& pos2, Push& push
 
 void CollisionSystem::moveToTarget(Acceleration& accel, Position& bPos, Position& gPos, GLfloat dT) {
 
-   accel.vel.x += glm::normalize(gPos.tempPos.x - bPos.tempPos.x) * accel.accel*dT;
-   accel.vel.z += glm::normalize(gPos.tempPos.z - bPos.tempPos.z) * accel.accel*dT;
+   accel.vel.x = (gPos.tempPos.x - bPos.tempPos.x) * accel.accel*dT;
+   accel.vel.z = (gPos.tempPos.z - bPos.tempPos.z) * accel.accel*dT;
 
    GLfloat speed = sqrt(accel.vel.x*accel.vel.x + accel.vel.z*accel.vel.z);
-   if (speed > accel.maxSpeed) {
-      accel.vel.x *= accel.maxSpeed / speed;
-      accel.vel.z *= accel.maxSpeed / speed;
-   }
+
+   accel.vel.x *= accel.maxSpeed / speed;
+   accel.vel.z *= accel.maxSpeed / speed;
 
 
 }

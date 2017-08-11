@@ -15,7 +15,11 @@
 RenderSystem::RenderSystem(ex::EntityManager &entM, GLFWwindow* winIn) {
 
    window = winIn;
-   
+
+   // glGenQueries(1, &queryID[queryBackBuffer]);
+   // glGenQueries(1, &queryID[queryFrontBuffer]);
+   // glQueryCounter(queryID[queryFrontBuffer], GL_TIMESTAMP);
+
 }
 
 
@@ -25,6 +29,9 @@ void RenderSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenBuffers
 
 
 void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::TimeDelta dT) {
+
+   // GLuint64 timer2;
+   // glBeginQuery(GL_TIME_ELAPSED, queryID[queryBackBuffer]);
 
    //Creates the model matrix based on the objects current position
    entM.each<Position, Renderable>([this](ex::Entity entity, Position& pos, Renderable& mat) {
@@ -72,12 +79,28 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
       });
    }
 
-
+   // glEndQuery(GL_TIME_ELAPSED);
+   // glGetQueryObjectui64v(queryID[queryFrontBuffer], GL_QUERY_RESULT, &timer2);
+   // swapQueryBuffers();
+   //
+   // std::cout << timer2 << std::endl;
 
    //Reset the VAO
    glBindVertexArray(0);
 }
 
+
+
+
+void RenderSystem::swapQueryBuffers() {
+
+   if (queryBackBuffer) {
+      queryBackBuffer = 0; queryFrontBuffer = 1;
+   } else {
+      queryBackBuffer = 1; queryFrontBuffer = 0;
+   }
+
+}
 
 
 
@@ -153,7 +176,7 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
    //Rebind the objects VAO
    glBindVertexArray(mesh.VAO);
 
-   // Passes colour of font to graphic card
+   //Passes the type of render for the menu shader (could just split shaders)
    ex::ComponentHandle<Font> font = entity.component<Font>();
    if (font)
       glUniform1i(glGetUniformLocation(prog.progID, "renderType"), 0);
@@ -164,6 +187,7 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
 
    //Send object's model matrix
    glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
+   // Passes colour of font to graphic card
    glUniform3fv(glGetUniformLocation(prog.progID, "colour"), 1, &(mesh.colour[0]));
 
    //Resets the texture and binds correct texture
@@ -179,6 +203,7 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
 
    //Unbind the VAO for the next object
    glBindVertexArray(0);
+
 }
 
 

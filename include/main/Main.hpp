@@ -26,6 +26,8 @@
 #include <entityx/entityx.h>
 namespace ex = entityx;
 
+#include <fstream>
+
 
 //Initialise graphics libaries
 int initGraphics(GLFWwindow*&);
@@ -33,11 +35,14 @@ int initGraphics(GLFWwindow*&);
 //The entity system class
 class Game : public ex::EntityX {
    public:
-      explicit Game(GLFWwindow* window);
-      void update(ex::TimeDelta dT);
+      explicit Game(GLFWwindow*);
+      void update(ex::TimeDelta, std::ofstream&);
+
+      GLuint frameCount;
 
    protected:
       bool isMenu;
+
 
 };
 

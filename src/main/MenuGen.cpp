@@ -32,10 +32,7 @@ void MenuGenSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenMenu>(
 
 
 
-void MenuGenSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex::TimeDelta dT) {
-
-
-}
+void MenuGenSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex::TimeDelta dT) {}
 
 
 

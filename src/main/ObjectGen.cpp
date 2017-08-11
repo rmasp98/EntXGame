@@ -31,10 +31,7 @@ void ObjectSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenObjects
 
 
 
-void ObjectSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
-
-
-}
+void ObjectSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {}
 
 
 
@@ -103,6 +100,8 @@ void ObjectSystem::genCamera() {
    entity.assign<Direction>(0.1f, glm::vec2(0, 0), glm::vec3(0.0f, 0.0f, 1.0f));
    //If object will collide
    entity.assign<Collidable>();
+   //It belongs to the level
+   entity.assign<Level>();
 
 }
 
@@ -114,12 +113,6 @@ void ObjectSystem::genCamera() {
 //TODO: Currently hardcode a lot of values which should be read from a config file
 void ObjectSystem::genLevel() {
 
-   // entMan->each<Camera, Position>([this](ex::Entity roomEnt, Camera& null, Position& pos) {
-   //    pos.pos = glm::vec3(0.0f, 3.0f, 0.0f);
-   // });
-
-
-   /////////////////////////////////////////////////////////////////////////////
    //Generate objects in the room (i.e. blocks)
    std::vector<glm::vec3> boxPos(7, glm::vec3(0.0f));
    boxPos[0] = glm::vec3(0.0, 1.0, 4.0);

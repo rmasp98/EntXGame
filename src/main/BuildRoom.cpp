@@ -29,9 +29,7 @@ void RoomSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenRoom>(*th
 
 
 
-void RoomSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
-
-}
+void RoomSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {}
 
 
 
