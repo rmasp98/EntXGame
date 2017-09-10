@@ -11,7 +11,7 @@ OBJ       := $(patsubst src/%.cpp,build/%.o,$(SRC))
 EXE       := firstProg
 
 INCLUDES   = -I include
-LIBS += -lglut -lGL -lGLU -lX11 -lXxf86vm -lpthread -lXrandr -lXi -lglfw -lGLEW -lSOIL -lentityx -lfreetype
+LIBS += -lglut -lGL -lGLU -lX11 -lXxf86vm -lpthread -lXrandr -lXi -lglfw -lGLEW -lSOIL -lentityx -lfreetype -lassimp
 
 vpath %.cpp $(SRC_DIR)
 

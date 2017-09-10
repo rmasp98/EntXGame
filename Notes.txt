@@ -1,0 +1,24 @@
+This is a notepad for things I need to do or think about
+
+TODO:
+ - I need to set up deferred rendering for my lighting
+ - Implement Blinn-phong lighting (https://learnopengl.com/#!Advanced-Lighting/Advanced-Lighting)
+ - Add gamma correction to final shader pass (https://learnopengl.com/#!Advanced-Lighting/Gamma-Correction)
+ - Shadows! (https://learnopengl.com/#!Advanced-Lighting/Shadows/Shadow-Mapping and https://learnopengl.com/#!Advanced-Lighting/Shadows/Point-Shadows)
+ - Normal mapping (https://learnopengl.com/#!Advanced-Lighting/Normal-Mapping)
+ - Keymap menu
+ - Fix issue with recentering boxes that are not pushed all the way off Goal
+ - Make easier to push boxes into corridors
+ - Write solution finder
+ - Need to sort out input system for menu code
+ - Need to improve object and image loader (and therefore the renderer as well)
+ - Need to set up random level generator with petential threading (really big job)
+
+
+Things to think about:
+ - Need to set up multisampling capability in textures (https://learnopengl.com/#!Advanced-OpenGL/Anti-Aliasing)
+ - Think about setting up instancing for boxes (https://learnopengl.com/#!Advanced-OpenGL/Instancing)
+ - Paralax mapping. Its cool but not really needed at this point (https://learnopengl.com/#!Advanced-Lighting/Parallax-Mapping)
+ - High Dynamic Range (HDR) compensates for extremes in light exposure (https://learnopengl.com/#!Advanced-Lighting/HDR)
+ - Bloom, blurs bright light sources (https://learnopengl.com/#!Advanced-Lighting/Bloom)
+ - Potentially add SSAO (https://learnopengl.com/#!Advanced-Lighting/SSAO)

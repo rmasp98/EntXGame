@@ -20,18 +20,20 @@ out vec4 colourOut;
 uniform vec3 viewPos;
 uniform vec3 colour;
 uniform Material material;
-uniform Light light[200];
+uniform Light light[30];
 uniform int lightNum;
 
 vec3 calcLights(int);
 
 void main() {
 
-   vec3 result = vec3(0.0f), ambient = vec3(0.0f);
+   //This ambient value should not be hard coded
+   vec3 ambient = 0.1 * vec3(texture(material.diffuse, FragUV));
+   vec3 result = vec3(0.0f);
    for (int i=0; i<lightNum; i++)
       result += calcLights(i);
 
-   colourOut = vec4(result * colour, 1.0f);
+   colourOut = vec4((ambient + result) * colour, 1.0f);
 }
 
 
@@ -40,7 +42,7 @@ void main() {
 vec3 calcLights(int i) {
 
    //Ambient
-   vec3 ambient = light[i].ambient * vec3(texture(material.diffuse, FragUV));
+   //vec3 ambient = light[i].ambient * vec3(texture(material.diffuse, FragUV));
 
    vec3 norm = normalize(FragNorm);
    vec3 lightDir = normalize(light[i].pos - FragPos);
@@ -59,5 +61,5 @@ vec3 calcLights(int i) {
    float distance = length(light[i].pos - FragPos);
    float attenuation = 1.0f / (1.0f + light[i].linear * distance + light[i].quad * distance * distance);
 
-   return (ambient + diffuse + specular) * attenuation;
+   return (diffuse + specular) * attenuation;
 }

@@ -20,6 +20,8 @@ ObjectSystem::ObjectSystem(ex::EntityManager& entM, ex::EventManager& evtM) {
    entMan = &entM;
    evtMan = &evtM;
 
+   loadAssImp("assets/Dragon2.3ds");
+
 }
 
 
@@ -155,6 +157,7 @@ void ObjectSystem::genLevel() {
 void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID, std::vector<glm::vec3>& pos) {
 
    std::vector<glm::vec3> verts, norms;
+   std::vector<unsigned short> inds;
    std::vector<glm::vec2> uvs;
 
    if (!loadOBJ(objFile.c_str(), verts, uvs, norms)) {

@@ -30,7 +30,7 @@ int main () {
 
 
    //Game loop
-   GLint cnt=0; GLfloat cTime = glfwGetTime(), cTime2 = glfwGetTime(); firstGame->frameCount=0;
+   GLint cnt=0; GLfloat cTime = glfwGetTime(); firstGame->frameCount=0;
    GLfloat currT = glfwGetTime();
    do {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Clear screen
@@ -39,18 +39,13 @@ int main () {
       //Update every system
       firstGame->update(glfwGetTime() - currT, timeFile);
 
-      // if (cnt++ % 100 == 0)
-      //    std::cout << glfwGetTime() - currT << std::endl;
-
       currT = glfwGetTime();
-      // timeFile << currT - cTime2 << std::endl;
-      // cTime2 = glfwGetTime();
 
-      //Checks the frame rate
-      // if (cnt++ % 100 == 0) {
-      //    std::cout << 100/(currT - cTime) << std::endl;
-      //    cTime = glfwGetTime();
-      // }
+      // Checks the frame rate
+      if (cnt++ % 500 == 0) {
+         std::cout << 500/(currT - cTime) << std::endl;
+         cTime = glfwGetTime();
+      }
 
       //Swap second buffer
       glfwSwapBuffers(window);
@@ -160,6 +155,10 @@ int initGraphics(GLFWwindow*& window) {
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Should find out about other profiles
 
+   //Enable mutlisampling Antialiasing
+   glfwWindowHint(GLFW_SAMPLES, 4);
+   glEnable(GL_MULTISAMPLE);
+
    //Gets information about the primary monitor
    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -199,7 +198,7 @@ int initGraphics(GLFWwindow*& window) {
    glEnable(GL_CULL_FACE);             //Don't draw backfacing triangles#
 
    glEnable(GL_BLEND);
-	 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    return 0;
 }

@@ -9,6 +9,8 @@ bool loadOBJ(
 );
 
 
+bool loadAssImp(const char*);
+
 
 bool loadAssImp(
 	const char * path,
