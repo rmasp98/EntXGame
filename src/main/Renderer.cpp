@@ -15,11 +15,12 @@
 RenderSystem::RenderSystem(ex::EntityManager &entM, GLFWwindow* winIn) {
 
    window = winIn;
+   prepShadowMap();
 
-   // glGenQueries(1, &queryID[queryBackBuffer]);
-   // glGenQueries(1, &queryID[queryFrontBuffer]);
-   // glQueryCounter(queryID[queryFrontBuffer], GL_TIMESTAMP);
-
+   //Load the shaders (need to add shader names to config file)
+   mainPID = LoadShaders("shaders/main.vs", "shaders/main.fs");
+   menuPID = LoadShaders("shaders/menu.vs", "shaders/menu.fs");
+   shadowPID = LoadShaders("shaders/shadow.vs", "shaders/shadow.gs", "shaders/shadow.fs");
 }
 
 
@@ -29,9 +30,6 @@ void RenderSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenBuffers
 
 
 void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::TimeDelta dT) {
-
-   // GLuint64 timer2;
-   // glBeginQuery(GL_TIME_ELAPSED, queryID[queryBackBuffer]);
 
    //Creates the model matrix based on the objects current position
    entM.each<Position, Renderable>([this](ex::Entity entity, Position& pos, Renderable& mat) {
@@ -45,45 +43,95 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
 
    if (currScrn >= 10) {
       // Hides the cursor
-      if (currScrn == 10)
-         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-      else
-         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+      glm::vec3 lightPos;
+      entM.each<Light, Position>([this, &lightPos](ex::Entity entity, Light& l, Position& p) {
+         lightPos = p.pos;
+      });
+
+      const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+      GLfloat nearPlane = 1.0f, farPlane = 25.0f;
+      glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, nearPlane, farPlane);
+      std::vector<glm::mat4> shadowTransforms;
+      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+
+      glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+      glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+      glClear(GL_DEPTH_BUFFER_BIT);
+      glUseProgram(shadowPID);
+      for (GLuint iCube = 0; iCube < 6; ++iCube) {
+         std::stringstream matName;
+         matName << "shadowMatrices[" << iCube << "].";
+
+         glUniformMatrix4fv(glGetUniformLocation(shadowPID, &(matName.str())[0]), 1, GL_FALSE, &shadowTransforms[iCube][0][0]);
+      }
+
+      glUniform1f(glGetUniformLocation(shadowPID, "farPlane"), farPlane);
+      glUniform3fv(glGetUniformLocation(shadowPID, "lightPos"), 1, &(lightPos[0]));
+
+      //Passes camera and model matrix, and then renders each object
+      entM.each<Renderable, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Level& null) {
+         // Pass material shininess to shader
+         glUniform1f(glGetUniformLocation(mainPID, "material.shininess"), 20.0);
+
+         drawScene(mesh, shadowPID, entM, entity);
+      });
+
+
 
       //Pass the lights to graphics card
-      addLight(entM);
+      addLight(entM, mainPID);
 
-      //Passes camera and model matrix, and then renders each object
-      entM.each<Renderable, Shader, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Shader& pID, Level& null) {
-         entM.each<Camera>([this, &mesh, &pID](ex::Entity ent, Camera& cam) {
-            //Send camera information to the buffer
-            glm::mat4 camView = cam.projection * cam.view * mesh.modelMat;
-            glUniformMatrix4fv(glGetUniformLocation(pID.progID, "camView"), 1, GL_FALSE, &camView[0][0]);
-         });
+      // Actually render the scene
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      glViewport(0, 0, 960, 540);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glUseProgram(mainPID);
 
-         drawScene(mesh, pID, entM, entity);
+      entM.each<Camera, Position>([this](ex::Entity ent, Camera& cam, Position& pos) {
+         //Send camera information to the buffer
+         glm::mat4 camView = cam.projection * cam.view;
+         glUniformMatrix4fv(glGetUniformLocation(mainPID, "camView"), 1, GL_FALSE, &camView[0][0]);
+         glUniform3fv(glGetUniformLocation(mainPID, "viewPos"), 1, &(pos.pos[0]));
       });
 
-      entM.each<Renderable, Shader, MenuID>([this, &entM, &currScrn](ex::Entity entity, Renderable& mesh, Shader& pID, MenuID& menu) {
-         if (currScrn == menu.id)
-            drawScene(mesh, pID, entM, entity);
-      });
-   } else {
-      // Reenables cursor for the menu
-      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
       //Passes camera and model matrix, and then renders each object
-      entM.each<Renderable, Shader, MenuID>([this, &entM, &currScrn](ex::Entity entity, Renderable& mesh, Shader& pID, MenuID& menu) {
-         if (currScrn == menu.id)
-            drawScene(mesh, pID, entM, entity);
+      entM.each<Renderable, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Level& null) {
+         // Pass material shininess to shader
+         glUniform1f(glGetUniformLocation(mainPID, "material.shininess"), 20.0);
+
+         drawScene(mesh, mainPID, entM, entity);
       });
    }
 
-   // glEndQuery(GL_TIME_ELAPSED);
-   // glGetQueryObjectui64v(queryID[queryFrontBuffer], GL_QUERY_RESULT, &timer2);
-   // swapQueryBuffers();
-   //
-   // std::cout << timer2 << std::endl;
+
+
+   //Passes camera and model matrix, and then renders each object
+   entM.each<Renderable, MenuID>([this, &entM, &currScrn](ex::Entity entity, Renderable& mesh, MenuID& menu) {
+      if (currScrn == menu.id) {
+         glUseProgram(menuPID);
+
+         //Passes the type of render for the menu shader (could just split shaders)
+         ex::ComponentHandle<Font> font = entity.component<Font>();
+         if (font)
+            glUniform1i(glGetUniformLocation(menuPID, "renderType"), 0);
+         else if (mesh.texID != 0)
+            glUniform1i(glGetUniformLocation(menuPID, "renderType"), 1);
+         else
+            glUniform1i(glGetUniformLocation(menuPID, "renderType"), 2);
+
+         // Reenables cursor for the menu
+         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+         drawScene(mesh, menuPID, entM, entity);
+      }
+   });
+
 
    //Reset the VAO
    glBindVertexArray(0);
@@ -92,38 +140,75 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
 
 
 
-void RenderSystem::swapQueryBuffers() {
-
-   if (queryBackBuffer) {
-      queryBackBuffer = 0; queryFrontBuffer = 1;
-   } else {
-      queryBackBuffer = 1; queryFrontBuffer = 0;
-   }
-
-}
 
 
 
 void RenderSystem::receive(const GenBuffers& gen) {
 
    // Need to figure way to remove unused buffers (maybe, does use same ids...)
-   genBuffers(gen.entity);
+   genBuffers(gen.entity, gen.shader);
 
 }
 
 
+
+
+
+
+
+
+void RenderSystem::prepShadowMap() {
+
+   // Create the Frame buffer and cubemap to store the shadowmap
+   glGenFramebuffers(1, &depthMapFBO);
+   glGenTextures(1, &depthCubemap);
+
+   const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+   glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+   for (unsigned int i = 0; i < 6; ++i)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
+                     SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+   glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
+   glDrawBuffer(GL_NONE);
+   glReadBuffer(GL_NONE);
+   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
+
+
+
+
+
+
+
+
 //This creates the VAOs, which are later used to quick switch between objects to render
-void RenderSystem::genBuffers(ex::Entity& ent) {
+void RenderSystem::genBuffers(ex::Entity& ent, GLuint shader) {
 
    ex::ComponentHandle<Renderable> eVecs = ent.component<Renderable>();
-   ex::ComponentHandle<Shader> prog = ent.component<Shader>();
 
-   if (eVecs && prog) {
+   GLuint pID = 0;
+   if (shader == 0)
+      pID = mainPID;
+   else if (shader == 1)
+      pID = menuPID;
+   else if (shader == 2)
+      pID = shadowPID;
+
+   if (eVecs) {
       std::vector<unsigned short> inds;
       std::vector<glm::vec2> uvsInds;
       std::vector<glm::vec3> vertInds, normInds;
 
-      glUseProgram(prog->progID);
+      glUseProgram(pID);
 
       //This performs VBO indexing
       indexVBO(eVecs->verts, eVecs->uvs, eVecs->norms, inds, vertInds, uvsInds, normInds);
@@ -169,33 +254,26 @@ void RenderSystem::genBuffers(ex::Entity& ent) {
 
 
 
-void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& entM, ex::Entity& entity) {
 
-   glUseProgram(prog.progID);
+
+
+
+void RenderSystem::drawScene(Renderable& mesh, GLuint prog, ex::EntityManager& entM, ex::Entity& entity) {
 
    //Rebind the objects VAO
    glBindVertexArray(mesh.VAO);
 
-   //Passes the type of render for the menu shader (could just split shaders)
-   ex::ComponentHandle<Font> font = entity.component<Font>();
-   if (font)
-      glUniform1i(glGetUniformLocation(prog.progID, "renderType"), 0);
-   else if (mesh.texID != 0)
-      glUniform1i(glGetUniformLocation(prog.progID, "renderType"), 1);
-   else
-      glUniform1i(glGetUniformLocation(prog.progID, "renderType"), 2);
-
    //Send object's model matrix
-   glUniformMatrix4fv(glGetUniformLocation(prog.progID, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
+   glUniformMatrix4fv(glGetUniformLocation(prog, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
    // Passes colour of font to graphic card
-   glUniform3fv(glGetUniformLocation(prog.progID, "colour"), 1, &(mesh.colour[0]));
+   glUniform3fv(glGetUniformLocation(prog, "colour"), 1, &(mesh.colour[0]));
+   // Passes gamma value to graphics
+   glUniform1f(glGetUniformLocation(prog, "gamma"), 2.2);
 
    //Resets the texture and binds correct texture
    if (mesh.texID != 0) {
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, mesh.texID);
-
-      glUniform1f(glGetUniformLocation(prog.progID, "material.shininess"), 1.0);
    }
 
    //Render the object
@@ -210,34 +288,33 @@ void RenderSystem::drawScene(Renderable& mesh, Shader& prog, ex::EntityManager& 
 
 
 
-void RenderSystem::addLight(ex::EntityManager& entM) {
+void RenderSystem::addLight(ex::EntityManager& entM, GLuint pID) {
 
    //Runs over all light entities to send the information to the buffer
-   GLuint iNum = 0, pID = 0;
-   entM.each<Light, Position, Shader>([this, &iNum, &pID]
-                                     (ex::Entity entity, Light& l, Position& p, Shader& s) {
+   GLuint iNum = 0;
+   entM.each<Light, Position>([this, &iNum, &pID]
+                                     (ex::Entity entity, Light& l, Position& p) {
 
-      pID = s.progID;
       glUseProgram(pID);
 
       //Creates a custom name to pass the lights into an array
       std::stringstream bName;
       bName << "light[" << iNum++ << "].";
 
-      glUniform3f(glGetUniformLocation(s.progID, &(bName.str() + "pos")[0]),
+      glUniform3f(glGetUniformLocation(pID, &(bName.str() + "pos")[0]),
                                        p.pos.x, p.pos.y, p.pos.z);
 
-      glUniform3f(glGetUniformLocation(s.progID, &(bName.str() + "ambient")[0]),
+      glUniform3f(glGetUniformLocation(pID, &(bName.str() + "ambient")[0]),
                                        l.ambient.x, l.ambient.y, l.ambient.z);
 
-      glUniform3f(glGetUniformLocation(s.progID, &(bName.str() + "diffuse")[0]),
+      glUniform3f(glGetUniformLocation(pID, &(bName.str() + "diffuse")[0]),
                                        l.diffuse.x, l.diffuse.y, l.diffuse.z);
 
-      glUniform3f(glGetUniformLocation(s.progID, &(bName.str() + "specular")[0]),
+      glUniform3f(glGetUniformLocation(pID, &(bName.str() + "specular")[0]),
                                        l.specular.x, l.specular.y, l.specular.z);
 
-      glUniform1f(glGetUniformLocation(s.progID, &(bName.str() + "linear")[0]), l.linear);
-      glUniform1f(glGetUniformLocation(s.progID, &(bName.str() + "quad")[0]), l.quad);
+      glUniform1f(glGetUniformLocation(pID, &(bName.str() + "linear")[0]), l.linear);
+      glUniform1f(glGetUniformLocation(pID, &(bName.str() + "quad")[0]), l.quad);
    });
 
    //Passes the number of lights to the buffer

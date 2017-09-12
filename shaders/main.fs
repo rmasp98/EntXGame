@@ -22,18 +22,20 @@ uniform vec3 colour;
 uniform Material material;
 uniform Light light[30];
 uniform int lightNum;
+uniform float gamma;
 
 vec3 calcLights(int);
 
 void main() {
 
    //This ambient value should not be hard coded
-   vec3 ambient = 0.1 * vec3(texture(material.diffuse, FragUV));
+   vec3 ambient = 0.05 * vec3(texture(material.diffuse, FragUV));
    vec3 result = vec3(0.0f);
    for (int i=0; i<lightNum; i++)
       result += calcLights(i);
 
-   colourOut = vec4((ambient + result) * colour, 1.0f);
+   vec3 finalColour = pow((ambient + result) * colour, vec3(1.0/gamma));
+   colourOut = vec4(finalColour, 1.0f);
 }
 
 
@@ -41,9 +43,7 @@ void main() {
 
 vec3 calcLights(int i) {
 
-   //Ambient
-   //vec3 ambient = light[i].ambient * vec3(texture(material.diffuse, FragUV));
-
+   // write a comment
    vec3 norm = normalize(FragNorm);
    vec3 lightDir = normalize(light[i].pos - FragPos);
 
@@ -53,8 +53,8 @@ vec3 calcLights(int i) {
 
    //Specular
    vec3 viewDir = normalize(viewPos - FragPos);
-   vec3 reflectDir = reflect(-lightDir, norm);
-   float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+   vec3 halfwayDir = normalize(lightDir + viewDir);
+   float spec = pow(max(dot(norm, halfwayDir), 0.0), material.shininess);
    vec3 specular = light[i].specular * spec * vec3(texture(material.diffuse, FragUV));
 
    //Attentuation

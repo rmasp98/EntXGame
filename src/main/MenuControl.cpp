@@ -10,11 +10,10 @@
 
 
 
-MenuCtrlSystem::MenuCtrlSystem(GLFWwindow* window) {
-
-   win = window;
-   glfwGetWindowSize(win, &winXcen, &winYcen);
-
+MenuCtrlSystem::MenuCtrlSystem(ex::EntityManager& entM, GLFWwindow* window) {
+   entM.each<Input>([this](ex::Entity null, Input& tempInput) {
+      input = &tempInput;
+   });
 }
 
 
@@ -28,20 +27,19 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
    });
 
    if (currScrn != 10) {
-      //Finds the current cursor position
       entM.each<Clickable, Font, Action, MenuID, Renderable>([this, &entM, &evtM, &currScrn]
                (ex::Entity entity, Clickable& click, Font& font, Action& action, MenuID& menu, Renderable& mesh) {
 
-         double xPos, yPos;
-         glfwGetCursorPos(win, &xPos, &yPos);
-
          // If the cursor is on top of the button
-         if ((xPos > click.bound.x) && (yPos > click.bound.y) && (xPos < click.bound.z) && (yPos < click.bound.w)) {
+         if ((input->cursor[0] > click.bound.x) && (input->cursor[1] > click.bound.y)
+          && (input->cursor[0] < click.bound.z) && (input->cursor[1] < click.bound.w)) {
             mesh.colour = font.hiColour;
 
             // If the button is clicked
-            if ((menu.id == currScrn) && (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS))
+            if ((menu.id == currScrn) && (input->active & input->keyMap["select"][1])) {
                buttonPress(action.functionID, entM, evtM, entity);
+               currScrn = 10;
+            }
 
          } else
             mesh.colour = font.loColour;
@@ -59,19 +57,22 @@ void MenuCtrlSystem::buttonPress(GLuint functionID, ex::EntityManager& entM, ex:
    if (functionID == 1) {
       ex::ComponentHandle<ScreenLink> link = entity.component<ScreenLink>();
       if (link) {
-         entM.each<Screen>([this, &link](ex::Entity roomEnt, Screen& screen) {
+         entM.each<Screen>([this, &link, &evtM](ex::Entity roomEnt, Screen& screen) {
             if (link->linkId >= 0)
                screen.id = link->linkId;
             else if (screen.prevId >= 0)
                screen.id = screen.prevId;
 
-            glfwSetCursorPos(win, winXcen/2.0f, winYcen/2.0f);
+            // This should be an event to the input system so that this system doesn't need window
+            if (screen.id == 10)
+               evtM.emit<CenterCursor>();
+
          });
       }
    } else if (functionID == 2)
-      glfwSetWindowShouldClose(win, GLFW_TRUE);
-   else if (functionID == 3) {
+      evtM.emit<QuitGame>();
+   else if (functionID == 3)
       evtM.emit<GenRoom>(entM, evtM);
-   } else if (functionID == 4)
+   else if (functionID == 4)
       evtM.emit<GenObjects>();
 }

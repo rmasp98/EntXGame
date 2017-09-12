@@ -125,11 +125,9 @@ bool loadAssImp(const char * path) {
 
 	Assimp::Importer importer;
 
-	std::cout << "hello loader" << std::endl;
-
 	const aiScene* scene = importer.ReadFile(path, 0);
 	if (!scene) {
-		std::cout << importer.GetErrorString() <<  std::endl;
+		std::cerr << importer.GetErrorString() <<  std::endl;
 		return false;
 	}
 
@@ -160,11 +158,7 @@ bool loadAssImp(const char * path) {
 			aiVector3D n = mesh->mNormals[j];
 			norms.push_back(glm::vec3(n.x, n.y, n.z));
 		}
-
-		std::cout << verts.size() << "\t" << norms.size() << "\t" << uvs.size() << std::endl;
 	}
-
-
 
 	return true;
 

@@ -34,6 +34,17 @@ InputSystem::InputSystem(GLFWwindow* window, ex::EntityManager& entM) {
 
 
 
+
+void InputSystem::configure(ex::EventManager& evnM) {
+   evnM.subscribe<CenterCursor>(*this);
+   evnM.subscribe<QuitGame>(*this);
+}
+
+
+
+
+
+
 void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::TimeDelta dT) {
 
    GLuint currScrn;
@@ -44,7 +55,7 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
    keyState = 0;
    GLuint it=0;
    for (auto const &ent1 : keyMap) {
-      if (glfwGetKey(win, ent1.second[0]) == GLFW_PRESS)
+      if (isPressed(ent1.second))
          keyState += glm::pow(2,it);
       it++;
    }
@@ -83,12 +94,44 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
 
 
 
+void InputSystem::receive(const CenterCursor& null) {
+   glfwSetCursorPos(win, winCen[0], winCen[1]);
+}
+
+
+
+
+
+void InputSystem::receive(const QuitGame& null) {
+   glfwSetWindowShouldClose(win, GLFW_TRUE);
+}
+
+
+
+
+
+
+bool InputSystem::isPressed(const GLuint pressIn[3]) {
+
+   if (pressIn[2] == 1) { //Is key
+      if (glfwGetKey(win, pressIn[0]) == GLFW_PRESS)
+         return true;
+   } else if (pressIn[2] == 2) { //Is mouse
+      if (glfwGetMouseButton(win, pressIn[0]) == GLFW_PRESS)
+         return true;
+   }
+
+   return false;
+}
+
+
+
 
 
 
 void InputSystem::assignKeys(std::string fileName) {
 
-   std::map<std::string, bool> holdKeyTemp;
+   std::map<std::string, bool> holdKeyTemp, holdMouseTemp;
    holdKeys = 0;
 
    // Read the json file into rapidjson
@@ -105,12 +148,15 @@ void InputSystem::assignKeys(std::string fileName) {
             rj::Value& keysIn = getArrayKey(type[iType], "keys");
             for (rj::SizeType jKey = 0; jKey < keysIn.Size(); ++jKey) {
                std::string keyName = getStringKey(keysIn[jKey], "name");
-               keyMap[keyName][0] = getUintKey(keysIn[jKey], "keyVal");
+               keyMap[keyName][0] = getUintKey(keysIn[jKey], "val");
+
+               // finds type of button (1=key, 2=mouse)
+               keyMap[keyName][2] = getUintKey(keysIn[jKey], "type");
 
                // Find out if key is a hold key
                holdKeyTemp[keyName] = false;
-               if (keysIn[jKey].HasMember("holdKey")) {
-                  if (getBoolKey(keysIn[jKey], "holdKey"))
+               if (keysIn[jKey].HasMember("hold")) {
+                  if (getBoolKey(keysIn[jKey], "hold"))
                      holdKeyTemp[keyName] = true;
                }
             }

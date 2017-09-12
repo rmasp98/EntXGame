@@ -1,18 +1,24 @@
 This is a notepad for things I need to do or think about
 
 TODO:
- - I need to set up deferred rendering for my lighting
- - Implement Blinn-phong lighting (https://learnopengl.com/#!Advanced-Lighting/Advanced-Lighting)
- - Add gamma correction to final shader pass (https://learnopengl.com/#!Advanced-Lighting/Gamma-Correction)
- - Shadows! (https://learnopengl.com/#!Advanced-Lighting/Shadows/Shadow-Mapping and https://learnopengl.com/#!Advanced-Lighting/Shadows/Point-Shadows)
- - Normal mapping (https://learnopengl.com/#!Advanced-Lighting/Normal-Mapping)
- - Keymap menu
- - Fix issue with recentering boxes that are not pushed all the way off Goal
- - Make easier to push boxes into corridors
- - Write solution finder
- - Need to sort out input system for menu code
- - Need to improve object and image loader (and therefore the renderer as well)
- - Need to set up random level generator with petential threading (really big job)
+ 1. I need to set up deferred rendering for my lighting
+ 2. Add material shiniess to entity
+ 3. Clean up what we pass to shaders (could pass it in blocks)
+ 4. Shadows! (https://learnopengl.com/#!Advanced-Lighting/Shadows/Shadow-Mapping and https://learnopengl.com/#!Advanced-Lighting/Shadows/Point-Shadows)
+   f. create the shadow shaders
+   g. Need to create VAOs for shadow buffer
+   h. pass the cube map to main shaders
+   i. Alter main shaders to account for shadows
+ 5. Normal mapping (https://learnopengl.com/#!Advanced-Lighting/Normal-Mapping)
+ 6. Keymap menu
+ 7. Fix issue with recentering boxes that are not pushed all the way off Goal
+ 8. Make easier to push boxes into corridors
+ 9. Write solution finder
+ 11. Need to improve object and image loader (and therefore the renderer as well)
+ 12. Need to set up random level generator with petential threading (really big job)
+ 13. Fix player vibrating in corners
+ 18. Tidy up entity storage and buffer generation (may not need to store all I do currently)
+
 
 
 Things to think about:
@@ -22,3 +28,17 @@ Things to think about:
  - High Dynamic Range (HDR) compensates for extremes in light exposure (https://learnopengl.com/#!Advanced-Lighting/HDR)
  - Bloom, blurs bright light sources (https://learnopengl.com/#!Advanced-Lighting/Bloom)
  - Potentially add SSAO (https://learnopengl.com/#!Advanced-Lighting/SSAO)
+
+
+Done:
+ 4. shadows
+   a. geometry shader loader
+   b. remove all reference to shaders directly in entities
+   c. load shaders in render system
+   d. rearrange renderer to minimise the ammount passed to shader per entity
+   e. add preparation stuff for shadow pass
+ 10. Need to sort out input system for menu code
+ 14. Resume button in in-game menu raises camera a little - because not updating cursor position in input entity (see 10)
+ 15. Implement Blinn-phong lighting (https://learnopengl.com/#!Advanced-Lighting/Advanced-Lighting)
+ 16. Add gamma correction to final shader pass (https://learnopengl.com/#!Advanced-Lighting/Gamma-Correction)
+ 17. Resume button in in-game menu returns to main menu - was finding cursor position multiple times

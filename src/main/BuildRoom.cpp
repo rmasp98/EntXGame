@@ -9,17 +9,7 @@
 #include "main/BuildRoom.hpp"
 
 
-RoomSystem::RoomSystem(ex::EntityManager& entM, ex::EventManager& evtM) {
-
-   //Load the shaders (need to add shader names to config file)
-   std::string vsName = "shaders/main.vs", fsName = "shaders/main.fs";
-   if (vsName != "" && fsName != "")
-      pID = LoadShaders(vsName.c_str(), fsName.c_str());
-   else {
-      std::cerr << "Failed to load shaders!\n";
-      exit(EXIT_FAILURE);
-   }
-}
+RoomSystem::RoomSystem(ex::EntityManager& entM, ex::EventManager& evtM) {}
 
 
 
@@ -56,7 +46,6 @@ void RoomSystem::genRoom(ex::EntityManager& entM, ex::EventManager& evtM) {
    //Create the room entity and assign it as a room
    ex::Entity entity = entM.create();
    entity.assign<Level>();
-   entity.assign<Shader>(pID);
 
    entity.assign<Room>();
    ex::ComponentHandle<Room> roomC = entity.component<Room>();
@@ -71,7 +60,7 @@ void RoomSystem::genRoom(ex::EntityManager& entM, ex::EventManager& evtM) {
    //Use everything to generate the vertices, norms and UVs
    buildRoom(entM, entity, roomC, pID);
 
-   evtM.emit<GenBuffers>(entity);
+   evtM.emit<GenBuffers>(entity, 0);
 
 }
 
@@ -296,13 +285,12 @@ void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::Compone
       }
 
       //Every 15 blocks (probably should be configurable), it creates a light
-      if ((i % 10) == 0) {
+      if ((i % 100) == 0) {
          ex::Entity lightEnt = entM.create();
-         glm::vec3 amb(0.1f), diff(0.5f), spec(0.05f), pos(rC->blocks[i][0]*rScale, 4.5, rC->blocks[i][1]*rScale);
+         glm::vec3 amb(0.00f), diff(0.2f), spec(0.2f), pos(rC->blocks[i][0]*rScale, 4.5, rC->blocks[i][1]*rScale);
 
          lightEnt.assign<Light>(amb, diff, spec, 0.07, 0.017);
          lightEnt.assign<Position>(pos, glm::vec3(0.0f));
-         lightEnt.assign<Shader>(pID);
          lightEnt.assign<Level>();
          lightEnt.assign<Room>();
       }

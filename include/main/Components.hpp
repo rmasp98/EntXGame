@@ -86,21 +86,33 @@ struct Renderable {
 
 // Holds list off active keys, mouse information and the mapping of those keys
 struct Input {
-   Input(std::vector<GLdouble> cursIn, std::map<std::string, GLuint[2]> keysIn)
+   Input(std::vector<GLdouble> cursIn, std::map<std::string, GLuint[3]> keysIn)
          : active(0), cursor(cursIn), winCen(cursIn), keyMap(keysIn) {}
 
    GLuint active;
    std::vector<GLdouble> cursor, winCen;
-   std::map<std::string, GLuint[2]> keyMap;
+   std::map<std::string, GLuint[3]> keyMap;
+};
+
+
+struct CenterCursor {
+   CenterCursor() {}
 };
 
 
 
 
 struct GenBuffers {
-   GenBuffers(ex::Entity& entIn) : entity(entIn) {}
+   GenBuffers(ex::Entity& entIn, GLuint shaderIn) : entity(entIn), shader(shaderIn) {}
 
    ex::Entity& entity;
+   GLuint shader;
+};
+
+
+
+struct QuitGame {
+   QuitGame() {}
 };
 
 

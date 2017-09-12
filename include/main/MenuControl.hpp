@@ -17,12 +17,11 @@
 
 class MenuCtrlSystem : public ex::System<MenuCtrlSystem> {
    public:
-      explicit MenuCtrlSystem(GLFWwindow*);
+      explicit MenuCtrlSystem(ex::EntityManager&, GLFWwindow*);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    protected:
-      GLFWwindow* win;
-      GLint winXcen, winYcen;
+      Input* input;
 
       void buttonPress(GLuint, ex::EntityManager&, ex::EventManager&, ex::Entity&);
 };

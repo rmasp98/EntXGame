@@ -22,8 +22,7 @@ int main () {
    }
 
    //Create the entity systems
-   Game* firstGame = new Game
-   (window);
+   Game* firstGame = new Game(window);
 
    std::ofstream timeFile; timeFile.open("times.dat");
    //timeFile << "#Frame\tInput\tMove\tBev\tCollision\tMenu\tRender\ttotal" << std::endl;
@@ -79,7 +78,7 @@ Game::Game(GLFWwindow* window) {
 
    // Menu Systems
    systems.add<MenuGenSystem>(entities, events, window);
-   systems.add<MenuCtrlSystem>(window);
+   systems.add<MenuCtrlSystem>(entities, window);
 
    //Global Systems
    systems.add<RenderSystem>(entities, window);

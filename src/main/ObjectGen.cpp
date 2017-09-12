@@ -20,7 +20,7 @@ ObjectSystem::ObjectSystem(ex::EntityManager& entM, ex::EventManager& evtM) {
    entMan = &entM;
    evtMan = &evtM;
 
-   loadAssImp("assets/Dragon2.3ds");
+   //loadAssImp("assets/Dragon2.3ds");
 
 }
 
@@ -63,11 +63,6 @@ void ObjectSystem::newLevel() {
 
    entMan->each<Level, Push, Position>([this](ex::Entity entity, Level& lNULL, Push& pNULL, Position& posnull) {
       entity.destroy();
-   });
-
-   //Get shader from the objectGen entities
-   entMan->each<Room, Shader>([this](ex::Entity ent, Room& rNULL, Shader& shader) {
-      pID = shader.progID;
    });
 
    // Generate camera
@@ -137,11 +132,11 @@ void ObjectSystem::genLevel() {
    boxGoal[6] = glm::vec3(-4.0, 0.5, 0.0);
    for (GLuint iGoal=0; iGoal<boxGoal.size(); iGoal++) {
       ex::Entity lightEnt = entMan->create();
-      glm::vec3 amb(0.0f), diff(1.0f, -1.0f, -1.0f), spec(0.0f, -0.0f, -0.0f);
+      //glm::vec3 amb(0.0f), diff(1.0f, -1.0f, -1.0f), spec(0.0f, -0.0f, -0.0f);
+      glm::vec3 amb(0.0f), diff(0.0f, -0.0f, -0.0f), spec(0.0f, -0.0f, -0.0f);
 
-      lightEnt.assign<Light>(amb, diff, spec, 0.05, 5.0);
+      //lightEnt.assign<Light>(amb, diff, spec, 0.05, 5.0);
       lightEnt.assign<Position>(boxGoal[iGoal], glm::vec3(0.0f));
-      lightEnt.assign<Shader>(pID);
       lightEnt.assign<Goal>();
       lightEnt.assign<Level>();
    }
@@ -180,12 +175,11 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
       //Assign all values to the entity
       entity.assign<Level>();
       entity.assign<Renderable>(verts, norms, uvs, texID);
-      entity.assign<Shader>(pID);
       entity.assign<Position>(pos[iBox], glm::vec3(1.0f));
       entity.assign<Collidable>();
       entity.assign<Acceleration>(1.5f, 8.0f);
       entity.assign<Push>(10, 30);
 
-      evtMan->emit<GenBuffers>(entity);
+      evtMan->emit<GenBuffers>(entity, 0);
    }
 }

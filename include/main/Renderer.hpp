@@ -12,6 +12,7 @@
 //Game headers
 #include "main/Components.hpp"
 #include "common/vboIndexer.hpp"
+#include "common/shader.hpp"
 
 //Generic libraries
 #include <sstream>
@@ -29,13 +30,12 @@ class RenderSystem : public ex::System<RenderSystem>, public ex::Receiver<Render
 
    protected:
       GLFWwindow* window;
-      GLuint queryID[2], queryFrontBuffer=1, queryBackBuffer=0;
+      GLuint depthMapFBO, depthCubemap, mainPID, menuPID, shadowPID;
 
-      void swapQueryBuffers();
-
-      void genBuffers(ex::Entity&);
-      void drawScene(Renderable&, Shader&, ex::EntityManager& entM, ex::Entity&);
-      void addLight(ex::EntityManager&);
+      void prepShadowMap();
+      void genBuffers(ex::Entity&, GLuint);
+      void drawScene(Renderable&, GLuint, ex::EntityManager& entM, ex::Entity&);
+      void addLight(ex::EntityManager&, GLuint);
 };
 
 

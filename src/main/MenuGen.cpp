@@ -45,7 +45,7 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, 
 
 	FT_Library ft;
 	if(FT_Init_FreeType(&ft))
-		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+		std::cerr << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
 
 	// Read the json file into rapidjson
 	std::ifstream cfgFile; cfgFile.open(fileName);
@@ -55,14 +55,14 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, 
 	rj::Document doc;
 	if (!doc.ParseStream(cfgIn).HasParseError()) {
 		// Get the menu shaders from config and load them
-		std::string vsName = getStringKey(doc, "vertShader");
-		std::string fsName = getStringKey(doc, "fragShader");
-		if (vsName != "" && fsName != "")
-	      pID = LoadShaders(vsName.c_str(), fsName.c_str());
-	   else {
-	      std::cerr << "Failed to load shaders!\n";
-	      exit(EXIT_FAILURE);
-	   }
+		// std::string vsName = getStringKey(doc, "vertShader");
+		// std::string fsName = getStringKey(doc, "fragShader");
+		// if (vsName != "" && fsName != "")
+	   //    pID = LoadShaders(vsName.c_str(), fsName.c_str());
+	   // else {
+	   //    std::cerr << "Failed to load shaders!\n";
+	   //    exit(EXIT_FAILURE);
+	   // }
 
 		// Get font values from config and load font
 		std::string fontFile = getStringKey(doc, "fontFile");
@@ -115,7 +115,6 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, 
 							glm::vec3 pos((iKey - 0.5) * 0.5, 0.2 - it * 0.15, 0.0f);
 							makeButton(entity, ent1.first, pos, 0, fontSize, *menuFont);
 
-							entity.assign<Shader>(pID);
 							entity.assign<MenuID>(1, menuID);
 
 							glm::vec3 buttonBC;
@@ -136,7 +135,7 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, 
 				std::vector<glm::vec3> pos;
 				std::vector<GLuint> action;
 				if (buttons[jButton].HasMember("autoGen") && getBoolKey(buttons[jButton], "autoGen")) {
-					std::map<std::string, GLuint[2]> keyMap;
+					std::map<std::string, GLuint[3]> keyMap;
 				   entM.each<Input>([this, &keyMap](ex::Entity roomEnt, Input& input) {
 				      keyMap = input.keyMap;
 				   });
@@ -174,7 +173,6 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, 
 					makeButton(entity, text[kButtons], pos[kButtons], action[kButtons],
 								  fontSize, *menuFont);
 
-					entity.assign<Shader>(pID);
 					entity.assign<MenuID>(0, menuID);
 
 					//Probably should have a check that if actionId==1 then there is a linkId
@@ -196,7 +194,7 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, 
 					if (mesh)
 						mesh->colour = buttonBC;
 
-					evtM.emit<GenBuffers>(entity);
+					evtM.emit<GenBuffers>(entity, 1);
 				}
 			}
 		}
@@ -227,7 +225,7 @@ void MenuGenSystem::genBackground(ex::EntityManager& entM, ex::EventManager& evt
    	texID = loadDDS(bgImage.c_str());
 
 		if (texID == 0)
-			std::cout << "Failed to load menu image" << std::endl;
+			std::cerr << "Failed to load menu image" << std::endl;
 	}
 
 
@@ -250,12 +248,11 @@ void MenuGenSystem::genBackground(ex::EntityManager& entM, ex::EventManager& evt
 	uvs[4] = glm::vec2(1.0f, 0.0f);
 	uvs[5] = glm::vec2(1.0f, 1.0f);
 
-	//Currently still passing the text texture to shader
+	//Currently still passing the text texture to graphics
 	entity.assign<Renderable>(verts, norms, uvs, texID);
-	entity.assign<Shader>(pID);
 	entity.assign<MenuID>(0, menuID);
 
-	evtM.emit<GenBuffers>(entity);
+	evtM.emit<GenBuffers>(entity, 1);
 }
 
 
@@ -326,7 +323,7 @@ void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 p
 Atlas::Atlas(std::string fontFile, GLuint fontSize, FT_Library& ft) {
 	FT_Face face;
 	if (FT_New_Face(ft, fontFile.c_str(), 0, &face))
-		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+		std::cerr << "ERROR::FREETYPE: Failed to load font" << std::endl;
 
 	 // Set size to load glyphs as
 	 FT_Set_Pixel_Sizes(face, 0, fontSize);
@@ -339,7 +336,7 @@ Atlas::Atlas(std::string fontFile, GLuint fontSize, FT_Library& ft) {
 
 	 for (GLubyte i=32; i<128; i++) {
 		 if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
-			 std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
+			 std::cerr << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
 			 continue;
 		 }
 
@@ -373,7 +370,7 @@ Atlas::Atlas(std::string fontFile, GLuint fontSize, FT_Library& ft) {
 	GLint xOff=0, yOff=0; rowH=0;
 	for (GLubyte i=32; i<128; i++) {
 		if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
-			std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
+			std::cerr << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
 			continue;
 		}
 

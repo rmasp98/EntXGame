@@ -22,18 +22,22 @@
 
 
 //System for building the puzzle room
-class InputSystem : public ex::System<InputSystem> {
+class InputSystem : public ex::System<InputSystem>, public ex::Receiver<InputSystem> {
    public:
       explicit InputSystem(GLFWwindow*, ex::EntityManager&);
+      void configure(ex::EventManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
+      void receive(const CenterCursor&);
+      void receive(const QuitGame&);
 
    protected:
       GLFWwindow* win;
       GLuint oldKeyState, keyState, holdKeys;
       std::vector<GLdouble> winCen;
       //std::map<std::string, GLint> keys;
-      std::map<std::string, GLuint[2]> keyMap;
+      std::map<std::string, GLuint[3]> keyMap;
 
+      bool isPressed(const GLuint*);
       void assignKeys(std::string);
 };
 

@@ -12,7 +12,7 @@ uniform mat4 camView;
 uniform mat4 model;
 
 void main() {
-   gl_Position = camView * vec4(vertexPos, 1.0f);
+   gl_Position = camView * model * vec4(vertexPos, 1.0f);
 
    //Accounts for any non-uniform stretching in model
    FragNorm = normalize(mat3(transpose(inverse(model))) * vertexNorm);
