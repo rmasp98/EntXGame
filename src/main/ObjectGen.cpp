@@ -132,13 +132,15 @@ void ObjectSystem::genLevel() {
    boxGoal[6] = glm::vec3(-4.0, 0.5, 0.0);
    for (GLuint iGoal=0; iGoal<boxGoal.size(); iGoal++) {
       ex::Entity lightEnt = entMan->create();
-      //glm::vec3 amb(0.0f), diff(1.0f, -1.0f, -1.0f), spec(0.0f, -0.0f, -0.0f);
-      glm::vec3 amb(0.0f), diff(0.0f, -0.0f, -0.0f), spec(0.0f, -0.0f, -0.0f);
+      glm::vec3 amb(0.0f), diff(1.0f, -1.0f, -1.0f), spec(0.0f, -0.0f, -0.0f);
 
-      //lightEnt.assign<Light>(amb, diff, spec, 0.05, 5.0);
       lightEnt.assign<Position>(boxGoal[iGoal], glm::vec3(0.0f));
       lightEnt.assign<Goal>();
       lightEnt.assign<Level>();
+
+      // lightEnt.assign<Light>(amb, diff, spec, 0.05, 5.0);
+      // lightEnt.assign<Shadow>();
+      // evtMan->emit<PrepShadowMap>(lightEnt.component<Shadow>());
    }
 }
 
@@ -174,12 +176,12 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
 
       //Assign all values to the entity
       entity.assign<Level>();
-      entity.assign<Renderable>(verts, norms, uvs, texID);
+      entity.assign<Renderable>(texID);
       entity.assign<Position>(pos[iBox], glm::vec3(1.0f));
       entity.assign<Collidable>();
       entity.assign<Acceleration>(1.5f, 8.0f);
       entity.assign<Push>(10, 30);
 
-      evtMan->emit<GenBuffers>(entity, 0);
+      evtMan->emit<GenBuffers>(entity, verts, norms, uvs);
    }
 }

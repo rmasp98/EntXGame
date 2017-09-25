@@ -43,7 +43,7 @@ class MenuGenSystem : public ex::System<MenuGenSystem>, public ex::Receiver<Menu
       GLuint pID;
       GLint scaleX, scaleY;
 
-      void makeButton(ex::Entity&, std::string, glm::vec3, GLuint, GLfloat, Atlas&);
+      void makeButton(ex::Entity&, std::string, glm::vec3, GLuint, GLfloat, Atlas&, ex::EventManager&);
       void genBackground(ex::EntityManager&, ex::EventManager&, std::string, GLuint);
       void readConfig(ex::EntityManager&, ex::EventManager&, std::string);
 

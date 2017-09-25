@@ -4,11 +4,6 @@ TODO:
  1. I need to set up deferred rendering for my lighting
  2. Add material shiniess to entity
  3. Clean up what we pass to shaders (could pass it in blocks)
- 4. Shadows! (https://learnopengl.com/#!Advanced-Lighting/Shadows/Shadow-Mapping and https://learnopengl.com/#!Advanced-Lighting/Shadows/Point-Shadows)
-   f. create the shadow shaders
-   g. Need to create VAOs for shadow buffer
-   h. pass the cube map to main shaders
-   i. Alter main shaders to account for shadows
  5. Normal mapping (https://learnopengl.com/#!Advanced-Lighting/Normal-Mapping)
  6. Keymap menu
  7. Fix issue with recentering boxes that are not pushed all the way off Goal
@@ -17,8 +12,14 @@ TODO:
  11. Need to improve object and image loader (and therefore the renderer as well)
  12. Need to set up random level generator with petential threading (really big job)
  13. Fix player vibrating in corners
- 18. Tidy up entity storage and buffer generation (may not need to store all I do currently)
-
+ 19. Clean up shader loader (could pass vector of strings that loops over repeated code)
+ 20. Turns out some objects don't have norms (norm maps instead) so need to adapt program accordingly (gen buffers and shaders)
+ 21. Look up a better way to do PCF for point light shadows
+ 22. Need to try and improve performance!!!
+ 23. Shadowmaps are currently being sent to a second light struct. Need to figure out why it breaks in the first struct
+ 24. Need to add window resolution an global variable configurable in options
+ 25. Currently no way to get rid of shadow acne and peter-panning on walls simulataneously
+ 26. Flickering pointer in in-game menu (may just be a frame rate issue)
 
 
 Things to think about:
@@ -31,14 +32,20 @@ Things to think about:
 
 
 Done:
- 4. shadows
+ 4. Shadows! (https://learnopengl.com/#!Advanced-Lighting/Shadows/Shadow-Mapping and https://learnopengl.com/#!Advanced-Lighting/Shadows/Point-Shadows)
    a. geometry shader loader
    b. remove all reference to shaders directly in entities
    c. load shaders in render system
    d. rearrange renderer to minimise the ammount passed to shader per entity
    e. add preparation stuff for shadow pass
+   f. create the shadow shaders
+   g. Need to create VAOs for shadow buffer - turns out not needed as VAO are not program dependent
+   h. pass the cube map to main shaders
+   i. Alter main shaders to account for shadows
+   j. Implement for multiple lights
  10. Need to sort out input system for menu code
  14. Resume button in in-game menu raises camera a little - because not updating cursor position in input entity (see 10)
  15. Implement Blinn-phong lighting (https://learnopengl.com/#!Advanced-Lighting/Advanced-Lighting)
  16. Add gamma correction to final shader pass (https://learnopengl.com/#!Advanced-Lighting/Gamma-Correction)
  17. Resume button in in-game menu returns to main menu - was finding cursor position multiple times
+ 18. Tidy up entity storage and buffer generation (may not need to store all I do currently) - removed verts, norms, uvs from renderable as they are only needed briefly for gen buffers

@@ -171,7 +171,7 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, 
 					ex::Entity entity = entM.create();
 
 					makeButton(entity, text[kButtons], pos[kButtons], action[kButtons],
-								  fontSize, *menuFont);
+								  fontSize, *menuFont, evtM);
 
 					entity.assign<MenuID>(0, menuID);
 
@@ -193,8 +193,6 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, 
 					ex::ComponentHandle<Renderable> mesh = entity.component<Renderable>();
 					if (mesh)
 						mesh->colour = buttonBC;
-
-					evtM.emit<GenBuffers>(entity, 1);
 				}
 			}
 		}
@@ -249,16 +247,17 @@ void MenuGenSystem::genBackground(ex::EntityManager& entM, ex::EventManager& evt
 	uvs[5] = glm::vec2(1.0f, 1.0f);
 
 	//Currently still passing the text texture to graphics
-	entity.assign<Renderable>(verts, norms, uvs, texID);
+	entity.assign<Renderable>(texID);
 	entity.assign<MenuID>(0, menuID);
 
-	evtM.emit<GenBuffers>(entity, 1);
+	evtM.emit<GenBuffers>(entity, verts, norms, uvs);
 }
 
 
 
 
-void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 pos, GLuint action, GLfloat fSize, Atlas& font) {
+void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 pos,
+										 GLuint action, GLfloat fSize, Atlas& font, ex::EventManager& evtM) {
 
 	GLuint numVerts = 6 * text.length();
 	std::vector<glm::vec3> verts(numVerts, glm::vec3(0)), norms(numVerts, glm::vec3(0));
@@ -299,7 +298,7 @@ void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 p
 		 maxH = std::max(maxH, h);
    }
 
-	entity.assign<Renderable>(verts, norms, uvs, font.texID);
+	entity.assign<Renderable>(font.texID);
 
 	pos.x -= xOff / 2.0f;
 	entity.assign<Position>(pos, glm::vec3(0.0f));
@@ -314,6 +313,7 @@ void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 p
 										 (1 - pos.y) * scaleY / 2.0f);
 	}
 
+	evtM.emit<GenBuffers>(entity, verts, norms, uvs);
 }
 
 

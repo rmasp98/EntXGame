@@ -58,9 +58,7 @@ void RoomSystem::genRoom(ex::EntityManager& entM, ex::EventManager& evtM) {
    createBound(roomC);
 
    //Use everything to generate the vertices, norms and UVs
-   buildRoom(entM, entity, roomC, pID);
-
-   evtM.emit<GenBuffers>(entity, 0);
+   buildRoom(entM, evtM, entity, roomC, pID);
 
 }
 
@@ -228,7 +226,7 @@ void RoomSystem::createBound(ex::ComponentHandle<Room>& rC) {
 
 
 
-void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::ComponentHandle<Room>& rC, GLuint pID) {
+void RoomSystem::buildRoom(ex::EntityManager& entM, ex::EventManager& evtM, ex::Entity& ent, ex::ComponentHandle<Room>& rC, GLuint pID) {
 
    //Scales floor and roof. Should fix
    GLfloat rScale = 2;
@@ -285,7 +283,7 @@ void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::Compone
       }
 
       //Every 15 blocks (probably should be configurable), it creates a light
-      if ((i % 100) == 0) {
+      if ((i % 10) == 0) {
          ex::Entity lightEnt = entM.create();
          glm::vec3 amb(0.00f), diff(0.2f), spec(0.2f), pos(rC->blocks[i][0]*rScale, 4.5, rC->blocks[i][1]*rScale);
 
@@ -293,6 +291,9 @@ void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::Compone
          lightEnt.assign<Position>(pos, glm::vec3(0.0f));
          lightEnt.assign<Level>();
          lightEnt.assign<Room>();
+         lightEnt.assign<Shadow>();
+
+         evtM.emit<PrepShadowMap>(lightEnt.component<Shadow>());
       }
    }
 
@@ -326,7 +327,9 @@ void RoomSystem::buildRoom(ex::EntityManager& entM, ex::Entity& ent, ex::Compone
    }
 
    //Assign all the verts, norms, UVs and texture ID to the room entity
-   ent.assign<Renderable>(roomVerts, roomNorms, roomUVs, texID);
+   ent.assign<Renderable>(texID);
+   evtM.emit<GenBuffers>(ent, roomVerts, roomNorms, roomUVs);
+
    ent.assign<Collidable>();
 
 }

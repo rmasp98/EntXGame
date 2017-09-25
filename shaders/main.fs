@@ -1,8 +1,12 @@
-#version 330 core
+#version 400 core
 
 struct Material {
-   sampler2D diffuse, specular;
+   sampler2D diffuse;
    float shininess;
+};
+
+struct Light2 {
+   samplerCube depthMap;
 };
 
 struct Light {
@@ -17,14 +21,31 @@ in vec2 FragUV;
 
 out vec4 colourOut;
 
+uniform float farPlane;
 uniform vec3 viewPos;
 uniform vec3 colour;
-uniform Material material;
-uniform Light light[30];
-uniform int lightNum;
 uniform float gamma;
+uniform Material material;
+uniform int lightNum;
+uniform Light light[10];
+uniform Light2 light2[3];
+
+uniform samplerCubeArray test;
+
+
+int samples = 20;
+vec3 offsets[20] = vec3[]
+(
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1),
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+);
+
 
 vec3 calcLights(int);
+float ShadowCalculation(float, int);
 
 void main() {
 
@@ -59,7 +80,42 @@ vec3 calcLights(int i) {
 
    //Attentuation
    float distance = length(light[i].pos - FragPos);
-   float attenuation = 1.0f / (1.0f + light[i].linear * distance + light[i].quad * distance * distance);
+   //float attenuation = 1.0f / (1.0f + light[i].linear * distance + light[i].quad * distance * distance);
+   float attenuation = 1.0f / (1.0f + 0.07 * distance + 0.017 * distance * distance);
 
-   return (diffuse + specular) * attenuation;
+   float shadow = ShadowCalculation(diff, i);
+
+   return (1.0f - shadow) * (diffuse + specular) * attenuation;
+}
+
+
+
+
+float ShadowCalculation(float diff, int iLight)
+{
+    // get vector between fragment position and light position
+    vec3 fragToLight = FragPos - light[iLight].pos;
+
+    // now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+
+    float bias = max(0.2 * (1.0 - diff), 0.025);
+    float shadow = 0.0f;
+    float viewDistance = length(viewPos - FragPos);
+    float diskRadius = (1.0 + (viewDistance / farPlane)) / 50.0;
+
+    for (int iSample = 0; iSample < samples; iSample++) {
+       // ise the fragment to light vector to sample from the depth map
+       float closestDepth = texture(light2[iLight].depthMap, fragToLight + offsets[iSample] * diskRadius).r;
+
+       // it is currently in linear range between [0,1], let's re-transform it back to original depth value
+       closestDepth *= farPlane;
+
+       // test for shadows
+       if ((currentDepth - bias) > closestDepth) {
+         shadow += 1.0;
+       }
+    }
+
+    return shadow /= float(samples);
 }

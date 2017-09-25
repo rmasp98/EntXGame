@@ -27,13 +27,15 @@ class RenderSystem : public ex::System<RenderSystem>, public ex::Receiver<Render
       void configure(ex::EventManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
       void receive(const GenBuffers&);
+      void receive(const PrepShadowMap&);
 
    protected:
       GLFWwindow* window;
       GLuint depthMapFBO, depthCubemap, mainPID, menuPID, shadowPID;
 
       void prepShadowMap();
-      void genBuffers(ex::Entity&, GLuint);
+      void genShadowMap(ex::EntityManager&, glm::vec3, GLuint);
+      void genBuffers(ex::Entity&, std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn);
       void drawScene(Renderable&, GLuint, ex::EntityManager& entM, ex::Entity&);
       void addLight(ex::EntityManager&, GLuint);
 };

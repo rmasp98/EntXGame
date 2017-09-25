@@ -14,6 +14,9 @@
 
 RenderSystem::RenderSystem(ex::EntityManager &entM, GLFWwindow* winIn) {
 
+   // Create the Frame buffer to store the shadowmap
+   glGenFramebuffers(1, &depthMapFBO);
+
    window = winIn;
    prepShadowMap();
 
@@ -21,10 +24,17 @@ RenderSystem::RenderSystem(ex::EntityManager &entM, GLFWwindow* winIn) {
    mainPID = LoadShaders("shaders/main.vs", "shaders/main.fs");
    menuPID = LoadShaders("shaders/menu.vs", "shaders/menu.fs");
    shadowPID = LoadShaders("shaders/shadow.vs", "shaders/shadow.gs", "shaders/shadow.fs");
+
+   // GLint texture_units;
+   // glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
+   // std::cout << "hello " << texture_units << std::endl;
 }
 
 
-void RenderSystem::configure(ex::EventManager& evnM) { evnM.subscribe<GenBuffers>(*this); }
+void RenderSystem::configure(ex::EventManager& evnM) {
+   evnM.subscribe<GenBuffers>(*this);
+   evnM.subscribe<PrepShadowMap>(*this);
+}
 
 
 
@@ -45,48 +55,11 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
       // Hides the cursor
       glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-      glm::vec3 lightPos;
-      entM.each<Light, Position>([this, &lightPos](ex::Entity entity, Light& l, Position& p) {
-         lightPos = p.pos;
+      entM.each<Light, Position, Shadow>([this, &entM](ex::Entity eNull, Light& lNull, Position& light, Shadow& shadow) {
+         genShadowMap(entM, light.pos, shadow.depthMap);
       });
+      glCullFace(GL_BACK);
 
-      const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-      GLfloat nearPlane = 1.0f, farPlane = 25.0f;
-      glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, nearPlane, farPlane);
-      std::vector<glm::mat4> shadowTransforms;
-      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
-      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-      shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-
-      glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-      glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-      glClear(GL_DEPTH_BUFFER_BIT);
-      glUseProgram(shadowPID);
-      for (GLuint iCube = 0; iCube < 6; ++iCube) {
-         std::stringstream matName;
-         matName << "shadowMatrices[" << iCube << "].";
-
-         glUniformMatrix4fv(glGetUniformLocation(shadowPID, &(matName.str())[0]), 1, GL_FALSE, &shadowTransforms[iCube][0][0]);
-      }
-
-      glUniform1f(glGetUniformLocation(shadowPID, "farPlane"), farPlane);
-      glUniform3fv(glGetUniformLocation(shadowPID, "lightPos"), 1, &(lightPos[0]));
-
-      //Passes camera and model matrix, and then renders each object
-      entM.each<Renderable, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Level& null) {
-         // Pass material shininess to shader
-         glUniform1f(glGetUniformLocation(mainPID, "material.shininess"), 20.0);
-
-         drawScene(mesh, shadowPID, entM, entity);
-      });
-
-
-
-      //Pass the lights to graphics card
-      addLight(entM, mainPID);
 
       // Actually render the scene
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -100,6 +73,31 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
          glUniformMatrix4fv(glGetUniformLocation(mainPID, "camView"), 1, GL_FALSE, &camView[0][0]);
          glUniform3fv(glGetUniformLocation(mainPID, "viewPos"), 1, &(pos.pos[0]));
       });
+
+
+      // Passes gamma value to graphics
+      glUniform1f(glGetUniformLocation(mainPID, "gamma"), 2.2);
+      GLfloat farPlane = 25.0f;
+      glUniform1f(glGetUniformLocation(mainPID, "farPlane"), farPlane);
+
+      //Pass the lights to graphics card
+      addLight(entM, mainPID);
+
+      glUniform1i(glGetUniformLocation(mainPID, "material.diffuse"), 0);
+
+      //This is a bodge, figure out how to fix!
+      GLuint iLight = 0;
+      entM.each<Light, Shadow>([this, &iLight](ex::Entity entity, Light& null, Shadow& shadow) {
+         std::stringstream dmName;
+         dmName << "light2[" << iLight++ << "].depthMap";
+
+         glUniform1i(glGetUniformLocation(mainPID, &(dmName.str())[0]), iLight);
+
+         glActiveTexture(GL_TEXTURE0 + iLight);
+         glBindTexture(GL_TEXTURE_CUBE_MAP, shadow.depthMap);
+      });
+
+
 
       //Passes camera and model matrix, and then renders each object
       entM.each<Renderable, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Level& null) {
@@ -146,7 +144,7 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
 void RenderSystem::receive(const GenBuffers& gen) {
 
    // Need to figure way to remove unused buffers (maybe, does use same ids...)
-   genBuffers(gen.entity, gen.shader);
+   genBuffers(gen.entity, gen.verts, gen.norms, gen.uvs);
 
 }
 
@@ -155,16 +153,10 @@ void RenderSystem::receive(const GenBuffers& gen) {
 
 
 
-
-
-void RenderSystem::prepShadowMap() {
-
-   // Create the Frame buffer and cubemap to store the shadowmap
-   glGenFramebuffers(1, &depthMapFBO);
-   glGenTextures(1, &depthCubemap);
+void RenderSystem::receive(const PrepShadowMap& sMap) {
 
    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-   glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+   glBindTexture(GL_TEXTURE_CUBE_MAP, sMap.shadow->depthMap);
    for (unsigned int i = 0; i < 6; ++i)
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
                      SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -175,12 +167,61 @@ void RenderSystem::prepShadowMap() {
    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+}
+
+
+
+
+
+
+
+void RenderSystem::prepShadowMap() {
+
+
+}
+
+
+
+
+
+
+void RenderSystem::genShadowMap(ex::EntityManager& entM, glm::vec3 lightPos, GLuint depthMap) {
+
+   const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+   GLfloat nearPlane = 1.0f, farPlane = 25.0f;
+   glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, nearPlane, farPlane);
+   std::vector<glm::mat4> shadowTransforms;
+   shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+   shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+   shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+   shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+   shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+   shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+
+   glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
+
+   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMap, 0);
    glDrawBuffer(GL_NONE);
    glReadBuffer(GL_NONE);
-   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+   glClear(GL_DEPTH_BUFFER_BIT);
+   glUseProgram(shadowPID);
+   for (GLuint iCube = 0; iCube < 6; ++iCube) {
+      std::stringstream matName;
+      matName << "shadowMatrices[" << iCube << "]";
+
+      glm::mat4 tempMat = shadowTransforms[iCube];
+      glUniformMatrix4fv(glGetUniformLocation(shadowPID, &(matName.str())[0]), 1, GL_FALSE, &tempMat[0][0]);
+   }
+
+   glUniform1f(glGetUniformLocation(shadowPID, "farPlane"), farPlane);
+   glUniform3fv(glGetUniformLocation(shadowPID, "lightPos"), 1, &(lightPos[0]));
+
+   //Passes camera and model matrix, and then renders each object
+   entM.each<Renderable, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Level& null) {
+      drawScene(mesh, shadowPID, entM, entity);
+   });
 }
 
 
@@ -191,27 +232,16 @@ void RenderSystem::prepShadowMap() {
 
 
 //This creates the VAOs, which are later used to quick switch between objects to render
-void RenderSystem::genBuffers(ex::Entity& ent, GLuint shader) {
+void RenderSystem::genBuffers(ex::Entity& ent, std::vector<glm::vec3> verts, std::vector<glm::vec3> norms, std::vector<glm::vec2> uvs) {
 
    ex::ComponentHandle<Renderable> eVecs = ent.component<Renderable>();
-
-   GLuint pID = 0;
-   if (shader == 0)
-      pID = mainPID;
-   else if (shader == 1)
-      pID = menuPID;
-   else if (shader == 2)
-      pID = shadowPID;
-
    if (eVecs) {
       std::vector<unsigned short> inds;
       std::vector<glm::vec2> uvsInds;
       std::vector<glm::vec3> vertInds, normInds;
 
-      glUseProgram(pID);
-
       //This performs VBO indexing
-      indexVBO(eVecs->verts, eVecs->uvs, eVecs->norms, inds, vertInds, uvsInds, normInds);
+      indexVBO(verts, uvs, norms, inds, vertInds, uvsInds, normInds);
       eVecs->indSize = inds.size();
 
       //Generate and bind VAO
@@ -219,29 +249,33 @@ void RenderSystem::genBuffers(ex::Entity& ent, GLuint shader) {
       glBindVertexArray(eVecs->VAO);
 
       //Bind vertices to shader
-      glGenBuffers(1, &eVecs->vertID);
-      glBindBuffer(GL_ARRAY_BUFFER, eVecs->vertID);
+      GLuint vertID;
+      glGenBuffers(1, &vertID);
+      glBindBuffer(GL_ARRAY_BUFFER, vertID);
       glBufferData(GL_ARRAY_BUFFER, vertInds.size() * sizeof(glm::vec3), &vertInds[0], GL_STATIC_DRAW);
       glEnableVertexAttribArray(0);
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
       //Bind texture locations to shader
-      glGenBuffers(1, &eVecs->uvID);
-      glBindBuffer(GL_ARRAY_BUFFER, eVecs->uvID);
+      GLuint uvID;
+      glGenBuffers(1, &uvID);
+      glBindBuffer(GL_ARRAY_BUFFER, uvID);
       glBufferData(GL_ARRAY_BUFFER, uvsInds.size() * sizeof(glm::vec2), &uvsInds[0], GL_STATIC_DRAW);
       glEnableVertexAttribArray(1);
       glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
       //Bind normals to shader
-      glGenBuffers(1, &eVecs->normID);
-      glBindBuffer(GL_ARRAY_BUFFER, eVecs->normID);
+      GLuint normID;
+      glGenBuffers(1, &normID);
+      glBindBuffer(GL_ARRAY_BUFFER, normID);
       glBufferData(GL_ARRAY_BUFFER, normInds.size() * sizeof(glm::vec3), &normInds[0], GL_STATIC_DRAW);
       glEnableVertexAttribArray(2);
       glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
       //Bind VBO indices to shader
-      glGenBuffers(1, &eVecs->indID);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eVecs->indID);
+      GLuint indID;
+      glGenBuffers(1, &indID);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indID);
       glBufferData(GL_ELEMENT_ARRAY_BUFFER, inds.size() * sizeof(unsigned short), &inds[0] , GL_STATIC_DRAW);
 
       //Unbind VAO
@@ -267,8 +301,6 @@ void RenderSystem::drawScene(Renderable& mesh, GLuint prog, ex::EntityManager& e
    glUniformMatrix4fv(glGetUniformLocation(prog, "model"), 1, GL_FALSE, &mesh.modelMat[0][0]);
    // Passes colour of font to graphic card
    glUniform3fv(glGetUniformLocation(prog, "colour"), 1, &(mesh.colour[0]));
-   // Passes gamma value to graphics
-   glUniform1f(glGetUniformLocation(prog, "gamma"), 2.2);
 
    //Resets the texture and binds correct texture
    if (mesh.texID != 0) {
@@ -295,7 +327,7 @@ void RenderSystem::addLight(ex::EntityManager& entM, GLuint pID) {
    entM.each<Light, Position>([this, &iNum, &pID]
                                      (ex::Entity entity, Light& l, Position& p) {
 
-      glUseProgram(pID);
+      //glUseProgram(pID);
 
       //Creates a custom name to pass the lights into an array
       std::stringstream bName;

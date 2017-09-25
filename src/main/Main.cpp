@@ -150,8 +150,8 @@ int initGraphics(GLFWwindow*& window) {
 
    //glfwWindowHint(GLFW_SAMPLES, 4); //Antialiasing = 4 samples
    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //Pointing to version of openGL
-   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); //Pointing to version of openGL
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Should find out about other profiles
 
    //Enable mutlisampling Antialiasing

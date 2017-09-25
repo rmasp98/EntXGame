@@ -34,7 +34,7 @@ class RoomSystem : public ex::System<RoomSystem>, public ex::Receiver<RoomSystem
       std::vector< glm::tvec2<GLint> > createBlocks(GLint);
       std::vector< glm::tvec2<GLint> > createBlocks();
       void createBound(ex::ComponentHandle<Room>&);
-      void buildRoom(ex::EntityManager&, ex::Entity&, ex::ComponentHandle<Room>&, GLuint);
+      void buildRoom(ex::EntityManager&, ex::EventManager&, ex::Entity&, ex::ComponentHandle<Room>&, GLuint);
 
 };
 

@@ -50,12 +50,6 @@ struct Camera {
 
 
 
-//This is a holder for the program ID
-struct Shader {
-   Shader(GLuint shaderIn) : progID(shaderIn) {}
-
-   GLuint progID;
-};
 
 
 
@@ -71,12 +65,9 @@ struct Position {
 //An object that can be rendered. Includes vertices, normals, uv coordinates, model matrix and various IDs:
 //Vertex Array object, graphics ids for verts, uv coords, norms, VBO indices; number of verts and texture ID
 struct Renderable {
-   Renderable(std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn, GLint texIn)
-   : verts(vertIn), norms(normIn), uvs(uvIn), texID(texIn), modelMat(glm::mat4(1.0f)), colour(glm::vec3(1.0f)) {}
+   Renderable(GLint texIn) : texID(texIn), modelMat(glm::mat4(1.0f)), colour(glm::vec3(1.0f)) {}
 
-   std::vector<glm::vec3> verts, norms;
-   std::vector<glm::vec2> uvs;
-   GLuint VAO, vertID, uvID, normID, indID, indSize, texID;
+   GLuint VAO, indSize, texID;
    glm::mat4 modelMat;
    glm::vec3 colour;
 };
@@ -95,6 +86,7 @@ struct Input {
 };
 
 
+// Event to move cursor back to the center of the screen
 struct CenterCursor {
    CenterCursor() {}
 };
@@ -102,15 +94,21 @@ struct CenterCursor {
 
 
 
+
+// Event to generate the buffers for an entity
 struct GenBuffers {
-   GenBuffers(ex::Entity& entIn, GLuint shaderIn) : entity(entIn), shader(shaderIn) {}
+   GenBuffers(ex::Entity& entIn, std::vector<glm::vec3>& vertIn, std::vector<glm::vec3>& normIn, std::vector<glm::vec2>& uvIn)
+              : entity(entIn), verts(vertIn), norms(normIn), uvs(uvIn) {}
 
    ex::Entity& entity;
-   GLuint shader;
+   std::vector<glm::vec3> verts, norms;
+   std::vector<glm::vec2> uvs;
 };
 
 
 
+
+// Event to quit the game
 struct QuitGame {
    QuitGame() {}
 };
@@ -177,6 +175,28 @@ struct Light {
 
    glm::vec3 ambient, diffuse, specular;
    GLfloat linear, quad;
+};
+
+
+
+
+struct Shadow {
+   Shadow() {
+      // Create the Frame buffer and cubemap to store the shadowmap
+      glGenTextures(1, &depthMap);
+   }
+
+   GLuint depthMap;
+};
+
+
+
+
+// Event to prepare the shadowmap
+struct PrepShadowMap {
+   PrepShadowMap(ex::ComponentHandle<Shadow> shadIn) : shadow(shadIn) {}
+
+   ex::ComponentHandle<Shadow> shadow;
 };
 
 
