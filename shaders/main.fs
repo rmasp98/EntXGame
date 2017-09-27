@@ -1,10 +1,5 @@
 #version 400 core
 
-struct Material {
-   sampler2D diffuse;
-   float shininess;
-};
-
 struct Light2 {
    samplerCube depthMap;
 };
@@ -15,23 +10,29 @@ struct Light {
    float linear, quad;
 };
 
-in vec3 FragPos;
-in vec3 FragNorm;
 in vec2 FragUV;
 
 out vec4 colourOut;
 
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedoSpec;
+
 uniform float farPlane;
 uniform vec3 viewPos;
-uniform vec3 colour;
+
 uniform float gamma;
-uniform Material material;
+
 uniform int lightNum;
 uniform Light light[10];
 uniform Light2 light2[3];
 
-uniform samplerCubeArray test;
+//uniform samplerCubeArray test;
 
+vec3 FragPos;
+vec3 FragNorm;
+vec3 Diffuse;
+float Specular;
 
 int samples = 20;
 vec3 offsets[20] = vec3[]
@@ -48,15 +49,21 @@ vec3 calcLights(int);
 float ShadowCalculation(float, int);
 
 void main() {
+   FragPos = texture(gPosition, FragUV).rgb;
+   FragNorm = texture(gNormal, FragUV).rgb;
+   Diffuse = texture(gAlbedoSpec, FragUV).rgb;
+   Specular = texture(gAlbedoSpec, FragUV).a;
 
-   //This ambient value should not be hard coded
-   vec3 ambient = 0.05 * vec3(texture(material.diffuse, FragUV));
+
+   // This ambient value should not be hard coded
+   vec3 ambient = 0.05 * Diffuse;
    vec3 result = vec3(0.0f);
    for (int i=0; i<lightNum; i++)
       result += calcLights(i);
 
-   vec3 finalColour = pow((ambient + result) * colour, vec3(1.0/gamma));
+   vec3 finalColour = pow((ambient + result), vec3(1.0/gamma));
    colourOut = vec4(finalColour, 1.0f);
+
 }
 
 
@@ -70,13 +77,13 @@ vec3 calcLights(int i) {
 
    //Diffuse
    float diff = max(dot(norm, lightDir), 0.0);
-   vec3 diffuse = light[i].diffuse * diff * vec3(texture(material.diffuse, FragUV));
+   vec3 diffuse = light[i].diffuse * diff * Diffuse;
 
    //Specular
    vec3 viewDir = normalize(viewPos - FragPos);
    vec3 halfwayDir = normalize(lightDir + viewDir);
-   float spec = pow(max(dot(norm, halfwayDir), 0.0), material.shininess);
-   vec3 specular = light[i].specular * spec * vec3(texture(material.diffuse, FragUV));
+   float spec = pow(max(dot(norm, halfwayDir), 0.0), Specular);
+   vec3 specular = light[i].specular * spec * Diffuse;
 
    //Attentuation
    float distance = length(light[i].pos - FragPos);

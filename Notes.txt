@@ -1,10 +1,8 @@
 This is a notepad for things I need to do or think about
 
 TODO:
- 1. I need to set up deferred rendering for my lighting
- 2. Add material shiniess to entity
+ 2. Add material shininess to entity
  3. Clean up what we pass to shaders (could pass it in blocks)
- 5. Normal mapping (https://learnopengl.com/#!Advanced-Lighting/Normal-Mapping)
  6. Keymap menu
  7. Fix issue with recentering boxes that are not pushed all the way off Goal
  8. Make easier to push boxes into corridors
@@ -23,15 +21,18 @@ TODO:
 
 
 Things to think about:
+ - Normal mapping (https://learnopengl.com/#!Advanced-Lighting/Normal-Mapping)
  - Need to set up multisampling capability in textures (https://learnopengl.com/#!Advanced-OpenGL/Anti-Aliasing)
  - Think about setting up instancing for boxes (https://learnopengl.com/#!Advanced-OpenGL/Instancing)
  - Paralax mapping. Its cool but not really needed at this point (https://learnopengl.com/#!Advanced-Lighting/Parallax-Mapping)
  - High Dynamic Range (HDR) compensates for extremes in light exposure (https://learnopengl.com/#!Advanced-Lighting/HDR)
  - Bloom, blurs bright light sources (https://learnopengl.com/#!Advanced-Lighting/Bloom)
  - Potentially add SSAO (https://learnopengl.com/#!Advanced-Lighting/SSAO)
+ - Abstract all referencing to OpenGL and GLFW to make it potentially platform independent
 
 
 Done:
+ 1. I need to set up deferred rendering for my lighting
  4. Shadows! (https://learnopengl.com/#!Advanced-Lighting/Shadows/Shadow-Mapping and https://learnopengl.com/#!Advanced-Lighting/Shadows/Point-Shadows)
    a. geometry shader loader
    b. remove all reference to shaders directly in entities

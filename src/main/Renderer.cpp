@@ -20,10 +20,58 @@ RenderSystem::RenderSystem(ex::EntityManager &entM, GLFWwindow* winIn) {
    window = winIn;
    prepShadowMap();
 
+   quadVAO = 0;
+
    //Load the shaders (need to add shader names to config file)
    mainPID = LoadShaders("shaders/main.vs", "shaders/main.fs");
    menuPID = LoadShaders("shaders/menu.vs", "shaders/menu.fs");
+   deferPID = LoadShaders("shaders/defer.vs", "shaders/defer.fs");
    shadowPID = LoadShaders("shaders/shadow.vs", "shaders/shadow.gs", "shaders/shadow.fs");
+
+
+
+
+
+
+   glGenFramebuffers(1, &gBuffer);
+   glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+
+   // position color buffer
+   glGenTextures(1, &gPosition);
+   glBindTexture(GL_TEXTURE_2D, gPosition);
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 960, 540, 0, GL_RGB, GL_FLOAT, NULL);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+   // normal color buffer
+   glGenTextures(1, &gNormal);
+   glBindTexture(GL_TEXTURE_2D, gNormal);
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 960, 540, 0, GL_RGB, GL_FLOAT, NULL);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+   // color + specular color buffer
+   glGenTextures(1, &gAlbedoSpec);
+   glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 960, 540, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+   // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
+   GLuint attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+   glDrawBuffers(3, attachments);
+   // create and attach depth buffer (renderbuffer)
+   GLuint rboDepth;
+   glGenRenderbuffers(1, &rboDepth);
+   glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 960, 540);
+   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+   // if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+   //      std::cout << "Framebuffer not complete!" << std::endl;
+
+   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
    // GLint texture_units;
    // glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
@@ -59,31 +107,67 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
          genShadowMap(entM, light.pos, shadow.depthMap);
       });
       glCullFace(GL_BACK);
-
-
-      // Actually render the scene
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
       glViewport(0, 0, 960, 540);
+
+
+
+
+
+      glDisable(GL_BLEND);
+      glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glUseProgram(mainPID);
+      glUseProgram(deferPID);
+
+      glUniform1i(glGetUniformLocation(deferPID, "material.diffuse"), 0);
 
       entM.each<Camera, Position>([this](ex::Entity ent, Camera& cam, Position& pos) {
          //Send camera information to the buffer
          glm::mat4 camView = cam.projection * cam.view;
-         glUniformMatrix4fv(glGetUniformLocation(mainPID, "camView"), 1, GL_FALSE, &camView[0][0]);
-         glUniform3fv(glGetUniformLocation(mainPID, "viewPos"), 1, &(pos.pos[0]));
+         glUniformMatrix4fv(glGetUniformLocation(deferPID, "camView"), 1, GL_FALSE, &camView[0][0]);
+         glUniform3fv(glGetUniformLocation(deferPID, "viewPos"), 1, &(pos.pos[0]));
       });
 
+      //Passes camera and model matrix, and then renders each object
+      entM.each<Renderable, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Level& null) {
+         // Pass material shininess to shader
+         glUniform1f(glGetUniformLocation(deferPID, "material.shininess"), 20.0);
+
+         drawScene(mesh, deferPID, entM, entity);
+      });
+
+
+
+
+
+      glEnable(GL_BLEND);
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glUseProgram(mainPID);
+
+      glUniform1i(glGetUniformLocation(mainPID, "gPosition"), 0);
+      glUniform1i(glGetUniformLocation(mainPID, "gNormal"), 1);
+      glUniform1i(glGetUniformLocation(mainPID, "gAlbedoSpec"), 2);
+
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, gPosition);
+      glActiveTexture(GL_TEXTURE1);
+      glBindTexture(GL_TEXTURE_2D, gNormal);
+      glActiveTexture(GL_TEXTURE2);
+      glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+
+
+
+      //Pass the lights to graphics card
+      addLight(entM, mainPID);
+
+      entM.each<Camera, Position>([this](ex::Entity ent, Camera& cam, Position& pos) {
+         glUniform3fv(glGetUniformLocation(mainPID, "viewPos"), 1, &(pos.pos[0]));
+      });
 
       // Passes gamma value to graphics
       glUniform1f(glGetUniformLocation(mainPID, "gamma"), 2.2);
       GLfloat farPlane = 25.0f;
       glUniform1f(glGetUniformLocation(mainPID, "farPlane"), farPlane);
-
-      //Pass the lights to graphics card
-      addLight(entM, mainPID);
-
-      glUniform1i(glGetUniformLocation(mainPID, "material.diffuse"), 0);
 
       //This is a bodge, figure out how to fix!
       GLuint iLight = 0;
@@ -91,21 +175,24 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
          std::stringstream dmName;
          dmName << "light2[" << iLight++ << "].depthMap";
 
-         glUniform1i(glGetUniformLocation(mainPID, &(dmName.str())[0]), iLight);
+         glUniform1i(glGetUniformLocation(mainPID, &(dmName.str())[0]), 3 + iLight);
 
-         glActiveTexture(GL_TEXTURE0 + iLight);
+         glActiveTexture(GL_TEXTURE3 + iLight);
          glBindTexture(GL_TEXTURE_CUBE_MAP, shadow.depthMap);
       });
 
+      renderQuad();
 
+      // 2.5. copy content of geometry's depth buffer to default framebuffer's depth buffer
+      // ----------------------------------------------------------------------------------
+      glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+      glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+      // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
+      // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the
+      // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
+      glBlitFramebuffer(0, 0, 960, 540, 0, 0, 960, 540, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-      //Passes camera and model matrix, and then renders each object
-      entM.each<Renderable, Level>([this, &entM](ex::Entity entity, Renderable &mesh, Level& null) {
-         // Pass material shininess to shader
-         glUniform1f(glGetUniformLocation(mainPID, "material.shininess"), 20.0);
-
-         drawScene(mesh, mainPID, entM, entity);
-      });
    }
 
 
@@ -169,6 +256,36 @@ void RenderSystem::receive(const PrepShadowMap& sMap) {
 
 }
 
+
+
+
+
+void RenderSystem::renderQuad() {
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        GLuint quadVBO;
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+}
 
 
 

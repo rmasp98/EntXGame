@@ -31,8 +31,10 @@ class RenderSystem : public ex::System<RenderSystem>, public ex::Receiver<Render
 
    protected:
       GLFWwindow* window;
-      GLuint depthMapFBO, depthCubemap, mainPID, menuPID, shadowPID;
+      GLuint depthMapFBO, gBuffer, depthCubemap, mainPID, menuPID, deferPID, shadowPID;
+      GLuint gPosition, gNormal, gAlbedoSpec, quadVAO;
 
+      void renderQuad();
       void prepShadowMap();
       void genShadowMap(ex::EntityManager&, glm::vec3, GLuint);
       void genBuffers(ex::Entity&, std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn);
