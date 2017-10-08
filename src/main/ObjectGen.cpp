@@ -176,7 +176,8 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
 
       //Assign all values to the entity
       entity.assign<Level>();
-      entity.assign<Renderable>(texID);
+      entity.assign<Renderable>();
+      entity.assign<Material>(texID, 20.0f);
       entity.assign<Position>(pos[iBox], glm::vec3(1.0f));
       entity.assign<Collidable>();
       entity.assign<Acceleration>(1.5f, 8.0f);

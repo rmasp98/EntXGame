@@ -327,7 +327,8 @@ void RoomSystem::buildRoom(ex::EntityManager& entM, ex::EventManager& evtM, ex::
    }
 
    //Assign all the verts, norms, UVs and texture ID to the room entity
-   ent.assign<Renderable>(texID);
+   ent.assign<Renderable>();
+   ent.assign<Material>(texID, 20.0f);
    evtM.emit<GenBuffers>(ent, roomVerts, roomNorms, roomUVs);
 
    ent.assign<Collidable>();

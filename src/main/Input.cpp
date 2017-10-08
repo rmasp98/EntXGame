@@ -90,6 +90,13 @@ void InputSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex::Ti
 
       glfwSetCursorPos(win, winCen[0], winCen[1]);
    }
+
+   // Disable to mouse for game and enable for menus
+   if ((currScrn >= 10) && (currScrn < 20))
+      glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+   else
+      glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
 }
 
 

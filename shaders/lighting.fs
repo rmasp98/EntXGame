@@ -87,10 +87,10 @@ vec3 calcLights(int i) {
 
    //Attentuation
    float distance = length(light[i].pos - FragPos);
-   //float attenuation = 1.0f / (1.0f + light[i].linear * distance + light[i].quad * distance * distance);
-   float attenuation = 1.0f / (1.0f + 0.07 * distance + 0.017 * distance * distance);
+   float attenuation = 1.0f / (1.0f + light[i].linear * distance + light[i].quad * distance * distance);
 
-   float shadow = ShadowCalculation(diff, i);
+   //float shadow = ShadowCalculation(diff, i);
+   float shadow = 0.0f;
 
    return (1.0f - shadow) * (diffuse + specular) * attenuation;
 }

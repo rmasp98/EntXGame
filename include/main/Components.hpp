@@ -62,13 +62,25 @@ struct Position {
 
 
 
-//An object that can be rendered. Includes vertices, normals, uv coordinates, model matrix and various IDs:
-//Vertex Array object, graphics ids for verts, uv coords, norms, VBO indices; number of verts and texture ID
+//An object that can be rendered. Includes model matrix and VAO details
 struct Renderable {
-   Renderable(GLint texIn) : texID(texIn), modelMat(glm::mat4(1.0f)), colour(glm::vec3(1.0f)) {}
+   Renderable() : modelMat(glm::mat4(1.0f)) {}
 
-   GLuint VAO, indSize, texID;
+   GLuint VAO, indSize;
    glm::mat4 modelMat;
+
+};
+
+
+
+
+
+// An objects visible qualities
+struct Material {
+   Material(GLuint texIn, GLfloat shineIn) : texID(texIn), shininess(shineIn), colour(glm::vec3(1.0f)) {}
+
+   GLuint texID;
+   GLfloat shininess;
    glm::vec3 colour;
 };
 

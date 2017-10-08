@@ -17,7 +17,7 @@
 
 class MenuCtrlSystem : public ex::System<MenuCtrlSystem> {
    public:
-      explicit MenuCtrlSystem(ex::EntityManager&, GLFWwindow*);
+      explicit MenuCtrlSystem(ex::EntityManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
 
    protected:

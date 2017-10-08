@@ -49,12 +49,12 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
       });
 
 
-      entM.each<Collidable, Position, Renderable, Push, Acceleration>([this, &entM, &dT]
-           (ex::Entity entity1, Collidable& coll, Position& pos1, Renderable& mesh, Push& push, Acceleration& accel) {
+      entM.each<Collidable, Position, Material, Push, Acceleration>([this, &entM, &dT]
+           (ex::Entity entity1, Collidable& coll, Position& pos1, Material& mat, Push& push, Acceleration& accel) {
          bool isDone = false;
-         entM.each<Goal, Position>([this, &pos1, &mesh, &isDone, &push, &accel, &dT](ex::Entity entity2, Goal& goal, Position& pos2) {
+         entM.each<Goal, Position>([this, &pos1, &mat, &isDone, &push, &accel, &dT](ex::Entity entity2, Goal& goal, Position& pos2) {
             if (testCollision(pos1, pos2)) {
-               mesh.colour = glm::vec3(1.0f, 0.5f, 0.5f);
+               mat.colour = glm::vec3(1.0f, 0.5f, 0.5f);
                isDone = true;
                push.delay = push.delLong;
                goal.complete = true;
@@ -68,7 +68,7 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
          });
 
          if (!isDone) {
-            mesh.colour = glm::vec3(1.0f, 1.0f, 1.0f);
+            mat.colour = glm::vec3(1.0f, 1.0f, 1.0f);
             push.delay = push.delShort;
             push.state = 1;
          }

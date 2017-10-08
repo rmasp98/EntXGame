@@ -14,14 +14,7 @@
 
 
 
-MenuGenSystem::MenuGenSystem(ex::EntityManager& entM, ex::EventManager& evtM, GLFWwindow* window) {
-
-	//Get window size for text scaling
-	glfwGetWindowSize(window, &scaleX, &scaleY);
-
-	// Read in the config file and generates the menus from there
-	//readConfig(entM, evtM, "config/menu.cfg");
-}
+MenuGenSystem::MenuGenSystem() {}
 
 
 
@@ -42,6 +35,11 @@ void MenuGenSystem::receive(const GenMenu& gen) { readConfig(gen.entM, gen.evtM,
 
 
 void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, std::string fileName) {
+
+	entM.each<Input>([this](ex::Entity null, Input& input) {
+		scaleX = input.winCen[0] * 2;
+		scaleY = input.winCen[1] * 2;
+	});
 
 	FT_Library ft;
 	if(FT_Init_FreeType(&ft))
@@ -190,9 +188,9 @@ void MenuGenSystem::readConfig(ex::EntityManager& entM, ex::EventManager& evtM, 
 					entity.assign<Font>(buttonBC, buttonHC, menuFont);
 
 					// Quick bodge to set the default button colour
-					ex::ComponentHandle<Renderable> mesh = entity.component<Renderable>();
-					if (mesh)
-						mesh->colour = buttonBC;
+					ex::ComponentHandle<Material> mat = entity.component<Material>();
+					if (mat)
+						mat->colour = buttonBC;
 				}
 			}
 		}
@@ -247,7 +245,8 @@ void MenuGenSystem::genBackground(ex::EntityManager& entM, ex::EventManager& evt
 	uvs[5] = glm::vec2(1.0f, 1.0f);
 
 	//Currently still passing the text texture to graphics
-	entity.assign<Renderable>(texID);
+	entity.assign<Renderable>();
+	entity.assign<Material>(texID, 20.0f);
 	entity.assign<MenuID>(0, menuID);
 
 	evtM.emit<GenBuffers>(entity, verts, norms, uvs);
@@ -298,7 +297,8 @@ void MenuGenSystem::makeButton(ex::Entity& entity, std::string text, glm::vec3 p
 		 maxH = std::max(maxH, h);
    }
 
-	entity.assign<Renderable>(font.texID);
+	entity.assign<Renderable>();
+	entity.assign<Material>(font.texID, 20.0f);
 
 	pos.x -= xOff / 2.0f;
 	entity.assign<Position>(pos, glm::vec3(0.0f));

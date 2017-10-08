@@ -77,11 +77,11 @@ Game::Game(GLFWwindow* window) {
 
 
    // Menu Systems
-   systems.add<MenuGenSystem>(entities, events, window);
-   systems.add<MenuCtrlSystem>(entities, window);
+   systems.add<MenuGenSystem>(); //This doesn't really need a system at the moment
+   systems.add<MenuCtrlSystem>(entities);
 
    //Global Systems
-   systems.add<RenderSystem>(entities, window);
+   systems.add<RenderSystem>(entities);
    systems.configure();
 
    events.emit<GenMenu>(entities, events);

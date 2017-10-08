@@ -10,7 +10,7 @@
 
 
 
-MenuCtrlSystem::MenuCtrlSystem(ex::EntityManager& entM, GLFWwindow* window) {
+MenuCtrlSystem::MenuCtrlSystem(ex::EntityManager& entM) {
    entM.each<Input>([this](ex::Entity null, Input& tempInput) {
       input = &tempInput;
    });
@@ -27,13 +27,13 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
    });
 
    if (currScrn != 10) {
-      entM.each<Clickable, Font, Action, MenuID, Renderable>([this, &entM, &evtM, &currScrn]
-               (ex::Entity entity, Clickable& click, Font& font, Action& action, MenuID& menu, Renderable& mesh) {
+      entM.each<Clickable, Font, Action, MenuID, Material>([this, &entM, &evtM, &currScrn]
+               (ex::Entity entity, Clickable& click, Font& font, Action& action, MenuID& menu, Material& mat) {
 
          // If the cursor is on top of the button
          if ((input->cursor[0] > click.bound.x) && (input->cursor[1] > click.bound.y)
           && (input->cursor[0] < click.bound.z) && (input->cursor[1] < click.bound.w)) {
-            mesh.colour = font.hiColour;
+            mat.colour = font.hiColour;
 
             // If the button is clicked
             if ((menu.id == currScrn) && (input->active & input->keyMap["select"][1])) {
@@ -42,7 +42,7 @@ void MenuCtrlSystem::update(ex::EntityManager& entM, ex::EventManager& evtM, ex:
             }
 
          } else
-            mesh.colour = font.loColour;
+            mat.colour = font.loColour;
       });
    }
 }

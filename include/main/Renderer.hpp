@@ -23,7 +23,7 @@
 
 class RenderSystem : public ex::System<RenderSystem>, public ex::Receiver<RenderSystem> {
    public:
-      explicit RenderSystem(ex::EntityManager&, GLFWwindow*);
+      explicit RenderSystem(ex::EntityManager&);
       void configure(ex::EventManager&);
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
       void receive(const GenBuffers&);
@@ -31,14 +31,18 @@ class RenderSystem : public ex::System<RenderSystem>, public ex::Receiver<Render
 
    protected:
       GLFWwindow* window;
-      GLuint depthMapFBO, gBuffer, depthCubemap, mainPID, menuPID, deferPID, shadowPID;
+      GLuint depthMapFBO, gBuffer, depthCubemap, lightingPID, menuPID, deferPID, shadowPID;
       GLuint gPosition, gNormal, gAlbedoSpec, quadVAO;
+      GLuint winHeight, winWidth, shadowHeight, shadowWidth;
+      GLfloat gamma, farPlane, nearPlane;
 
+      void prepGBuffer();
       void renderQuad();
-      void prepShadowMap();
-      void genShadowMap(ex::EntityManager&, glm::vec3, GLuint);
+      void genShadowMap(ex::EntityManager&);
+      void genGBuffer(ex::EntityManager&);
+      void deferredRender(ex::EntityManager&);
       void genBuffers(ex::Entity&, std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn);
-      void drawScene(Renderable&, GLuint, ex::EntityManager& entM, ex::Entity&);
+      void drawScene(Renderable&, Material&, GLuint, ex::EntityManager& entM, ex::Entity&);
       void addLight(ex::EntityManager&, GLuint);
 };
 

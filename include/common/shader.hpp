@@ -1,7 +1,12 @@
 #ifndef SHADER_HPP
 #define SHADER_HPP
 
-GLuint LoadShaders(const char*, const char*);
-GLuint LoadShaders(const char*, const char*, const char*);
+#include <string>
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <GL/glew.h>
+
+GLuint LoadShaders(std::vector<std::string> filePaths);
 
 #endif
