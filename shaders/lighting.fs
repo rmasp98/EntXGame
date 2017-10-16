@@ -1,4 +1,4 @@
-#version 400 core
+#version 420 core
 
 struct Light2 {
    samplerCube depthMap;
@@ -18,13 +18,19 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 
-uniform float farPlane;
-uniform vec3 viewPos;
+layout (std140, binding=0) uniform inBlock {
+   float farPlane, gamma;
+   int samples;
+   bool shadows;
+   vec3 viewPos;
+};
 
-uniform float gamma;
+layout (std140, binding=1) uniform lightBlock {
+   int lightNum;
+   Light light[3];
+};
 
-uniform int lightNum;
-uniform Light light[10];
+
 uniform Light2 light2[3];
 
 //uniform samplerCubeArray test;
@@ -34,7 +40,6 @@ vec3 FragNorm;
 vec3 Diffuse;
 float Specular;
 
-int samples = 20;
 vec3 offsets[20] = vec3[]
 (
    vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1),
@@ -70,7 +75,6 @@ void main() {
 
 
 vec3 calcLights(int i) {
-
    // write a comment
    vec3 norm = normalize(FragNorm);
    vec3 lightDir = normalize(light[i].pos - FragPos);
@@ -89,8 +93,10 @@ vec3 calcLights(int i) {
    float distance = length(light[i].pos - FragPos);
    float attenuation = 1.0f / (1.0f + light[i].linear * distance + light[i].quad * distance * distance);
 
-   //float shadow = ShadowCalculation(diff, i);
    float shadow = 0.0f;
+   if (shadows)
+      shadow = ShadowCalculation(diff, i);
+
 
    return (1.0f - shadow) * (diffuse + specular) * attenuation;
 }

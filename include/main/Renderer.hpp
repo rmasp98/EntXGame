@@ -28,13 +28,15 @@ class RenderSystem : public ex::System<RenderSystem>, public ex::Receiver<Render
       void update(ex::EntityManager&, ex::EventManager&, ex::TimeDelta) override;
       void receive(const GenBuffers&);
       void receive(const PrepShadowMap&);
+      void receive(const SetLights&);
 
    protected:
       GLFWwindow* window;
       GLuint depthMapFBO, gBuffer, depthCubemap, lightingPID, menuPID, deferPID, shadowPID;
-      GLuint gPosition, gNormal, gAlbedoSpec, quadVAO;
-      GLuint winHeight, winWidth, shadowHeight, shadowWidth;
+      GLuint gPosition, gNormal, gAlbedoSpec, quadVAO, inBlock, lightBlock;
+      GLuint winHeight, winWidth, shadowHeight, shadowWidth, samples;
       GLfloat gamma, farPlane, nearPlane;
+      bool shadows;
 
       void prepGBuffer();
       void renderQuad();
@@ -43,7 +45,7 @@ class RenderSystem : public ex::System<RenderSystem>, public ex::Receiver<Render
       void deferredRender(ex::EntityManager&);
       void genBuffers(ex::Entity&, std::vector<glm::vec3> vertIn, std::vector<glm::vec3> normIn, std::vector<glm::vec2> uvIn);
       void drawScene(Renderable&, Material&, GLuint, ex::EntityManager& entM, ex::Entity&);
-      void addLight(ex::EntityManager&, GLuint);
+      void addLight(ex::EntityManager&);
 };
 
 

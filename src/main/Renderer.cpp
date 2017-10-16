@@ -19,9 +19,10 @@ RenderSystem::RenderSystem(ex::EntityManager &entM) {
 
    // Variables to eventually pull from a config file
    winHeight = 540; winWidth = 960;
+   //winHeight = 1080; winWidth = 1920;
    shadowHeight = 1024; shadowWidth = 1024;
    gamma = 2.2f; nearPlane = 1.0f; farPlane = 25.0f;
-   quadVAO = 0;
+   quadVAO = 0; samples = 8; shadows = false;
 
    // Loaded the various shaders
    std::vector<std::string> shadow(3, "");
@@ -45,6 +46,24 @@ RenderSystem::RenderSystem(ex::EntityManager &entM) {
    menu[1] = "shaders/menu.fs";
    menuPID = LoadShaders(menu);
 
+   glGenBuffers(1, &inBlock);
+   glBindBuffer(GL_UNIFORM_BUFFER, inBlock);
+   glBufferData(GL_UNIFORM_BUFFER, 272, NULL, GL_STATIC_DRAW);
+   glBindBufferBase(GL_UNIFORM_BUFFER, 0, inBlock);
+
+   glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GLfloat), &farPlane);
+   glBufferSubData(GL_UNIFORM_BUFFER, 4, sizeof(GLfloat), &gamma);
+   glBufferSubData(GL_UNIFORM_BUFFER, 8, sizeof(GLfloat), &samples);
+   glBufferSubData(GL_UNIFORM_BUFFER, 12, sizeof(GLfloat), &shadows);
+
+   glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+   glGenBuffers(1, &lightBlock);
+   glBindBuffer(GL_UNIFORM_BUFFER, lightBlock);
+   glBufferData(GL_UNIFORM_BUFFER, 240, NULL, GL_STATIC_DRAW);
+   glBindBufferBase(GL_UNIFORM_BUFFER, 1, lightBlock);
+   glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
    prepGBuffer();
 }
 
@@ -53,6 +72,7 @@ RenderSystem::RenderSystem(ex::EntityManager &entM) {
 void RenderSystem::configure(ex::EventManager& evnM) {
    evnM.subscribe<GenBuffers>(*this);
    evnM.subscribe<PrepShadowMap>(*this);
+   evnM.subscribe<SetLights>(*this);
 }
 
 
@@ -72,7 +92,8 @@ void RenderSystem::update(ex::EntityManager &entM, ex::EventManager &evnM, ex::T
 
    if (currScrn >= 10) {
       // Generates the shadow cubemaps for each light
-      //genShadowMap(entM);
+      if (shadows)
+         genShadowMap(entM);
 
       // Generates the gBuffer
       genGBuffer(entM);
@@ -134,6 +155,11 @@ void RenderSystem::receive(const PrepShadowMap& sMap) {
    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+}
+
+
+void RenderSystem::receive(const SetLights& sl) {
+   addLight(sl.entM);
 }
 
 
@@ -308,28 +334,24 @@ void RenderSystem::deferredRender(ex::EntityManager& entM) {
    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
    glUniform1i(glGetUniformLocation(lightingPID, "gAlbedoSpec"), 2);
 
-   //Pass the lights to graphics card
-   addLight(entM, lightingPID);
-
-   entM.each<Camera, Position>([this](ex::Entity ent, Camera& cam, Position& pos) {
-      glUniform3fv(glGetUniformLocation(lightingPID, "viewPos"), 1, &(pos.pos[0]));
-   });
-
-   // Passes gamma value to graphics
-   glUniform1f(glGetUniformLocation(lightingPID, "gamma"), gamma);
-   glUniform1f(glGetUniformLocation(lightingPID, "farPlane"), farPlane);
-
    //This is a bodge, figure out how to fix!
    GLuint iLight = 0;
    entM.each<Light, Shadow>([this, &iLight](ex::Entity entity, Light& null, Shadow& shadow) {
       std::stringstream dmName;
       dmName << "light2[" << iLight++ << "].depthMap";
 
-      glUniform1i(glGetUniformLocation(lightingPID, &(dmName.str())[0]), 3 + iLight);
+      glUniform1i(glGetUniformLocation(lightingPID, &(dmName.str())[0]), 2 + iLight);
 
-      glActiveTexture(GL_TEXTURE3 + iLight);
+      glActiveTexture(GL_TEXTURE2 + iLight);
       glBindTexture(GL_TEXTURE_CUBE_MAP, shadow.depthMap);
    });
+
+   glBindBuffer(GL_UNIFORM_BUFFER, inBlock);
+   entM.each<Camera, Position>([this](ex::Entity ent, Camera& cam, Position& pos) {
+      //glUniform3fv(glGetUniformLocation(lightingPID, "viewPos"), 1, &(pos.pos[0]));
+      glBufferSubData(GL_UNIFORM_BUFFER, 16, sizeof(glm::vec4), &(pos.pos[0]));
+   });
+   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
    // Draw quad
    glBindVertexArray(quadVAO);
@@ -439,33 +461,37 @@ void RenderSystem::drawScene(Renderable& mesh, Material& mat, GLuint prog, ex::E
 
 
 
-void RenderSystem::addLight(ex::EntityManager& entM, GLuint pID) {
+
+
+
+
+
+
+
+void RenderSystem::addLight(ex::EntityManager& entM) {
+
+   glBindBuffer(GL_UNIFORM_BUFFER, lightBlock);
 
    //Runs over all light entities to send the information to the buffer
-   GLuint iNum = 0;
-   entM.each<Light, Position>([this, &iNum, &pID]
+   GLuint iNum = 0, offset = 16;
+   entM.each<Light, Position>([this, &iNum, &offset]
                                      (ex::Entity entity, Light& l, Position& p) {
-      //Creates a custom name to pass the lights into an array
-      std::stringstream bName;
-      bName << "light[" << iNum++ << "].";
 
-      glUniform3f(glGetUniformLocation(pID, &(bName.str() + "pos")[0]),
-                                       p.pos.x, p.pos.y, p.pos.z);
+      glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::vec4), &(p.pos[0]));
+      glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, sizeof(glm::vec4), &(l.ambient[0]));
+      glBufferSubData(GL_UNIFORM_BUFFER, offset + 32, sizeof(glm::vec4), &(l.diffuse[0]));
+      glBufferSubData(GL_UNIFORM_BUFFER, offset + 48, sizeof(glm::vec4), &(l.specular[0]));
+      glBufferSubData(GL_UNIFORM_BUFFER, offset + 64, sizeof(GLfloat), &l.linear);
+      glBufferSubData(GL_UNIFORM_BUFFER, offset + 68, sizeof(GLfloat), &l.quad);
 
-      glUniform3f(glGetUniformLocation(pID, &(bName.str() + "ambient")[0]),
-                                       l.ambient.x, l.ambient.y, l.ambient.z);
+      offset += 80;
+      iNum++;
 
-      glUniform3f(glGetUniformLocation(pID, &(bName.str() + "diffuse")[0]),
-                                       l.diffuse.x, l.diffuse.y, l.diffuse.z);
-
-      glUniform3f(glGetUniformLocation(pID, &(bName.str() + "specular")[0]),
-                                       l.specular.x, l.specular.y, l.specular.z);
-
-      glUniform1f(glGetUniformLocation(pID, &(bName.str() + "linear")[0]), l.linear);
-      glUniform1f(glGetUniformLocation(pID, &(bName.str() + "quad")[0]), l.quad);
    });
 
    //Passes the number of lights to the buffer
-   glUniform1i(glGetUniformLocation(pID, "lightNum"), iNum);
+   glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GLint), &iNum);
+
+   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 }

@@ -212,6 +212,14 @@ struct PrepShadowMap {
 };
 
 
+//Event to send lights to shader
+struct SetLights {
+   SetLights(ex::EntityManager& emIn) : entM(emIn) {}
+
+   ex::EntityManager& entM;
+};
+
+
 
 
 //This is mostly for the room. Includes the blocks, boundary and normals for the walls, floor and roof

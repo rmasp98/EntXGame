@@ -1,4 +1,4 @@
-#version 400 core
+#version 420 core
 
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
@@ -13,12 +13,13 @@ struct Material {
    float shininess;
 };
 uniform Material material;
+uniform vec3 colour;
 
 void main() {
 
    gPosition = FragPos;
    gNormal = normalize(FragNorm);
-   gAlbedoSpec.rgb = texture(material.diffuse, FragUV).rgb;
+   gAlbedoSpec.rgb = colour * texture(material.diffuse, FragUV).rgb;
    gAlbedoSpec.a = material.shininess;
 
 }

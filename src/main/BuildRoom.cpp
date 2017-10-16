@@ -60,6 +60,8 @@ void RoomSystem::genRoom(ex::EntityManager& entM, ex::EventManager& evtM) {
    //Use everything to generate the vertices, norms and UVs
    buildRoom(entM, evtM, entity, roomC, pID);
 
+   evtM.emit<SetLights>(entM);
+
 }
 
 
