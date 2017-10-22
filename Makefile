@@ -10,8 +10,8 @@ SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.cpp))
 OBJ       := $(patsubst src/%.cpp,build/%.o,$(SRC))
 EXE       := firstProg
 
-INCLUDES   = -I include
-LIBS += -lglut -lGL -lGLU -lX11 -lXxf86vm -lpthread -lXrandr -lXi -lglfw -lGLEW -lSOIL -lentityx -lfreetype -lassimp
+INCLUDES   = -I include -I /usr/include/freetype2
+LIBS += -lglut -lGL -lGLU -lX11 -lXxf86vm -lpthread -lXrandr -lXi -lglfw -lGLEW -lSOIL -lfreetype -lassimp -lentityx
 
 vpath %.cpp $(SRC_DIR)
 

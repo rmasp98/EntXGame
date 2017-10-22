@@ -13,6 +13,7 @@ The long term goal for this game is to try and develop a procedurally generated 
 Currently the game does not come with any of the required libraries so they will need to be installed beforehand. It is C++ code so obviously you will need a C++ compiler (if you choose something other than g++, you will need to alter to makefile to reflect this). The following libraries can be installed generally by the distribution you are running:
 * libGL
 * libGLU
+* glm
 * libglut
 * libx11
 * libXxf86vm
@@ -23,6 +24,10 @@ Currently the game does not come with any of the required libraries so they will
 * libGLEW
 * libSOIL
 * libfreetype
+
+For Fedora:
+dnf install mesa-libGL-devel mesa-libGLU-devel glm-devel freeglut-devel libX11-devel libXxf86vm-devel libXrandr-devel libXi-devel glfw-devel glew-devel SOIL-devel freetype-devel assimp-devel cmake gcc-c++
+
 
 There is also an additional library required that manages the Entity Component System (ECS) that the game is based upon. This can be downloaded from: https://github.com/alecthomas/entityx. Follow the instructions in the GitHub page to install the library ensuring that the install directory is /usr rather than the default /usr/local.
 

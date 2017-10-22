@@ -168,7 +168,8 @@ int initGraphics(GLFWwindow*& window) {
    //window = glfwCreateWindow(mode->width, mode->height, "First Program", NULL, NULL);
 
    //window = glfwCreateWindow(1920, 1080, "First Program", monitor, NULL);
-   window = glfwCreateWindow(960, 540, "First Program", monitor, NULL);
+   //window = glfwCreateWindow(960, 540, "First Program", monitor, NULL);
+   window = glfwCreateWindow(1680, 1050, "First Program", monitor, NULL);
 
    //This one sets up full screen but there is currently a bug that produces a blue strip
    //window = glfwCreateWindow(mode->width, mode->height, "First Program", mode, NULL);

@@ -25,7 +25,7 @@ RenderSystem::RenderSystem(ex::EntityManager &entM) {
    winWidth = input->winCen[0] * 2.0; winHeight = input->winCen[1] * 2.0;
    shadowHeight = 1024; shadowWidth = 1024;
    gamma = 2.2f; nearPlane = 1.0f; farPlane = 25.0f;
-   quadVAO = 0; samples = 8; shadows = false;
+   quadVAO = 0; samples = 20; shadows = true;
 
    // Loaded the various shaders
    std::vector<std::string> shadow(3, "");
