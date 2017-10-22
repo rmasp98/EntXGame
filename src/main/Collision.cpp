@@ -32,12 +32,14 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
          entM.each<Collidable, Position>([this, &room, &entM](ex::Entity entity1, Collidable& coll, Position& pos1) {
             // If entity has moved
             if (glm::distance(pos1.pos, pos1.tempPos) > 1e-3) {
+               //Check entity-entity collisions
                entM.each<Collidable, Position, Push>([this, &entity1, &pos1](ex::Entity entity2, Collidable& coll, Position& pos2, Push& push) {
                   if (entity1 != entity2) {
                      ex::ComponentHandle<Camera> cam = entity1.component<Camera>();
+                     //Check if the entities have collided
                      if (testCollision(pos1, pos2))
                         objectCollision(pos1, pos2, push, entity1);
-                     else if (cam)
+                     else if (cam) //If  not being pushed by camera, then reset the push count
                         push.count = 0;
 
                   }
@@ -49,17 +51,25 @@ void CollisionSystem::update(ex::EntityManager& entM, ex::EventManager& evnM, ex
       });
 
 
+      //This checks to see if a box has collided with a goal
       entM.each<Collidable, Position, Material, Push, Acceleration>([this, &entM, &dT]
            (ex::Entity entity1, Collidable& coll, Position& pos1, Material& mat, Push& push, Acceleration& accel) {
          bool isDone = false;
          entM.each<Goal, Position>([this, &pos1, &mat, &isDone, &push, &accel, &dT](ex::Entity entity2, Goal& goal, Position& pos2) {
+            // If they have collided
             if (testCollision(pos1, pos2)) {
+               //Highlight the box so user knows it complete
                mat.colour = glm::vec3(1.0f, 0.5f, 0.5f);
+               //Checks to see if box is on goal else it will reset the box
                isDone = true;
+               //Makes it slightly harder for the box to be pushed off a goal
                push.delay = push.delLong;
+               //Per goal flag for checking if the puzzle is complete
                goal.complete = true;
 
-               if ((push.state != 2) && (glm::distance(glm::vec2(pos1.tempPos.x, pos1.tempPos.z), glm::vec2(pos2.tempPos.x, pos2.tempPos.z)) > 1e-3)) {
+               // push.state values are: 0 = no push, 1 = push and center, 2 = push, no center
+               //This triggers the automove to target
+               if ((push.state != 2) && (glm::distance(glm::vec2(pos1.tempPos.x, pos1.tempPos.z), glm::vec2(pos2.tempPos.x, pos2.tempPos.z)) > 1e-2)) {
                   push.state = 0;
                   moveToTarget(accel, pos1, pos2, dT);
                } else

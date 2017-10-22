@@ -5,12 +5,10 @@ TODO:
     a. Shadowmaps are currently being sent to a second light struct. Need to figure out why it breaks in the first struct
     b. This could be done by a CubemapArray (upgraded to GLSL 4.0 to use this)
  6. Keymap menu
- 7. Fix issue with recentering boxes that are not pushed all the way off Goal
- 8. Make easier to push boxes into corridors
  9. Write solution finder
  11. Need to improve object and image loader (and therefore the renderer as well)
     a. Turns out some objects don't have norms (norm maps instead) so need to adapt program accordingly (gen buffers and shaders)
- 12. Need to set up random level generator with petential threading (really big job)
+ 12. Need to set up random level generator with potential threading (really big job)
  13. Fix player vibrating in corners
  21. Look up a better way to do PCF for point light shadows
  22. Need to try and improve performance!!!
@@ -24,6 +22,8 @@ TODO:
  28. Need to determine good values for the linear and quadratic light attenuation
  29. Could look into combining the quad used for Menu background and deferred rendering
  31. Assess whether menuGen needs to be a system as it does not initialise or update, just an event
+ 32. Fix bug where lights sometimes don't show (may need to set up proper destructors)
+ 33. Need to implement cmake for building the game
 
 
 Things to think about:
@@ -35,7 +35,9 @@ Things to think about:
  - Bloom, blurs bright light sources (https://learnopengl.com/#!Advanced-Lighting/Bloom)
  - Potentially add SSAO (https://learnopengl.com/#!Advanced-Lighting/SSAO)
  - Abstract all referencing to OpenGL and GLFW to make it potentially platform independent
-
+ - Add feature where boxes recenter when they are not pushed all the way off Goal (could see if distance decreases from goal)
+ - HUD showing bev and scores
+ - Possibility to undo a move
 
 Done:
  1. I need to set up deferred rendering for my lighting
@@ -51,6 +53,7 @@ Done:
    h. pass the cube map to main shaders
    i. Alter main shaders to account for shadows
    j. Implement for multiple lights
+ 8. Make easier to push boxes into corridors (scaled down boxes so they fit easier)
  10. Need to sort out input system for menu code
  14. Resume button in in-game menu raises camera a little - because not updating cursor position in input entity (see 10)
  15. Implement Blinn-phong lighting (https://learnopengl.com/#!Advanced-Lighting/Advanced-Lighting)

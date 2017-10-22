@@ -8,7 +8,6 @@
 
 
 #include "main/Main.hpp"
-//#include <fstream>
 
 
 int main () {
@@ -74,7 +73,6 @@ Game::Game(GLFWwindow* window) {
    systems.add<MoveSystem>(entities);
    systems.add<BevSystem>(entities);
    systems.add<CollisionSystem>();
-
 
    // Menu Systems
    systems.add<MenuGenSystem>(); //This doesn't really need a system at the moment

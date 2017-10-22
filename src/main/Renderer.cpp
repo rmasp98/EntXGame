@@ -17,9 +17,12 @@ RenderSystem::RenderSystem(ex::EntityManager &entM) {
    // Create the Frame buffer to store the shadowmap
    glGenFramebuffers(1, &depthMapFBO);
 
+   Input* input;
+   entM.each<Input>([this, &input](ex::Entity null, Input& tempInput) {
+      input = &tempInput;
+   });
    // Variables to eventually pull from a config file
-   winHeight = 540; winWidth = 960;
-   //winHeight = 1080; winWidth = 1920;
+   winWidth = input->winCen[0] * 2.0; winHeight = input->winCen[1] * 2.0;
    shadowHeight = 1024; shadowWidth = 1024;
    gamma = 2.2f; nearPlane = 1.0f; farPlane = 25.0f;
    quadVAO = 0; samples = 8; shadows = false;

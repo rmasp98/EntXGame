@@ -20,6 +20,8 @@ ObjectSystem::ObjectSystem(ex::EntityManager& entM, ex::EventManager& evtM) {
    entMan = &entM;
    evtMan = &evtM;
 
+   boxScale = 0.95;
+
    //loadAssImp("assets/Dragon2.3ds");
 
 }
@@ -112,13 +114,13 @@ void ObjectSystem::genLevel() {
 
    //Generate objects in the room (i.e. blocks)
    std::vector<glm::vec3> boxPos(7, glm::vec3(0.0f));
-   boxPos[0] = glm::vec3(0.0, 1.0, 4.0);
-   boxPos[1] = glm::vec3(-2.0, 1.0, 6.0);
-   boxPos[2] = glm::vec3(-4.0, 1.0, 6.0);
-   boxPos[3] = glm::vec3(-8.0, 1.0, 6.0);
-   boxPos[4] = glm::vec3(-8.0, 1.0, 4.0);
-   boxPos[5] = glm::vec3(-8.0, 1.0, 8.0);
-   boxPos[6] = glm::vec3(-8.0, 1.0, 0.0);
+   boxPos[0] = glm::vec3(0.0, boxScale, 4.0);
+   boxPos[1] = glm::vec3(-2.0, boxScale, 6.0);
+   boxPos[2] = glm::vec3(-4.0, boxScale, 6.0);
+   boxPos[3] = glm::vec3(-8.0, boxScale, 6.0);
+   boxPos[4] = glm::vec3(-8.0, boxScale, 4.0);
+   boxPos[5] = glm::vec3(-8.0, boxScale, 8.0);
+   boxPos[6] = glm::vec3(-8.0, boxScale, 0.0);
    genObject("assets/cube.obj", "assets/roomUV.DDS", pID, boxPos);
 
    //Create Goal lights
@@ -162,6 +164,10 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
       exit(EXIT_FAILURE);
    }
 
+   for (GLuint i=0; i<verts.size(); i++) {
+      verts[i] *= boxScale;
+   }
+
    //Load texture for object
    GLint texID;
    if (texFile != "") {
@@ -178,7 +184,7 @@ void ObjectSystem::genObject(std::string objFile, std::string texFile, GLint pID
       entity.assign<Level>();
       entity.assign<Renderable>();
       entity.assign<Material>(texID, 20.0f);
-      entity.assign<Position>(pos[iBox], glm::vec3(1.0f));
+      entity.assign<Position>(pos[iBox], glm::vec3(boxScale));
       entity.assign<Collidable>();
       entity.assign<Acceleration>(1.5f, 8.0f);
       entity.assign<Push>(10, 30);

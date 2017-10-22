@@ -30,6 +30,7 @@ class ObjectSystem : public ex::System<ObjectSystem>, public ex::Receiver<Object
       ex::EntityManager* entMan;
       ex::EventManager* evtMan;
       GLuint pID;
+      GLfloat boxScale;
 
       void newLevel();
       void genCamera();
